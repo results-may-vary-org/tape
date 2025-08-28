@@ -1,24 +1,30 @@
-import React, { useState } from "react";
-import { useApp } from "@/context/AppContext";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { FsNode } from "@/lib/types";
-import { Folder, FileText, FolderPlus, FilePlus, Pencil, Trash2, FolderOpen, MousePointerSquareDashed, ChevronRight, ChevronDown } from "lucide-react";
-import { useModal } from "@/context/ModalContext";
-import { toast } from "sonner";
-import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import * as React from "react"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+} from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { useApp } from "@/context/AppContext"
+import { useModal } from "@/context/ModalContext"
+import type { FsNode } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import { toast } from "sonner"
+import {
+  ChevronDown,
+  ChevronRight,
+  FilePlus,
+  FileText,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  MousePointerSquareDashed,
+  Pencil,
+  Trash2,
+} from "lucide-react"
 
-
-type TreeNodeProps = {
-  node: FsNode;
-  level: number;
-  expanded: boolean;
-  onToggle: (path: string) => void;
-  isExpandedFn: (path: string) => boolean;
-};
-
-function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: TreeNodeProps) {
+function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsNode; level: number; expanded: boolean; onToggle: (path: string) => void; isExpandedFn: (path: string) => boolean; }) {
   const { selectedPath, selectPath, createFolder, createNote, renamePath, deletePath } = useApp();
   const modal = useModal();
 
@@ -155,16 +161,15 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: TreeNodePro
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export function Sidebar() {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const modal = useModal();
   const { rootPath, pickRoot, tree, selectedPath, selectedIsDir, createFolder, createNote } = useApp();
-
   const parentForNew = selectedPath && selectedIsDir ? selectedPath : rootPath ?? "";
 
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set());
+  const [expandedPaths, setExpandedPaths] = React.useState<Set<string>>(() => new Set());
   const isExpanded = (p: string) => expandedPaths.has(p);
   const togglePath = (p: string) => setExpandedPaths((prev) => {
     const next = new Set(prev);
@@ -188,105 +193,66 @@ export function Sidebar() {
   const collapseAll = () => setExpandedPaths(new Set());
 
   return (
-    <div className="h-full w-64 border-r bg-sidebar p-2 flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button size="icon" variant="outline" aria-label="Choisir dossier" onClick={pickRoot}>
-              <FolderOpen />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent className="z-50 rounded-md border bg-popover px-2 py-1 text-xs shadow-md">
-            Choisir dossier
-          </TooltipContent>
-        </Tooltip>
-        {rootPath && (
-          <div className="flex gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="sm" variant="ghost" aria-label="Tout réduire" onClick={collapseAll}>
-                  <ChevronRight className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="z-50 rounded-md border bg-popover px-2 py-1 text-xs shadow-md">
-                Tout réduire
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="sm" variant="ghost" aria-label="Tout développer" onClick={expandAll}>
-                  <ChevronDown className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="z-50 rounded-md border bg-popover px-2 py-1 text-xs shadow-md">
-                Tout développer
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        )}
-      </div>
-      {rootPath && (
-        <div className="flex gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                aria-label="Nouveau dossier"
-                onClick={async () => {
-                  const name = await modal.prompt({ title: "Nouveau dossier", placeholder: "Nom du dossier" });
-                  if (name === null) return;
-                  const trimmed = name.trim();
-                  if (!trimmed) return;
-                  try {
-                    if (!rootPath) return;
-                    await createFolder(rootPath, trimmed);
-                  } catch (err: any) {
-                    toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création du dossier");
-                  }
-                }}
-              >
-                <FolderPlus />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="z-50 rounded-md border bg-popover px-2 py-1 text-xs shadow-md">
-              Nouveau dossier
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                aria-label="Nouvelle note"
-                onClick={async () => {
-                  const name = await modal.prompt({ title: "Nouvelle note", placeholder: "Nom de la note" });
-                  if (name === null) return;
-                  const trimmed = name.trim();
-                  if (!trimmed) return;
-                  try {
-                    await createNote(parentForNew || rootPath!, trimmed);
-                  } catch (err: any) {
-                    toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création de la note");
-                  }
-                }}
-              >
-                <FilePlus />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="z-50 rounded-md border bg-popover px-2 py-1 text-xs shadow-md">
-              Nouvelle note
-            </TooltipContent>
-          </Tooltip>
+    <Sidebar variant="inset" {...props}>
+      <SidebarHeader className="p-2">
+        <div className="flex items-center gap-2">
+          {/* 5 buttons horizontally with same style */}
+          <Button size="icon" variant="outline" aria-label="Choisir dossier" onClick={pickRoot}>
+            <FolderOpen className="size-4" />
+          </Button>
+          <Button size="icon" variant="outline" aria-label="Tout réduire" onClick={collapseAll}>
+            <ChevronRight className="size-4" />
+          </Button>
+          <Button size="icon" variant="outline" aria-label="Tout développer" onClick={expandAll}>
+            <ChevronDown className="size-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            aria-label="Nouveau dossier"
+            onClick={async () => {
+              const name = await modal.prompt({ title: "Nouveau dossier", placeholder: "Nom du dossier" });
+              if (name === null) return;
+              const trimmed = name.trim();
+              if (!trimmed) return;
+              try {
+                if (!rootPath) return;
+                await createFolder(rootPath, trimmed);
+              } catch (err: any) {
+                toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création du dossier");
+              }
+            }}
+          >
+            <FolderPlus className="size-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            aria-label="Nouvelle note"
+            onClick={async () => {
+              const name = await modal.prompt({ title: "Nouvelle note", placeholder: "Nom de la note" });
+              if (name === null) return;
+              const trimmed = name.trim();
+              if (!trimmed) return;
+              try {
+                await createNote(parentForNew || rootPath!, trimmed);
+              } catch (err: any) {
+                toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création de la note");
+              }
+            }}
+          >
+            <FilePlus className="size-4" />
+          </Button>
         </div>
-      )}
-      <div className="text-xs text-muted-foreground break-all px-1">{rootPath || "Aucun dossier"}</div>
-      <div className="flex-1 overflow-auto">
-        {tree.map((n) => (
-          <TreeNode key={n.path} node={n} level={0} expanded={isExpanded(n.path)} onToggle={togglePath} isExpandedFn={isExpanded} />
-        ))}
-      </div>
-    </div>
-  );
+      </SidebarHeader>
+      <SidebarContent>
+        <div className="text-xs text-muted-foreground break-all px-2 py-1">{rootPath || "Aucun dossier"}</div>
+        <div className="flex-1 overflow-auto px-1 pb-2">
+          {tree.map((n) => (
+            <TreeNode key={n.path} node={n} level={0} expanded={isExpanded(n.path)} onToggle={togglePath} isExpandedFn={isExpanded} />
+          ))}
+        </div>
+      </SidebarContent>
+    </Sidebar>
+  )
 }

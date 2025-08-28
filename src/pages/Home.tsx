@@ -1,10 +1,13 @@
 import React from "react";
-import { Sidebar } from "@/components/Sidebar";
 import { SplitView } from "@/components/SplitView";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Columns3, Rows3, Layers, FolderOpen, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbEllipsis } from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 function ModeIcon({ mode }: { mode: ReturnType<typeof useApp>["viewMode"] }) {
   switch (mode) {
@@ -39,7 +42,7 @@ function modeLabel(mode: ReturnType<typeof useApp>["viewMode"]) {
 }
 
 export default function Home() {
-  const { rootPath, pickRoot, viewMode, setViewMode } = useApp();
+  const { rootPath, pickRoot, viewMode, setViewMode, selectedPath, selectedIsDir } = useApp();
 
   if (!rootPath) {
     return (
@@ -55,44 +58,109 @@ export default function Home() {
     );
   }
 
-  return (
-    <div className="h-screen w-screen flex">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <div className="h-12 border-b flex items-center gap-2 px-2">
-          <div className="text-sm text-muted-foreground mr-2">Mode:</div>
+  const normalizedRoot = (rootPath || "").replace(/\\/g, "/");
+  const normalizedSel = (selectedPath || "").replace(/\\/g, "/");
+  let rel = "";
+  if (selectedPath) {
+    rel = normalizedSel.startsWith(normalizedRoot)
+      ? normalizedSel.slice(normalizedRoot.length).replace(/^\/+/, "")
+      : (selectedPath || "");
+  }
+  const rootName = normalizedRoot.replace(/\/+$/, "").split("/").filter(Boolean).pop() || normalizedRoot || "Racine";
+  const parts = rel ? rel.split("/").filter(Boolean) : [];
+  // We don't display the main folder (rootName) in the breadcrumb, only relative parts.
+  const breadcrumbParts = parts;
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" className="flex items-center gap-2">
-                <ModeIcon mode={viewMode} />
-                {modeLabel(viewMode)}
-                <ChevronDown className="size-4 opacity-60" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="z-50 min-w-52 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
-              <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("edit")}>
-                <Pencil className="size-4" /> Édition
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("preview")}>
-                <Eye className="size-4" /> Preview
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("split-vertical")}>
-                <Columns3 className="size-4" /> Split vertical
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("split-horizontal")}>
-                <Rows3 className="size-4" /> Split horizontal
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("stack")}>
-                <Layers className="size-4" /> Stack
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                {breadcrumbParts.length > 0 ? (
+                  (() => {
+                    const segs = breadcrumbParts
+                    if (segs.length <= 3) {
+                      return segs.map((seg, idx) => (
+                        <React.Fragment key={idx}>
+                          <BreadcrumbItem>
+                            {idx < segs.length - 1 ? (
+                              <BreadcrumbLink href="#">{seg}</BreadcrumbLink>
+                            ) : (
+                              <BreadcrumbPage>{seg}</BreadcrumbPage>
+                            )}
+                          </BreadcrumbItem>
+                          {idx < segs.length - 1 && <BreadcrumbSeparator />}
+                        </React.Fragment>
+                      ))
+                    } else {
+                      // Render: first, ellipsis, second-last, last
+                      const first = segs[0]
+                      const secondLast = segs[segs.length - 2]
+                      const last = segs[segs.length - 1]
+                      return (
+                        <>
+                          <BreadcrumbItem>
+                            <BreadcrumbLink href="#">{first}</BreadcrumbLink>
+                          </BreadcrumbItem>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem>
+                            <BreadcrumbEllipsis />
+                          </BreadcrumbItem>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem>
+                            <BreadcrumbLink href="#">{secondLast}</BreadcrumbLink>
+                          </BreadcrumbItem>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem>
+                            <BreadcrumbPage>{last}</BreadcrumbPage>
+                          </BreadcrumbItem>
+                        </>
+                      )
+                    }
+                  })()
+                ) : null}
+              </BreadcrumbList>
+            </Breadcrumb>
+            <Separator orientation="vertical" className="ml-2 mr-2 data-[orientation=vertical]:h-4" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="flex items-center gap-2">
+                  <ModeIcon mode={viewMode} />
+                  {modeLabel(viewMode)}
+                  <ChevronDown className="size-4 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="z-50 min-w-52 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("edit")}>
+                  <Pencil className="size-4" /> Édition
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("preview")}>
+                  <Eye className="size-4" /> Preview
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("split-vertical")}>
+                  <Columns3 className="size-4" /> Split vertical
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("split-horizontal")}>
+                  <Rows3 className="size-4" /> Split horizontal
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("stack")}>
+                  <Layers className="size-4" /> Stack
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <div className="flex-1 overflow-hidden">
+            <SplitView />
+          </div>
         </div>
-        <div className="flex-1 overflow-hidden">
-          <SplitView />
-        </div>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
