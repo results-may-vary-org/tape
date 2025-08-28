@@ -152,7 +152,7 @@ export default function Home() {
           </div>
         </header>
         <Separator/>
-        <SplitView />
+        <SplitView/>
       </SidebarInset>
     </SidebarProvider>
   );

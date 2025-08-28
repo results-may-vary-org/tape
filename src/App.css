@@ -137,17 +137,15 @@ button {
 }
 
 /**
-*
-*
-*
-*
-*   TYPOGRAPHY
-*
-*
-*
-*
-*
-*
+ * for some reason the overflow is fucktup with the react rendered so...
+ */
+body {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+/**
+ * TYPOGRAPHY
  */
 :root {
     --muted: #f3f4f6;     /* couleur d'arrière-plan douce (ex: gris clair) */
