@@ -1,4 +1,3 @@
-import React from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useApp } from "@/context/AppContext";
 import { MarkdownEditor } from "@/components/MarkdownEditor";

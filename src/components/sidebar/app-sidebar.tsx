@@ -25,15 +25,15 @@ import {
 } from "lucide-react"
 
 function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsNode; level: number; expanded: boolean; onToggle: (path: string) => void; isExpandedFn: (path: string) => boolean; }) {
-  const { selectedPath, selectPath, createFolder, createNote, renamePath, deletePath } = useApp();
+  const { selectedPath, selectedIsDir, selectPath, createFolder, createNote, renamePath, deletePath } = useApp();
   const modal = useModal();
 
-  const handleOpen = async (e?: React.MouseEvent) => {
+  const handleOpen = async (e?: Event) => {
     e?.stopPropagation();
     await selectPath(node.path, node.is_dir);
   };
 
-  const handleNewFolder = async (e?: React.MouseEvent) => {
+  const handleNewFolder = async (e?: Event) => {
     e?.stopPropagation();
     const name = await modal.prompt({ title: "Nouveau dossier", placeholder: "Nom du dossier" });
     if (name === null) return;
@@ -46,7 +46,7 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
     }
   };
 
-  const handleNewNote = async (e?: React.MouseEvent) => {
+  const handleNewNote = async (e?: Event) => {
     e?.stopPropagation();
     const name = await modal.prompt({ title: "Nouvelle note", placeholder: "Nom de la note" });
     if (name === null) return;
@@ -59,7 +59,7 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
     }
   };
 
-  const handleRename = async (e?: React.MouseEvent) => {
+  const handleRename = async (e?: Event) => {
     e?.stopPropagation();
     const defaultName = node.is_dir ? node.name : node.name.replace(/\.md$/i, "");
     const name = await modal.prompt({ title: "Renommer", placeholder: "Nouveau nom", defaultValue: defaultName, confirmText: "Renommer" });
@@ -73,7 +73,7 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
     }
   };
 
-  const handleDelete = async (e?: React.MouseEvent) => {
+  const handleDelete = async (e?: Event) => {
     e?.stopPropagation();
     try {
       await deletePath(node.path);
@@ -110,9 +110,49 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
             )}
             {node.is_dir ? <Folder className="size-4 text-muted-foreground" /> : <FileText className="size-4 text-muted-foreground" />}
             <span className={cn("text-xs", node.is_dir ? "font-semibold" : "")}>{node.name}</span>
-            <div className="ml-auto opacity-40">
-              <MousePointerSquareDashed className="size-3.5" />
-            </div>
+            {(() => {
+              let showDot = false;
+              if (!selectedIsDir && selectedPath) {
+                const normNodePath = node.path.replace(/\\/g, "/").replace(/\/+$/, "");
+                const normSelPath = selectedPath.replace(/\\/g, "/").replace(/\/+$/, "");
+                if (!node.is_dir && normSelPath === normNodePath) {
+                  showDot = true;
+                } else if (node.is_dir) {
+                  const normNode = normNodePath;
+                  const normSel = normSelPath;
+                  const isAncestor = normSel.startsWith(normNode + "/");
+                  if (isAncestor) {
+                    const expandedSelf = isExpandedFn(node.path);
+                    if (!expandedSelf) {
+                      // ensure all ancestor folders along the path from root to this node are expanded
+                      let p = normNode;
+                      let ok = true;
+                      while (true) {
+                        const parent = p.replace(/\/[^\/]+$/, "");
+                        if (!parent || parent === p) break;
+                        // Only consider if this parent is also an ancestor of the selected path
+                        if (normSel.startsWith(parent + "/")) {
+                          if (!isExpandedFn(parent)) { ok = false; break; }
+                          p = parent;
+                        } else {
+                          break;
+                        }
+                      }
+                      if (ok) showDot = true;
+                    }
+                  }
+                }
+              }
+              return (
+                <div className={cn("ml-auto", showDot ? "opacity-100" : "opacity-40")}>
+                  {showDot ? (
+                    <span className="inline-block size-2 rounded-full bg-green-500" />
+                  ) : (
+                    <MousePointerSquareDashed className="size-3.5" />
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent className="z-50 min-w-48 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
@@ -169,11 +209,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { rootPath, pickRoot, tree, selectedPath, selectedIsDir, createFolder, createNote } = useApp();
   const parentForNew = selectedPath && selectedIsDir ? selectedPath : rootPath ?? "";
 
+  const normalizePath = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/,"");
+
   const [expandedPaths, setExpandedPaths] = React.useState<Set<string>>(() => new Set());
-  const isExpanded = (p: string) => expandedPaths.has(p);
+  const isExpanded = (p: string) => expandedPaths.has(normalizePath(p));
   const togglePath = (p: string) => setExpandedPaths((prev) => {
+    const key = normalizePath(p);
     const next = new Set(prev);
-    if (next.has(p)) next.delete(p); else next.add(p);
+    if (next.has(key)) next.delete(key); else next.add(key);
     return next;
   });
 
@@ -182,7 +225,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const walk = (nodes: FsNode[]) => {
       for (const n of nodes) {
         if (n.is_dir) {
-          next.add(n.path);
+          next.add(normalizePath(n.path));
           if (n.children) walk(n.children);
         }
       }
@@ -196,7 +239,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar variant="inset" {...props}>
       <SidebarHeader className="p-2">
         <div className="flex items-center gap-2">
-          {/* 5 buttons horizontally with same style */}
           <Button size="icon" variant="outline" aria-label="Choisir dossier" onClick={pickRoot}>
             <FolderOpen className="size-4" />
           </Button>

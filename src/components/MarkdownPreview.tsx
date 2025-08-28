@@ -1,4 +1,3 @@
-import React from "react";
 import { useApp } from "@/context/AppContext";
 import ReactMarkdown from "react-markdown";
 import { Eye } from "lucide-react";
