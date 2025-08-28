@@ -135,3 +135,135 @@ button {
     @apply bg-background text-foreground;
   }
 }
+
+/**
+*
+*
+*
+*
+*   TYPOGRAPHY
+*
+*
+*
+*
+*
+*
+ */
+:root {
+    --muted: #f3f4f6;     /* couleur d'arrière-plan douce (ex: gris clair) */
+    --border: #e5e7eb;    /* couleur de bordure (ex: gris) */
+}
+
+/* Titres — comportement d’ancrage */
+h1, h2, h3, h4 {
+    scroll-margin-top: 5rem; /* équiv. scroll-m-20 (20 = 5rem) */
+    letter-spacing: -0.025em; /* tracking-tight */
+    font-weight: 600; /* valeur par défaut pour h2/h3/h4, h1 sera écrasé plus bas */
+}
+
+/* h1 */
+h1 {
+    text-align: center;              /* text-center */
+    font-size: 2.25rem;              /* text-4xl */
+    line-height: 2.5rem;
+    font-weight: 800;                /* font-extrabold */
+    text-wrap: balance;              /* text-balance (support moderne) */
+}
+
+/* h2 */
+h2 {
+    padding-bottom: 0.5rem;                  /* pb-2 */
+    font-size: 1.875rem;                     /* text-3xl */
+    line-height: 2.25rem;
+}
+h2:first-child {
+    margin-top: 0; /* first:mt-0 */
+}
+
+/* h3 */
+h3 {
+    font-size: 1.5rem;   /* text-2xl */
+    line-height: 2rem;
+}
+
+/* h4 */
+h4 {
+    font-size: 1.25rem;  /* text-xl */
+    line-height: 1.75rem;
+}
+
+/* Paragraphe */
+p {
+    line-height: 1.75rem;                  /* leading-7 */
+}
+p:not(:first-child) {
+    margin-top: 1.5rem;                     /* mt-6 */
+}
+
+/* Blockquote */
+blockquote {
+    margin-top: 1.5rem;                     /* mt-6 */
+    border-left: 2px solid var(--border);   /* border-l-2 */
+    padding-left: 1.5rem;                   /* pl-6 */
+    font-style: italic;                     /* italic */
+}
+
+/* Table */
+table {
+    width: 100%; /* w-full */
+    border-collapse: collapse;
+}
+
+/* Lignes */
+table tr {
+    margin: 0;                       /* m-0 */
+    padding: 0;                      /* p-0 */
+    border-top: 1px solid var(--border); /* border-t */
+}
+table tbody tr:nth-child(even) {
+    background-color: var(--muted);  /* even:bg-muted */
+}
+
+/* Cellules d’en-tête */
+table th {
+    border: 1px solid var(--border); /* border */
+    padding: 0.5rem 1rem;            /* py-2 px-4 */
+    text-align: left;                /* text-left */
+    font-weight: 700;                /* font-bold */
+}
+/* Respect des attributs align */
+table th[align="center"] { text-align: center; }
+table th[align="right"]  { text-align: right;  }
+
+/* Cellules */
+table td {
+    border: 1px solid var(--border); /* border */
+    padding: 0.5rem 1rem;            /* py-2 px-4 */
+    text-align: left;                /* text-left */
+}
+/* Respect des attributs align */
+table td[align="center"] { text-align: center; }
+table td[align="right"]  { text-align: right;  }
+
+/* Liste */
+ul {
+    margin-top: 1.5rem;     /* my-6 */
+    margin-bottom: 1.5rem;  /* my-6 */
+    margin-left: 1.5rem;    /* ml-6 */
+    list-style-type: disc;  /* list-disc */
+}
+ul > li {
+    margin-top: 0.5rem;     /* [&>li]:mt-2 */
+}
+
+/* Code inline */
+code {
+    position: relative;                 /* relative */
+    background-color: var(--muted);     /* bg-muted */
+    border-radius: 0.25rem;             /* rounded */
+    padding: 0.2rem 0.3rem;             /* py-[0.2rem] px-[0.3rem] */
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; /* font-mono */
+    font-size: 0.875rem;                /* text-sm */
+    line-height: 1.25rem;               /* text-sm line-height */
+    font-weight: 600;                   /* font-semibold */
+}

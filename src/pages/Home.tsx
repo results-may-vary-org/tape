@@ -68,7 +68,7 @@ export default function Home() {
   }
 
   // We don't display the main folder (rootName) in the breadcrumb, only relative parts.
-  const breadcrumbParts = rel ? rel.split("/").filter(Boolean) : [];;
+  const breadcrumbParts = rel ? rel.split("/").filter(Boolean) : ["."];
 
   return (
     <SidebarProvider>
@@ -147,18 +147,12 @@ export default function Home() {
                 <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("split-horizontal")}>
                   <Rows2 className="size-4" /> Split horizontal
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground" onSelect={() => setViewMode("stack")}>
-                  <Layers className="size-4" /> Stack
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="flex-1 overflow-hidden">
-            <SplitView />
-          </div>
-        </div>
+        <Separator/>
+        <SplitView />
       </SidebarInset>
     </SidebarProvider>
   );

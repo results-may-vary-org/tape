@@ -2,14 +2,15 @@ import { useApp } from "@/context/AppContext";
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect";
 import { fsService } from "@/services/fs";
 import { FileText } from "lucide-react";
+import {toast} from "sonner";
 
 export function MarkdownEditor() {
   const { content, setContent, selectedPath, selectedIsDir, rootPath } = useApp();
 
   useDebouncedEffect(() => {
     if (!rootPath || !selectedPath || selectedIsDir) return;
-    fsService.writeNote(rootPath, selectedPath, content).catch(() => {
-      // ignore minimal; production could show a toast
+    fsService.writeNote(rootPath, selectedPath, content).catch((err) => {
+      toast.error(err.message);
     });
   }, [content, selectedPath, selectedIsDir, rootPath], 500);
 
@@ -26,7 +27,7 @@ export function MarkdownEditor() {
     <textarea
       value={content}
       onChange={(e) => setContent(e.target.value)}
-      className="w-full h-full resize-none outline-none bg-background text-foreground p-4 font-mono text-sm"
+      className="resize-none outline-none w-full"
       placeholder="Écrivez en Markdown..."
     />
   );
