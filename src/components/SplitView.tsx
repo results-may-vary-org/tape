@@ -2,7 +2,6 @@ import { useApp } from "@/context/AppContext";
 import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { MarkdownPreview } from "@/components/MarkdownPreview";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable.tsx";
-import {ScrollArea} from "@/components/ui/scroll-area.tsx";
 import {useEffect, useState} from "react";
 
 export function SplitView() {
@@ -14,7 +13,7 @@ export function SplitView() {
       const sh = document.getElementById("sidebarHeader")?.offsetHeight || 0;
       const si = document.getElementById("sidebarInset")?.offsetHeight || 0;
       // 17 = remaining padding and 1 px for border
-      setH(si-sh-17);
+      setH(si-sh-30);
     };
     updateHeights();
     window.addEventListener("resize", updateHeights);
@@ -30,9 +29,7 @@ export function SplitView() {
       </ResizablePanel>
       <ResizableHandle withHandle/>
       <ResizablePanel defaultSize={50} minSize={20} className="p-2">
-        <div className="w-full h-500 overflow-auto">
-          <MarkdownPreview/>
-        </div>
+        <MarkdownPreview/>
       </ResizablePanel>
     </ResizablePanelGroup>
   );
