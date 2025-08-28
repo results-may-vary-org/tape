@@ -4,7 +4,7 @@ import { fsService } from "@/services/fs";
 import { FileText } from "lucide-react";
 import {toast} from "sonner";
 
-export function MarkdownEditor() {
+export function MarkdownEditor({height = "100%"}: { height?: string | number}) {
   const { content, setContent, selectedPath, selectedIsDir, rootPath } = useApp();
 
   useDebouncedEffect(() => {
@@ -27,8 +27,9 @@ export function MarkdownEditor() {
     <textarea
       value={content}
       onChange={(e) => setContent(e.target.value)}
-      className="resize-none outline-none w-full"
+      className="resize-none outline-none w-full h-full bg-transparent"
       placeholder="Écrivez en Markdown..."
+      style={{height}}
     />
   );
 }
