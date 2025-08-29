@@ -32,7 +32,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedIsDir, setSelectedIsDir] = useState(false);
   const [content, setContent] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("split-vertical");
+  const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const [orientation, setOrientation] = useState<"vertical" | "horizontal">("vertical");
 
   useEffect(() => {

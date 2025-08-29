@@ -5,9 +5,4 @@ export type FsNode = {
   children?: FsNode[];
 };
 
-export type ViewMode =
-  | "edit"
-  | "preview"
-  | "split-vertical" // left editor, right preview
-  | "split-horizontal" // top editor, bottom preview
-  | "stack";
+export type ViewMode = | "edit" | "preview" | "split-vertical" | "split-horizontal";
