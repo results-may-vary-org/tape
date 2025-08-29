@@ -2,6 +2,7 @@ import {useApp} from "@/context/AppContext.tsx";
 import {MarkdownEditor} from "@/components/editor/MardownEditor.tsx";
 import {getHello} from "@/services/hello.tsx";
 import {Eye, FileText} from "lucide-react";
+import {MarkdownPreview} from "@/components/editor/MarkdownPreview.tsx";
 
 export function Viewer() {
   const {viewMode, selectedPath, selectedIsDir} = useApp();
@@ -35,9 +36,7 @@ export function Viewer() {
 
   }
 
-  if (viewMode === "preview") {
-
-  }
+  if (viewMode === "preview") return <MarkdownPreview/>;
 
   if (viewMode === "split-vertical") {}
 
