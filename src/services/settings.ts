@@ -13,4 +13,10 @@ export const settingsService = {
   async save(root: string, settings: AppSettings): Promise<void> {
     await invoke("save_settings", { root, settings });
   },
+  async getLastRoot(): Promise<string | null> {
+    return await invoke<string | null>("get_last_root");
+  },
+  async saveLastRoot(root: string | null): Promise<void> {
+    await invoke("save_last_root", { root });
+  },
 };

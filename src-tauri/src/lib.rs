@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use tauri::Manager;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Node {
@@ -310,6 +311,53 @@ fn save_settings(root: String, settings: Settings) -> Result<(), String> {
     save_config(&root_path, &settings)
 }
 
+#[tauri::command]
+fn get_last_root(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    use std::fs;
+    use std::io::Read;
+    let resolver = app.path();
+    let dir = resolver
+        .app_config_dir()
+        .map_err(|e| format!("Cannot resolve app config dir: {}", e))?;
+    if !dir.exists() {
+        return Ok(None);
+    }
+    let path = dir.join("settings.json");
+    if !path.exists() {
+        return Ok(None);
+    }
+    let mut file = fs::File::open(&path).map_err(|e| format!("open settings failed: {}", e))?;
+    let mut data = String::new();
+    file.read_to_string(&mut data)
+        .map_err(|e| format!("read settings failed: {}", e))?;
+    #[derive(Deserialize)]
+    struct Global { last_root: Option<String> }
+    let parsed: Global = serde_json::from_str(&data).unwrap_or(Global { last_root: None });
+    Ok(parsed.last_root)
+}
+
+#[tauri::command]
+fn save_last_root(app: tauri::AppHandle, root: Option<String>) -> Result<(), String> {
+    use std::fs;
+    use std::io::Write;
+    let resolver = app.path();
+    let dir = resolver
+        .app_config_dir()
+        .map_err(|e| format!("Cannot resolve app config dir: {}", e))?;
+    if !dir.exists() {
+        fs::create_dir_all(&dir).map_err(|e| format!("create config dir failed: {}", e))?;
+    }
+    let path = dir.join("settings.json");
+    #[derive(Serialize)]
+    struct Global<'a> { last_root: Option<&'a String> }
+    let json = serde_json::to_string_pretty(&Global { last_root: root.as_ref() })
+        .map_err(|e| e.to_string())?;
+    let mut file = fs::File::create(&path).map_err(|e| format!("write settings failed: {}", e))?;
+    file.write_all(json.as_bytes())
+        .map_err(|e| format!("write settings failed: {}", e))?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -325,6 +373,8 @@ pub fn run() {
             delete_path,
             get_settings,
             save_settings,
+            get_last_root,
+            save_last_root,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

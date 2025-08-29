@@ -33,7 +33,7 @@ const Ctx = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const modal = useModal();
-  const [rootPath, setRootPath] = useState<string | null>(() => localStorage.getItem("rootPath"));
+  const [rootPath, setRootPath] = useState<string | null>(null);
   const [tree, setTree] = useState<FsNode[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedIsDir, setSelectedIsDir] = useState(false);
@@ -48,6 +48,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const v = localStorage.getItem("editor.relativeLineNumbers");
     return v === null ? false : v === "true";
   });
+
+  // On first mount: restore last root from persistent settings, validate it, or ask user
+  useEffect(() => {
+    (async () => {
+      try {
+        // Try persistent settings first
+        let candidate = await settingsService.getLastRoot();
+        // Fallback to legacy localStorage if present
+        if (!candidate) candidate = localStorage.getItem("rootPath");
+        if (candidate) {
+          try {
+            await fsService.listTree(candidate);
+            setRootPath(candidate);
+            localStorage.setItem("rootPath", candidate);
+            await settingsService.saveLastRoot(candidate).catch(() => void 0);
+          } catch {
+            // invalid or missing; clear and ask
+            await settingsService.saveLastRoot(null).catch(() => void 0);
+            localStorage.removeItem("rootPath");
+            const p = await fsService.pickRoot();
+            if (p) {
+              setRootPath(p);
+              localStorage.setItem("rootPath", p);
+              await settingsService.saveLastRoot(p).catch(() => void 0);
+            }
+          }
+        } else {
+          const p = await fsService.pickRoot();
+          if (p) {
+            setRootPath(p);
+            localStorage.setItem("rootPath", p);
+            await settingsService.saveLastRoot(p).catch(() => void 0);
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to initialize root path", e);
+      }
+    })();
+  }, []);
 
   // Load settings from native config (carnet.config.json) when a root is selected
   useEffect(() => {
@@ -75,6 +114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (p) {
       setRootPath(p);
       localStorage.setItem("rootPath", p);
+      await settingsService.saveLastRoot(p).catch(() => void 0);
       await refreshTree(p);
       setSelectedPath(null);
       setContent("");
