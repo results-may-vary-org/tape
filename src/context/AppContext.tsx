@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import type { FsNode, ViewMode } from "@/lib/types";
 import { fsService } from "@/services/fs";
 import { useModal } from "@/context/ModalContext";
+import { settingsService } from "@/services/settings";
 
 export type AppState = {
   rootPath: string | null;
@@ -47,6 +48,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const v = localStorage.getItem("editor.relativeLineNumbers");
     return v === null ? false : v === "true";
   });
+
+  // Load settings from native config (carnet.config.json) when a root is selected
+  useEffect(() => {
+    if (!rootPath) return;
+    (async () => {
+      try {
+        const s = await settingsService.get(rootPath);
+        setViewMode(s.viewMode as ViewMode);
+        setOrientation(s.viewMode === "split-horizontal" ? "horizontal" : "vertical");
+        setShowLineNumbers(s.showLineNumbers);
+        setRelativeLineNumbers(s.relativeLineNumbers);
+      } catch (err) {
+        console.warn("Failed to load settings from backend", err);
+      }
+    })();
+  }, [rootPath]);
 
   useEffect(() => {
     if (!rootPath) return;
@@ -137,14 +154,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setViewMode: (m: ViewMode) => {
       setViewMode(m);
       setOrientation(m === "split-horizontal" ? "horizontal" : "vertical");
+      // persist settings to native config
+      if (rootPath) {
+        settingsService.save(rootPath, {
+          viewMode: m,
+          showLineNumbers,
+          relativeLineNumbers,
+        }).catch(() => void 0);
+      }
     },
     setShowLineNumbers: (v: boolean) => {
       setShowLineNumbers(v);
       localStorage.setItem("editor.showLineNumbers", String(v));
+      // persist settings to native config
+      if (rootPath) {
+        settingsService.save(rootPath, {
+          viewMode,
+          showLineNumbers: v,
+          relativeLineNumbers,
+        }).catch(() => void 0);
+      }
     },
     setRelativeLineNumbers: (v: boolean) => {
       setRelativeLineNumbers(v);
       localStorage.setItem("editor.relativeLineNumbers", String(v));
+      // persist settings to native config
+      if (rootPath) {
+        settingsService.save(rootPath, {
+          viewMode,
+          showLineNumbers,
+          relativeLineNumbers: v,
+        }).catch(() => void 0);
+      }
     },
     createFolder,
     createNote,

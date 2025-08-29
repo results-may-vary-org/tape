@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -243,6 +243,73 @@ fn pick_root() -> Option<String> {
     rfd::FileDialog::new().pick_folder().map(|p| p.to_string_lossy().to_string())
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")] // Keep JSON keys in camelCase for frontend
+struct Settings {
+    view_mode: String,
+    show_line_numbers: bool,
+    relative_line_numbers: bool,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            view_mode: "edit".to_string(),
+            show_line_numbers: true,
+            relative_line_numbers: false,
+        }
+    }
+}
+
+fn config_path(root: &Path) -> PathBuf {
+    root.join("carnet.config.json")
+}
+
+fn load_or_init_config(root: &Path) -> Result<Settings, String> {
+    let path = config_path(root);
+    if !path.exists() {
+        let defaults = Settings::default();
+        let json = serde_json::to_string_pretty(&defaults).map_err(|e| e.to_string())?;
+        fs::write(&path, json).map_err(|e| format!("write config failed: {}", e))?;
+        return Ok(defaults);
+    }
+    let data = fs::read_to_string(&path).map_err(|e| format!("read config failed: {}", e))?;
+    match serde_json::from_str::<Settings>(&data) {
+        Ok(s) => Ok(s),
+        Err(_) => {
+            // If invalid, overwrite with defaults
+            let defaults = Settings::default();
+            let json = serde_json::to_string_pretty(&defaults).map_err(|e| e.to_string())?;
+            fs::write(&path, json).map_err(|e| format!("write config failed: {}", e))?;
+            Ok(defaults)
+        }
+    }
+}
+
+fn save_config(root: &Path, settings: &Settings) -> Result<(), String> {
+    let path = config_path(root);
+    let json = serde_json::to_string_pretty(settings).map_err(|e| e.to_string())?;
+    fs::write(&path, json).map_err(|e| format!("write config failed: {}", e))
+}
+
+#[tauri::command]
+fn get_settings(root: String) -> Result<Settings, String> {
+    let root_path = PathBuf::from(root);
+    if !root_path.exists() || !root_path.is_dir() {
+        return Err("Root doesn't exist or is not a directory".into());
+    }
+    load_or_init_config(&root_path)
+}
+
+#[tauri::command]
+fn save_settings(root: String, settings: Settings) -> Result<(), String> {
+    let root_path = PathBuf::from(root);
+    if !root_path.exists() || !root_path.is_dir() {
+        return Err("Root doesn't exist or is not a directory".into());
+    }
+    save_config(&root_path, &settings)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -255,7 +322,9 @@ pub fn run() {
             create_folder,
             create_note,
             rename_path,
-            delete_path
+            delete_path,
+            get_settings,
+            save_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
