@@ -10,14 +10,14 @@ export function MarkdownPreview({loading}: {loading: boolean}) {
 
   useLayoutEffect(() => {
     console.log("useLayoutEffect preview");
-    if (loading) {
-      console.log("loading");
+    if (!loading) {
+      console.log("render after height ready");
       const ast: Node = Markdoc.parse(content);
       const rtn: RenderableTreeNode = Markdoc.transform(ast);
       const reactNode: ReactNode = Markdoc.renderers.react(rtn, React);
       setRn(reactNode);
     }
-  }, [loading, useApp(), useApp().content]);
+  }, [loading, content]);
 
   if (!selectedPath || selectedIsDir) {
     return (

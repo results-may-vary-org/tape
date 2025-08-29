@@ -3,6 +3,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* for CodeMirror */
+.cm-focused {
+    outline: none !important;
+}
+.cm-scroller, .cm-editor {
+    border-bottom-left-radius: var(--radius-xl);
+    border-bottom-right-radius: var(--radius-xl);
+}
+
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;

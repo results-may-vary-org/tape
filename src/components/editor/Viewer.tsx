@@ -1,59 +1,47 @@
 import {useApp} from "@/context/AppContext.tsx";
-import {MarkdownEditor} from "@/components/editor/MarkdownEditor.tsx";
-import {MarkdownPreview} from "@/components/editor/MarkdownPreview.tsx";
-import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable.tsx";
-import {useEffect, useLayoutEffect, useRef, useState} from "react";
+import {MarkdownEditor} from "@/components/editor/MardownEditor.tsx";
+import {getHello} from "@/services/hello.tsx";
+import {Eye, FileText} from "lucide-react";
 
 export function Viewer() {
-  const {viewMode, content} = useApp();
-  const mkRef = useRef<HTMLDivElement | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const {viewMode, selectedPath, selectedIsDir} = useApp();
 
-  function getHeight() {
-    setLoading(true);
-    const headerHeight = document.getElementById("sidebarHeader")?.offsetHeight ?? 0;
-    const totalHeight = document.body.offsetHeight;
-    if (mkRef && mkRef.current) mkRef.current.style.height = `${totalHeight-headerHeight}px`;
-    console.log({headerHeight, totalHeight, "t": totalHeight-headerHeight})
-    setLoading(false);
+  // if no content
+  if (!selectedPath || selectedIsDir) {
+    if (viewMode === "edit") {
+      return (
+        <div className="h-full w-full text-muted-foreground flex flex-col items-center justify-center">
+          <div>
+            <i>{getHello()}</i>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <FileText className="size-5" />
+            <span>Select a note to start editing.</span>
+          </div>
+        </div>
+      );
+    }
+    if (viewMode === "preview") {
+      return (
+        <div className="h-full w-full text-muted-foreground flex flex-col items-center justify-center">
+          <div><i>{getHello()}</i></div>
+          <div className="flex gap-2 pt-2">
+            <Eye className="size-5" />
+            <span>Select a note to read it.</span>
+          </div>
+        </div>
+      );
+    }
+
   }
 
-  useLayoutEffect(() => {
-    console.log("useLayoutEffect viewer");
-    document.addEventListener("resize", () => getHeight())
-    return () => document.removeEventListener("resize", () => getHeight())
-  }, []);
+  if (viewMode === "preview") {
 
-  useEffect(() => {
-    console.log("viewMode or content changed", viewMode, content.length);
-    getHeight();
-  }, [viewMode, content]);
-
-  useEffect(() => {
-    console.log(";", loading);
-  }, [loading])
-
-  function generateMkPreview() {
-    return (
-      <div ref={mkRef} className="p-2" style={{background: "green"}}>
-        <MarkdownPreview loading={loading}/>
-      </div>
-    )
   }
 
-  if (viewMode === "preview") return generateMkPreview();
-  else if (viewMode.startsWith("split")) {
-    return (
-      <ResizablePanelGroup direction={viewMode === "split-horizontal" ? "vertical" : "horizontal"}>
-        <ResizablePanel defaultSize={50} minSize={20}>
-          <MarkdownEditor/>
-        </ResizablePanel>
-        <ResizableHandle withHandle/>
-        <ResizablePanel defaultSize={50} minSize={20}>
-          {generateMkPreview()}
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    )
-  }
-  return <MarkdownEditor/>
+  if (viewMode === "split-vertical") {}
+
+  if (viewMode === "split-horizontal") {}
+
+  return <MarkdownEditor/>;
 }
