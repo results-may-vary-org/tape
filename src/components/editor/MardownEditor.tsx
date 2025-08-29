@@ -5,6 +5,7 @@ import {markdown, markdownLanguage} from '@codemirror/lang-markdown';
 import {languages } from '@codemirror/language-data';
 import {githubLight} from "@uiw/codemirror-theme-github";
 import {EditorView, lineNumbers} from '@codemirror/view';
+import { lineNumbersRelative } from '@uiw/codemirror-extensions-line-numbers-relative';
 import {useDebouncedEffect} from "@/hooks/useDebouncedEffect.ts";
 import {fsService} from "@/services/fs.ts";
 import {toast} from "sonner";
@@ -80,15 +81,9 @@ export function MarkdownEditor() {
           extensions={[
             markdown({ base: markdownLanguage, codeLanguages: languages }),
             EditorView.lineWrapping,
-            ...(showLineNumbers ? [lineNumbers({
-              formatNumber: (lineNo, state) => {
-                if (!relativeLineNumbers) return String(lineNo);
-                const main = state.selection.main;
-                const cursorLine = state.doc.lineAt(main.head).number;
-                const diff = Math.abs(lineNo - cursorLine);
-                return diff === 0 ? String(lineNo) : String(diff);
-              },
-            })] : []),
+            ...(showLineNumbers
+              ? [relativeLineNumbers ? lineNumbersRelative : lineNumbers()]
+              : []),
           ]}
           basicSetup={{ lineNumbers: false }}
         />
