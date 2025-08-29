@@ -4,13 +4,13 @@ import CodeMirror from '@uiw/react-codemirror';
 import {markdown, markdownLanguage} from '@codemirror/lang-markdown';
 import {languages } from '@codemirror/language-data';
 import {githubLight} from "@uiw/codemirror-theme-github";
-import {EditorView} from '@codemirror/view';
+import {EditorView, lineNumbers} from '@codemirror/view';
 import {useDebouncedEffect} from "@/hooks/useDebouncedEffect.ts";
 import {fsService} from "@/services/fs.ts";
 import {toast} from "sonner";
 
 export function MarkdownEditor() {
-  const {content, setContent, rootPath, selectedPath, selectedIsDir} = useApp();
+  const {content, setContent, rootPath, selectedPath, selectedIsDir, showLineNumbers, relativeLineNumbers} = useApp();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = useState<{ width: number; height: number } | null>(null);
 
@@ -80,6 +80,15 @@ export function MarkdownEditor() {
           extensions={[
             markdown({ base: markdownLanguage, codeLanguages: languages }),
             EditorView.lineWrapping,
+            ...(showLineNumbers ? [lineNumbers({
+              formatNumber: (lineNo, state) => {
+                if (!relativeLineNumbers) return String(lineNo);
+                const main = state.selection.main;
+                const cursorLine = state.doc.lineAt(main.head).number;
+                const diff = Math.abs(lineNo - cursorLine);
+                return diff === 0 ? String(lineNo) : String(diff);
+              },
+            })] : []),
           ]}
           basicSetup={{ lineNumbers: false }}
         />

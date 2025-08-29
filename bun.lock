@@ -27,6 +27,7 @@
         "@tailwindcss/vite": "^4.1.12",
         "@tauri-apps/api": "^2",
         "@tauri-apps/plugin-opener": "^2",
+        "@uiw/codemirror-extensions-line-numbers-relative": "^4.25.1",
         "@uiw/codemirror-theme-github": "^4.25.1",
         "@uiw/react-codemirror": "^4.25.1",
         "class-variance-authority": "^0.7.1",
@@ -488,6 +489,8 @@
     "@types/unist": ["@types/unist@2.0.11", "", {}, "sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA=="],
 
     "@uiw/codemirror-extensions-basic-setup": ["@uiw/codemirror-extensions-basic-setup@4.25.1", "", { "dependencies": { "@codemirror/autocomplete": "^6.0.0", "@codemirror/commands": "^6.0.0", "@codemirror/language": "^6.0.0", "@codemirror/lint": "^6.0.0", "@codemirror/search": "^6.0.0", "@codemirror/state": "^6.0.0", "@codemirror/view": "^6.0.0" } }, "sha512-zxgA2QkvP3ZDKxTBc9UltNFTrSeFezGXcZtZj6qcsBxiMzowoEMP5mVwXcKjpzldpZVRuY+JCC+RsekEgid4vg=="],
+
+    "@uiw/codemirror-extensions-line-numbers-relative": ["@uiw/codemirror-extensions-line-numbers-relative@4.25.1", "", { "peerDependencies": { "@codemirror/state": ">=6.0.0", "@codemirror/view": ">=6.0.0" } }, "sha512-hEB57Z4khUWImjlA20sAV3thOs7W1CoxY4T3snUGoCQRkCBu/ayIEIlPwyTrAevX83OGudpGU8WTe1umqIE6sg=="],
 
     "@uiw/codemirror-theme-github": ["@uiw/codemirror-theme-github@4.25.1", "", { "dependencies": { "@uiw/codemirror-themes": "4.25.1" } }, "sha512-l70gUrYAxHlpMWmG8A/I4PN5h5zzPxV+c9pRtsw+VtdmdgVWMh3JaSsuFZlf6h311s+/WB2FMZKdFw5SwrFWaA=="],
 

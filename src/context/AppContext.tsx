@@ -11,12 +11,17 @@ export type AppState = {
   content: string;
   viewMode: ViewMode;
   orientation: "vertical" | "horizontal"; // for split only
+  // editor settings
+  showLineNumbers: boolean;
+  relativeLineNumbers: boolean;
   // actions
   pickRoot: () => Promise<void>;
   refreshTree: (root?: string | null) => Promise<void>;
   selectPath: (path: string, isDir: boolean) => Promise<void>;
   setContent: (s: string) => void;
   setViewMode: (m: ViewMode) => void;
+  setShowLineNumbers: (v: boolean) => void;
+  setRelativeLineNumbers: (v: boolean) => void;
   createFolder: (parent: string, name: string) => Promise<void>;
   createNote: (dir: string, name: string) => Promise<void>;
   renamePath: (path: string, newName: string) => Promise<void>;
@@ -34,6 +39,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [content, setContent] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const [orientation, setOrientation] = useState<"vertical" | "horizontal">("vertical");
+  const [showLineNumbers, setShowLineNumbers] = useState<boolean>(() => {
+    const v = localStorage.getItem("editor.showLineNumbers");
+    return v === null ? true : v === "true";
+  });
+  const [relativeLineNumbers, setRelativeLineNumbers] = useState<boolean>(() => {
+    const v = localStorage.getItem("editor.relativeLineNumbers");
+    return v === null ? false : v === "true";
+  });
 
   useEffect(() => {
     if (!rootPath) return;
@@ -115,6 +128,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     content,
     viewMode,
     orientation,
+    showLineNumbers,
+    relativeLineNumbers,
     pickRoot,
     refreshTree,
     selectPath,
@@ -123,11 +138,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setViewMode(m);
       setOrientation(m === "split-horizontal" ? "horizontal" : "vertical");
     },
+    setShowLineNumbers: (v: boolean) => {
+      setShowLineNumbers(v);
+      localStorage.setItem("editor.showLineNumbers", String(v));
+    },
+    setRelativeLineNumbers: (v: boolean) => {
+      setRelativeLineNumbers(v);
+      localStorage.setItem("editor.relativeLineNumbers", String(v));
+    },
     createFolder,
     createNote,
     renamePath,
     deletePath,
-  }), [rootPath, tree, selectedPath, selectedIsDir, content, viewMode, orientation]);
+  }), [rootPath, tree, selectedPath, selectedIsDir, content, viewMode, orientation, showLineNumbers, relativeLineNumbers]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
