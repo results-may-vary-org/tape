@@ -1,0 +1,111 @@
+name: "build and publish cross"
+
+on: workflow_dispatch
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check_version.outputs.should_release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_ENV
+          echo "Latest tag: ${LATEST_TAG}"
+
+      - name: Extract version from tauri.conf.json
+        id: extract_version
+        run: |
+          VERSION=$(grep -o '"version": "[^"]*"' ./postier-app/src-tauri/tauri.conf.json | cut -d '"' -f 4)
+          echo "CONF_VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "Config version: ${VERSION}"
+
+      - name: Check if versions are different
+        id: check_version
+        run: |
+          LATEST_TAG_VERSION=${LATEST_TAG#v}
+          echo "Latest tag version (without v): ${LATEST_TAG_VERSION}"
+          echo "Config version: ${CONF_VERSION}"
+
+          if [ "$LATEST_TAG_VERSION" != "$CONF_VERSION" ]; then
+            echo "Versions are different, should release"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "Versions are the same, should not release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  publish-tauri:
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            args: "-v --target aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            args: "-v --target x86_64-apple-darwin"
+          - platform: "ubuntu-22.04"
+            args: "-v "
+          - platform: "windows-latest"
+            args: "-v "
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: install frontend dependencies
+        working-directory: ./postier-app
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          bun install
+
+      - name: Import GPG key
+        if: matrix.platform == 'ubuntu-22.04'
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WEBKIT_DISABLE_COMPOSITING_MODE: 1
+          SIGN: 1
+          SIGN_KEY: ${{ steps.import_gpg.outputs.keyid }}
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        with:
+          tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: "Carnet v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

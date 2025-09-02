@@ -8,6 +8,8 @@ import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sid
 import {ViewSelector} from "@/components/editor/ViewSelector";
 import {BreadcrumbView} from "@/components/sidebar/BreadcrumbView.tsx";
 import {getHello} from "@/services/hello.tsx";
+import {ConfigSelector} from "@/components/sidebar/ConfigSelector.tsx";
+import {ModeToggle} from "@/components/sidebar/mode-toogle.tsx";
 
 export default function Home() {
   const {rootPath, pickRoot} = useApp();
@@ -37,7 +39,11 @@ export default function Home() {
               <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
               <BreadcrumbView/>
               <Separator orientation="vertical" className="ml-2 mr-2 data-[orientation=vertical]:h-4" />
-              <ViewSelector/>
+              <div className="flex items-center gap-2">
+                <ModeToggle/>
+                <ConfigSelector/>
+                <ViewSelector/>
+              </div>
             </div>
           </header>
           <Separator/>

@@ -162,10 +162,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   async function deletePath(path: string) {
     if (!rootPath) return;
     const ok = await modal.confirm({
-      title: "Supprimer",
-      description: "Voulez-vous vraiment supprimer cet élément ?",
-      confirmText: "Supprimer",
-      cancelText: "Annuler",
+      title: "Delete",
+      description: "Do you want to delete this item?",
+      confirmText: "Delete",
+      cancelText: "Cancel",
       destructive: true,
     });
     if (!ok) return;
