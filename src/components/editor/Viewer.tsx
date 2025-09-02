@@ -4,10 +4,13 @@ import {getHello} from "@/services/hello.tsx";
 import {Eye, FileText} from "lucide-react";
 import {MarkdownPreview} from "@/components/editor/MarkdownPreview.tsx";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable.tsx";
+import {useState} from "react";
+import {MkProps} from "@/lib/types.ts";
 
 export function Viewer() {
   const {viewMode, selectedPath, selectedIsDir, content} = useApp();
   const isEmpty = !selectedPath || !content || selectedIsDir;
+  const [panSize, setPanSize] = useState<MkProps>({panTop: 0, panBottom: 0});
 
   function editIsEmpty() {
     return (
@@ -35,22 +38,27 @@ export function Viewer() {
     );
   }
 
-  if (viewMode === "preview") return isEmpty ? previewIsEmpty() : <MarkdownPreview/>;
+  function handleResize(size: number) {
+    // we calculate the bottom size via the top size for simplicity
+    setPanSize({panTop: size, panBottom: 100 - size});
+  }
+
+  if (viewMode === "preview") return isEmpty ? previewIsEmpty() : <MarkdownPreview divider={0}/>;
 
   if (viewMode === "split-vertical" || viewMode === "split-horizontal") {
     return (
       // todo: dono why but the vertical do horizontal and vice versa
       <ResizablePanelGroup direction={viewMode !== "split-vertical" ? "vertical" : "horizontal"}>
-        <ResizablePanel>
-          {isEmpty ? editIsEmpty() : <MarkdownEditor/>}
+        <ResizablePanel onResize={(size) => handleResize(size)}>
+          {isEmpty ? editIsEmpty() : <MarkdownEditor divider={panSize.panTop}/>}
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle/>
         <ResizablePanel>
-          {isEmpty ? previewIsEmpty() : <MarkdownPreview/>}
+          {isEmpty ? previewIsEmpty() : <MarkdownPreview divider={panSize.panBottom}/>}
         </ResizablePanel>
       </ResizablePanelGroup>
     )
   }
 
-  return isEmpty ? editIsEmpty() : <MarkdownEditor/>;
+  return isEmpty ? editIsEmpty() : <MarkdownEditor divider={0}/>;
 }

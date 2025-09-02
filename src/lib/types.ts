@@ -6,3 +6,5 @@ export type FsNode = {
 };
 
 export type ViewMode = | "edit" | "preview" | "split-vertical" | "split-horizontal";
+
+export type MkProps = {panTop: number, panBottom: number};

@@ -3,8 +3,8 @@ import Markdoc, {Node, RenderableTreeNode} from '@markdoc/markdoc';
 import React, {ReactNode, useLayoutEffect, useRef, useState} from "react";
 
 // todo merge with MarkdownEditor measure and stuff for better code
-export function MarkdownPreview() {
-  const {content} = useApp();
+export function MarkdownPreview({divider}: {divider: number}) {
+  const {content, viewMode} = useApp();
   const [rn, setRn] = useState<ReactNode>(<div>Loading...</div>);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = useState<{ width: number; height: number } | null>(null);
@@ -21,8 +21,12 @@ export function MarkdownPreview() {
   function measure(): void {
     const headerHeight = document.getElementById('sidebarHeader')?.offsetHeight ?? 0;
     const docHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0;
-    const height = docHeight-headerHeight-17; // 17 is margin and alike
+    let height = docHeight-headerHeight-17; // 17 is margin and alike
     const width = containerRef.current?.offsetWidth ?? 0;
+    if (viewMode === "split-horizontal") {
+      height = (divider / 100) * height;
+      console.log(height);
+    }
     setDims(prev => {
       if (!prev || prev.width !== width || prev.height !== height) {
         return { width, height };
@@ -54,8 +58,7 @@ export function MarkdownPreview() {
       window.removeEventListener('resize', onResize);
       ro.disconnect();
     };
-  }, []);
-
+  }, [divider, viewMode]);
 
   useLayoutEffect(() => {
     const ast: Node = Markdoc.parse(content);

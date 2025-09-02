@@ -1,17 +1,17 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import {useLayoutEffect, useRef, useState} from 'react';
 import {useApp} from "@/context/AppContext.tsx";
 import CodeMirror from '@uiw/react-codemirror';
 import {markdown, markdownLanguage} from '@codemirror/lang-markdown';
-import {languages } from '@codemirror/language-data';
+import {languages} from '@codemirror/language-data';
 import {githubLight} from "@uiw/codemirror-theme-github";
 import {EditorView, lineNumbers} from '@codemirror/view';
-import { lineNumbersRelative } from '@uiw/codemirror-extensions-line-numbers-relative';
+import {lineNumbersRelative} from '@uiw/codemirror-extensions-line-numbers-relative';
 import {useDebouncedEffect} from "@/hooks/useDebouncedEffect.ts";
 import {fsService} from "@/services/fs.ts";
 import {toast} from "sonner";
 
-export function MarkdownEditor() {
-  const {content, setContent, rootPath, selectedPath, selectedIsDir, showLineNumbers, relativeLineNumbers} = useApp();
+export function MarkdownEditor({divider}: {divider: number}) {
+  const {content, setContent, rootPath, selectedPath, selectedIsDir, showLineNumbers, relativeLineNumbers, viewMode} = useApp();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = useState<{ width: number; height: number } | null>(null);
 
@@ -27,8 +27,12 @@ export function MarkdownEditor() {
   function measure(): void {
     const headerHeight = document.getElementById('sidebarHeader')?.offsetHeight ?? 0;
     const docHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0;
-    const height = docHeight-headerHeight-17; // 17 is margin and alike
+    let height = docHeight-headerHeight-17; // 17 is margin and alike
     const width = containerRef.current?.offsetWidth ?? 0;
+    if (viewMode === "split-horizontal") {
+      height = (divider / 100) * height;
+      console.log(height);
+    }
     setDims(prev => {
       if (!prev || prev.width !== width || prev.height !== height) {
         return { width, height };
@@ -60,7 +64,7 @@ export function MarkdownEditor() {
       window.removeEventListener('resize', onResize);
       ro.disconnect();
     };
-  }, []);
+  }, [divider, viewMode]);
 
   /**
    * Save the note to the file system after a delay.

@@ -24,7 +24,7 @@ export default function Home() {
           </Button>
         </div>
       </div>
-    );}
+    )}
 
   return (
     <SidebarProvider>
