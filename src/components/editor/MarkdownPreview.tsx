@@ -23,10 +23,7 @@ export function MarkdownPreview({divider}: {divider: number}) {
     const docHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0;
     let height = docHeight-headerHeight-17; // 17 is margin and alike
     const width = containerRef.current?.offsetWidth ?? 0;
-    if (viewMode === "split-horizontal") {
-      height = (divider / 100) * height;
-      console.log(height);
-    }
+    if (viewMode === "split-horizontal") height = (divider / 100) * height;
     setDims(prev => {
       if (!prev || prev.width !== width || prev.height !== height) {
         return { width, height };
