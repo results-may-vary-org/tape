@@ -3,44 +3,54 @@ import {MarkdownEditor} from "@/components/editor/MardownEditor.tsx";
 import {getHello} from "@/services/hello.tsx";
 import {Eye, FileText} from "lucide-react";
 import {MarkdownPreview} from "@/components/editor/MarkdownPreview.tsx";
+import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable.tsx";
 
 export function Viewer() {
-  const {viewMode, selectedPath, selectedIsDir} = useApp();
+  const {viewMode, selectedPath, selectedIsDir, content} = useApp();
+  const isEmpty = !selectedPath || !content || selectedIsDir;
 
-  // if no content
-  if (!selectedPath || selectedIsDir) {
-    if (viewMode === "edit") {
-      return (
-        <div className="h-full w-full text-muted-foreground flex flex-col items-center justify-center">
-          <div>
-            <i>{getHello()}</i>
-          </div>
-          <div className="flex gap-2 pt-2">
-            <FileText className="size-5" />
-            <span>Select a note to start editing.</span>
-          </div>
+  function editIsEmpty() {
+    return (
+      <div className="h-full w-full text-muted-foreground flex flex-col items-center justify-center">
+        <div>
+          <i>{getHello()}</i>
         </div>
-      );
-    }
-    if (viewMode === "preview") {
-      return (
-        <div className="h-full w-full text-muted-foreground flex flex-col items-center justify-center">
-          <div><i>{getHello()}</i></div>
-          <div className="flex gap-2 pt-2">
-            <Eye className="size-5" />
-            <span>Select a note to read it.</span>
-          </div>
+        <div className="flex gap-2 pt-2">
+          <FileText className="size-5" />
+          <span>Select a note to start editing.</span>
         </div>
-      );
-    }
-
+      </div>
+    );
   }
 
-  if (viewMode === "preview") return <MarkdownPreview/>;
+  function previewIsEmpty() {
+    return (
+      <div className="h-full w-full text-muted-foreground flex flex-col items-center justify-center">
+        <div><i>{getHello()}</i></div>
+        <div className="flex gap-2 pt-2">
+          <Eye className="size-5" />
+          <span>Select a note to read it.</span>
+        </div>
+      </div>
+    );
+  }
 
-  if (viewMode === "split-vertical") {}
+  if (viewMode === "preview") return isEmpty ? previewIsEmpty() : <MarkdownPreview/>;
 
-  if (viewMode === "split-horizontal") {}
+  if (viewMode === "split-vertical" || viewMode === "split-horizontal") {
+    return (
+      // todo: dono why but the vertical do horizontal and vice versa
+      <ResizablePanelGroup direction={viewMode !== "split-vertical" ? "vertical" : "horizontal"}>
+        <ResizablePanel>
+          {isEmpty ? editIsEmpty() : <MarkdownEditor/>}
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel>
+          {isEmpty ? previewIsEmpty() : <MarkdownPreview/>}
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    )
+  }
 
-  return <MarkdownEditor/>;
+  return isEmpty ? editIsEmpty() : <MarkdownEditor/>;
 }
