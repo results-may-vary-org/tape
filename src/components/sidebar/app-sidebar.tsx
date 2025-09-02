@@ -1,16 +1,12 @@
-import * as React from "react"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-} from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu"
-import { useApp } from "@/context/AppContext"
-import { useModal } from "@/context/ModalContext"
-import type { FsNode } from "@/lib/types"
-import { cn } from "@/lib/utils"
-import { toast } from "sonner"
+import * as React from "react";
+import {Sidebar, SidebarContent, SidebarHeader} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { useApp } from "@/context/AppContext";
+import { useModal } from "@/context/ModalContext";
+import type { FsNode } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   ChevronDown,
   ChevronRight,
@@ -22,7 +18,8 @@ import {
   MousePointerSquareDashed,
   Pencil,
   Trash2,
-} from "lucide-react"
+} from "lucide-react";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 
 function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsNode; level: number; expanded: boolean; onToggle: (path: string) => void; isExpandedFn: (path: string) => boolean; }) {
   const { selectedPath, selectedIsDir, selectPath, createFolder, createNote, renamePath, deletePath } = useApp();
@@ -35,41 +32,41 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
 
   const handleNewFolder = async (e?: Event) => {
     e?.stopPropagation();
-    const name = await modal.prompt({ title: "Nouveau dossier", placeholder: "Nom du dossier" });
+    const name = await modal.prompt({ title: "New folder", placeholder: "Folder name" });
     if (name === null) return;
     const trimmed = name.trim();
     if (!trimmed) return;
     try {
       await createFolder(node.path, trimmed);
     } catch (err: any) {
-      toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création du dossier");
+      toast.error(typeof err === "string" ? err : err?.message || "Error creating folder");
     }
   };
 
   const handleNewNote = async (e?: Event) => {
     e?.stopPropagation();
-    const name = await modal.prompt({ title: "Nouvelle note", placeholder: "Nom de la note" });
+    const name = await modal.prompt({ title: "New note", placeholder: "Note name" });
     if (name === null) return;
     const trimmed = name.trim();
     if (!trimmed) return;
     try {
       await createNote(node.is_dir ? node.path : node.path.replace(/[^\/\\]+$/, ""), trimmed);
     } catch (err: any) {
-      toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création de la note");
+      toast.error(typeof err === "string" ? err : err?.message || "Error creating note");
     }
   };
 
   const handleRename = async (e?: Event) => {
     e?.stopPropagation();
     const defaultName = node.is_dir ? node.name : node.name.replace(/\.md$/i, "");
-    const name = await modal.prompt({ title: "Renommer", placeholder: "Nouveau nom", defaultValue: defaultName, confirmText: "Renommer" });
+    const name = await modal.prompt({ title: "Rename", placeholder: "New name", defaultValue: defaultName, confirmText: "Rename" });
     if (name === null) return;
     const trimmed = name.trim();
     if (!trimmed) return;
     try {
       await renamePath(node.path, trimmed);
     } catch (err: any) {
-      toast.error(typeof err === "string" ? err : err?.message || "Erreur lors du renommage");
+      toast.error(typeof err === "string" ? err : err?.message || "Error during rename");
     }
   };
 
@@ -78,7 +75,7 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
     try {
       await deletePath(node.path);
     } catch (err: any) {
-      toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la suppression");
+      toast.error(typeof err === "string" ? err : err?.message || "Error deleting");
     }
   };
 
@@ -101,7 +98,7 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
                   e.stopPropagation();
                   onToggle(node.path);
                 }}
-                aria-label={expanded ? "Réduire" : "Développer"}
+                aria-label={expanded ? "Collapse" : "Expand"}
               >
                 {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
               </button>
@@ -158,18 +155,18 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
         <ContextMenuContent className="z-50 min-w-48 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
           <ContextMenuItem onSelect={handleOpen} className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground">
             {node.is_dir ? <Folder className="size-4" /> : <FileText className="size-4" />}
-            Ouvrir
+            Open
           </ContextMenuItem>
           {node.is_dir && (
             <>
               <ContextMenuSeparator className="-mx-1 my-1 h-px bg-border" />
               <ContextMenuItem onSelect={handleNewFolder} className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground">
                 <FolderPlus className="size-4" />
-                Nouveau dossier
+                New folder
               </ContextMenuItem>
               <ContextMenuItem onSelect={handleNewNote} className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground">
                 <FilePlus className="size-4" />
-                Nouvelle note
+                New note
               </ContextMenuItem>
             </>
           )}
@@ -178,18 +175,18 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
               <ContextMenuSeparator className="-mx-1 my-1 h-px bg-border" />
               <ContextMenuItem onSelect={handleNewNote} className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground">
                 <FilePlus className="size-4" />
-                Nouvelle note dans ce dossier
+                New note in this folder
               </ContextMenuItem>
             </>
           )}
           <ContextMenuSeparator className="-mx-1 my-1 h-px bg-border" />
           <ContextMenuItem onSelect={handleRename} className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground">
             <Pencil className="size-4" />
-            Renommer
+            Rename
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleDelete} className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive outline-none data-[highlighted]:bg-destructive/10">
             <Trash2 className="size-4" />
-            Supprimer
+            Delete
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -239,52 +236,87 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar variant="inset" {...props}>
       <SidebarHeader className="p-2">
         <div className="flex items-center gap-2">
-          <Button size="icon" variant="outline" aria-label="Choisir dossier" onClick={pickRoot}>
-            <FolderOpen className="size-4" />
-          </Button>
-          <Button size="icon" variant="outline" aria-label="Tout réduire" onClick={collapseAll}>
-            <ChevronRight className="size-4" />
-          </Button>
-          <Button size="icon" variant="outline" aria-label="Tout développer" onClick={expandAll}>
-            <ChevronDown className="size-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            aria-label="Nouveau dossier"
-            onClick={async () => {
-              const name = await modal.prompt({ title: "Nouveau dossier", placeholder: "Nom du dossier" });
-              if (name === null) return;
-              const trimmed = name.trim();
-              if (!trimmed) return;
-              try {
-                if (!rootPath) return;
-                await createFolder(rootPath, trimmed);
-              } catch (err: any) {
-                toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création du dossier");
-              }
-            }}
-          >
-            <FolderPlus className="size-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            aria-label="Nouvelle note"
-            onClick={async () => {
-              const name = await modal.prompt({ title: "Nouvelle note", placeholder: "Nom de la note" });
-              if (name === null) return;
-              const trimmed = name.trim();
-              if (!trimmed) return;
-              try {
-                await createNote(parentForNew || rootPath!, trimmed);
-              } catch (err: any) {
-                toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création de la note");
-              }
-            }}
-          >
-            <FilePlus className="size-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="outline" aria-label="Choose folder" onClick={pickRoot}>
+                <FolderOpen className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Choose a folder</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="outline" aria-label="Collapse all" onClick={collapseAll}>
+                <ChevronRight className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Collapse all</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="outline" aria-label="Expand all" onClick={expandAll}>
+                <ChevronDown className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Expand all</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                aria-label="New folder"
+                onClick={async () => {
+                  const name = await modal.prompt({ title: "New folder", placeholder: "Folder name" });
+                  if (name === null) return;
+                  const trimmed = name.trim();
+                  if (!trimmed) return;
+                  try {
+                    if (!rootPath) return;
+                    await createFolder(rootPath, trimmed);
+                  } catch (err: any) {
+                    toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création du dossier");
+                  }
+                }}
+              >
+                <FolderPlus className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>New folder</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                aria-label="Nouvelle note"
+                onClick={async () => {
+                  const name = await modal.prompt({ title: "Nouvelle note", placeholder: "Nom de la note" });
+                  if (name === null) return;
+                  const trimmed = name.trim();
+                  if (!trimmed) return;
+                  try {
+                    await createNote(parentForNew || rootPath!, trimmed);
+                  } catch (err: any) {
+                    toast.error(typeof err === "string" ? err : err?.message || "Erreur lors de la création de la note");
+                  }
+                }}
+              >
+                <FilePlus className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>New note</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </SidebarHeader>
       <SidebarContent>

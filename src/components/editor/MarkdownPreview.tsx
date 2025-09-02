@@ -1,10 +1,14 @@
 import {useApp} from "@/context/AppContext.tsx";
 import Markdoc, {Node, RenderableTreeNode} from '@markdoc/markdoc';
-import React, {ReactNode, useLayoutEffect, useRef, useState} from "react";
+import React, {JSX, ReactNode, useLayoutEffect, useRef, useState} from "react";
+import {Prism} from "react-syntax-highlighter";
+import {oneDark, oneLight} from "react-syntax-highlighter/dist/esm/styles/prism";
+import {useTheme} from "@/context/theme-provider.tsx";
 
 // todo merge with MarkdownEditor measure and stuff for better code
-export function MarkdownPreview({divider}: {divider: number}) {
+export function MarkdownPreview({divider}: {divider: number}): JSX.Element {
   const {content, viewMode} = useApp();
+  const {theme} = useTheme();
   const [rn, setRn] = useState<ReactNode>(<div>Loading...</div>);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = useState<{ width: number; height: number } | null>(null);
@@ -57,12 +61,32 @@ export function MarkdownPreview({divider}: {divider: number}) {
     };
   }, [divider, viewMode]);
 
+  function Fence({children, language}: {children: string | string[], language: string}) {
+    return <Prism
+      key={language}
+      language={language}
+      style={theme === "light" ? oneLight : oneDark}
+    >
+      {children}
+    </Prism>;
+  }
+
+  const fence = {
+    render: 'Fence',
+    attributes: {
+      language: {
+        type: String
+      }
+    }
+  };
+
   useLayoutEffect(() => {
+    console.log("render");
     const ast: Node = Markdoc.parse(content);
-    const rtn: RenderableTreeNode = Markdoc.transform(ast);
-    const reactNode: ReactNode = Markdoc.renderers.react(rtn, React);
+    const rtn: RenderableTreeNode = Markdoc.transform(ast, {nodes: {fence}});
+    const reactNode: ReactNode = Markdoc.renderers.react(rtn, React, {components: {Fence}});
     setRn(reactNode);
-  }, [content]);
+  }, [content, theme]);
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%' }}>

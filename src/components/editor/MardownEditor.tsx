@@ -3,15 +3,17 @@ import {useApp} from "@/context/AppContext.tsx";
 import CodeMirror from '@uiw/react-codemirror';
 import {markdown, markdownLanguage} from '@codemirror/lang-markdown';
 import {languages} from '@codemirror/language-data';
-import {githubLight} from "@uiw/codemirror-theme-github";
+import {githubDark, githubLight} from "@uiw/codemirror-theme-github";
 import {EditorView, lineNumbers} from '@codemirror/view';
 import {lineNumbersRelative} from '@uiw/codemirror-extensions-line-numbers-relative';
 import {useDebouncedEffect} from "@/hooks/useDebouncedEffect.ts";
 import {fsService} from "@/services/fs.ts";
 import {toast} from "sonner";
+import {useTheme} from "@/context/theme-provider.tsx";
 
 export function MarkdownEditor({divider}: {divider: number}) {
   const {content, setContent, rootPath, selectedPath, selectedIsDir, showLineNumbers, relativeLineNumbers, viewMode} = useApp();
+  const {theme} = useTheme();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = useState<{ width: number; height: number } | null>(null);
 
@@ -72,7 +74,7 @@ export function MarkdownEditor({divider}: {divider: number}) {
       .writeNote(rootPath, selectedPath, content)
       .then(() => toast.success("note saved"))
       .catch((err) => toast.error(err.message));
-  }, [content, selectedPath, selectedIsDir, rootPath], 500);
+  }, [content, selectedPath, selectedIsDir, rootPath], 250);
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
@@ -81,7 +83,7 @@ export function MarkdownEditor({divider}: {divider: number}) {
           height={`${dims.height}px`}
           value={content}
           onChange={(value) => setContent(value)}
-          theme={githubLight}
+          theme={theme === "light" ? githubLight : githubDark}
           extensions={[
             markdown({ base: markdownLanguage, codeLanguages: languages }),
             EditorView.lineWrapping,

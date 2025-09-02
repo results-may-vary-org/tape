@@ -8,8 +8,8 @@ import {useState} from "react";
 import {MkProps} from "@/lib/types.ts";
 
 export function Viewer() {
-  const {viewMode, selectedPath, selectedIsDir, content} = useApp();
-  const isEmpty = !selectedPath || !content || selectedIsDir;
+  const {viewMode, selectedPath, selectedIsDir} = useApp();
+  const isEmpty = !selectedPath || selectedIsDir;
   const [panSize, setPanSize] = useState<MkProps>({panTop: 0, panBottom: 0});
 
   function editIsEmpty() {
