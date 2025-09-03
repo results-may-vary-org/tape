@@ -1,14 +1,6 @@
 import {Fragment} from "react";
-import {
-  Breadcrumb,
-  BreadcrumbEllipsis,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator
-} from "@/components/ui/breadcrumb.tsx";
+import {Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator} from "@/components/ui/breadcrumb.tsx";
 import {useApp} from "@/context/AppContext.tsx";
-
 
 export function BreadcrumbView() {
   const { rootPath, selectedPath } = useApp();
@@ -17,14 +9,14 @@ export function BreadcrumbView() {
   const normalizedRoot = (rootPath || "").replace(/\\/g, "/");
   const normalizedSel = (selectedPath || "").replace(/\\/g, "/");
 
-  // We don't display the main folder (rootName) in the breadcrumb, only relative parts.
+  // we don't display the main folder (rootName) in the breadcrumb, only relative parts
   const cleanedPath = normalizedSel.slice(normalizedRoot.length);
 
   const breadcrumbParts = cleanedPath ? cleanedPath.split("/").filter(Boolean) : ["no selection"];
 
   return (
     <Breadcrumb>
-      <BreadcrumbList>
+      <BreadcrumbList className="flex-nowrap">
         {breadcrumbParts.map((value, index) => {
           // keep the first and two lasts part of the path
           const isPartToShow = index === 0 || index >= breadcrumbParts.length-2;
@@ -33,7 +25,7 @@ export function BreadcrumbView() {
           const isLast = index === breadcrumbParts.length - 1;
           return (
             <Fragment key={value+index}>
-              {isPartToShow && <BreadcrumbItem><BreadcrumbPage>{value}</BreadcrumbPage></BreadcrumbItem>}
+              {isPartToShow && <BreadcrumbItem><BreadcrumbPage className={isLast ? "truncate max-w-30" : ""}>{value}</BreadcrumbPage></BreadcrumbItem>}
               {isEllipsisToShow && <BreadcrumbItem><BreadcrumbEllipsis/></BreadcrumbItem>}
               {isEllipsisToShow && <BreadcrumbSeparator/>}
               {isPartToShow && !isLast && <BreadcrumbSeparator/>}

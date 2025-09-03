@@ -18,6 +18,7 @@ import {
   MousePointerSquareDashed,
   Pencil,
   Trash2,
+  CircleCheck
 } from "lucide-react";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 
@@ -106,7 +107,7 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
               <span className="w-4 inline-block" />
             )}
             {node.is_dir ? <Folder className="size-4 text-muted-foreground" /> : <FileText className="size-4 text-muted-foreground" />}
-            <span className={cn("text-xs", node.is_dir ? "font-semibold" : "")}>{node.name}</span>
+            <span className={cn("text-xs truncate max-w-[110px]", node.is_dir ? "font-semibold" : "")}>{node.name}</span>
             {(() => {
               let showDot = false;
               if (!selectedIsDir && selectedPath) {
@@ -143,7 +144,7 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
               return (
                 <div className={cn("ml-auto", showDot ? "opacity-100" : "opacity-40")}>
                   {showDot ? (
-                    <span className="inline-block size-2 rounded-full bg-green-500" />
+                    <CircleCheck className="size-3.5" color="green"/>
                   ) : (
                     <MousePointerSquareDashed className="size-3.5" />
                   )}

@@ -28,7 +28,7 @@ export function ConfigSelector() {
             <Switch checked={relativeLineNumbers} onCheckedChange={setRelativeLineNumbers} disabled={!showLineNumbers} />
           </Label>
           <Label className="justify-between">
-            <span>Show config in sidebar</span>
+            <span>Show config in sidebar [β feature]</span>
             <Switch checked={showConfigInSidebar} onCheckedChange={setShowConfigInSidebar} />
           </Label>
         </div>
