@@ -15,6 +15,8 @@ export type AppState = {
   // editor settings
   showLineNumbers: boolean;
   relativeLineNumbers: boolean;
+  // workspace settings
+  showConfigInSidebar: boolean;
   // actions
   pickRoot: () => Promise<void>;
   refreshTree: (root?: string | null) => Promise<void>;
@@ -23,6 +25,7 @@ export type AppState = {
   setViewMode: (m: ViewMode) => void;
   setShowLineNumbers: (v: boolean) => void;
   setRelativeLineNumbers: (v: boolean) => void;
+  setShowConfigInSidebar: (v: boolean) => void;
   createFolder: (parent: string, name: string) => Promise<void>;
   createNote: (dir: string, name: string) => Promise<void>;
   renamePath: (path: string, newName: string) => Promise<void>;
@@ -48,6 +51,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const v = localStorage.getItem("editor.relativeLineNumbers");
     return v === null ? false : v === "true";
   });
+  const [showConfigInSidebar, setShowConfigInSidebar] = useState<boolean>(false);
+  const [lastNotePath, setLastNotePath] = useState<string | null>(null);
 
   // On first mount: restore last root from persistent settings, validate it, or ask user
   useEffect(() => {
@@ -98,6 +103,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setOrientation(s.viewMode === "split-horizontal" ? "horizontal" : "vertical");
         setShowLineNumbers(s.showLineNumbers);
         setRelativeLineNumbers(s.relativeLineNumbers);
+        setShowConfigInSidebar(Boolean(s.showConfigInSidebar));
+        setLastNotePath(s.lastNotePath ?? null);
       } catch (err) {
         console.warn("Failed to load settings from backend", err);
       }
@@ -108,6 +115,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!rootPath) return;
     refreshTree(rootPath);
   }, [rootPath]);
+
+  // Auto-select last opened note on startup (excluding config file)
+  useEffect(() => {
+    if (!rootPath) return;
+    if (selectedPath) return;
+    if (!lastNotePath) return;
+
+    const norm = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/, "");
+    const cfgPath = `${norm(rootPath)}/carnet.config.json`;
+    if (norm(lastNotePath) === norm(cfgPath)) return;
+
+    // Check the lastNotePath exists in the current tree and is a file
+    const existsInTree = (nodes: FsNode[]): boolean => {
+      for (const n of nodes) {
+        if (norm(n.path) === norm(lastNotePath) && !n.is_dir) return true;
+        if (n.children && n.children.length && existsInTree(n.children)) return true;
+      }
+      return false;
+    };
+
+    if (existsInTree(tree)) {
+      // Fire and forget; selectPath will read and set selected state
+      selectPath(lastNotePath, false).catch(() => void 0);
+    }
+  }, [rootPath, tree, lastNotePath, selectedPath]);
 
   async function pickRoot() {
     const p = await fsService.pickRoot();
@@ -134,6 +166,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!isDir && rootPath) {
       const c = await fsService.readNote(rootPath, path);
       setContent(c);
+      const norm = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/, "");
+      const cfgPath = `${norm(rootPath)}/carnet.config.json`;
+      const isConfig = norm(path) === norm(cfgPath);
+      if (!isConfig) {
+        setLastNotePath(path);
+        // persist last note path along with other settings
+        try {
+          await settingsService.save(rootPath, {
+            viewMode,
+            showLineNumbers,
+            relativeLineNumbers,
+            showConfigInSidebar,
+            lastNotePath: path,
+          });
+        } catch (_) { /* ignore */ }
+      }
     } else {
       setContent("");
     }
@@ -187,6 +235,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     orientation,
     showLineNumbers,
     relativeLineNumbers,
+    showConfigInSidebar,
     pickRoot,
     refreshTree,
     selectPath,
@@ -200,6 +249,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           viewMode: m,
           showLineNumbers,
           relativeLineNumbers,
+          showConfigInSidebar,
+          lastNotePath,
         }).catch(() => void 0);
       }
     },
@@ -212,6 +263,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           viewMode,
           showLineNumbers: v,
           relativeLineNumbers,
+          showConfigInSidebar,
+          lastNotePath,
         }).catch(() => void 0);
       }
     },
@@ -224,6 +277,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           viewMode,
           showLineNumbers,
           relativeLineNumbers: v,
+          showConfigInSidebar,
+          lastNotePath,
+        }).catch(() => void 0);
+      }
+    },
+    setShowConfigInSidebar: (v: boolean) => {
+      setShowConfigInSidebar(v);
+      if (rootPath) {
+        settingsService.save(rootPath, {
+          viewMode,
+          showLineNumbers,
+          relativeLineNumbers,
+          showConfigInSidebar: v,
+          lastNotePath,
         }).catch(() => void 0);
       }
     },
@@ -231,7 +298,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     createNote,
     renamePath,
     deletePath,
-  }), [rootPath, tree, selectedPath, selectedIsDir, content, viewMode, orientation, showLineNumbers, relativeLineNumbers]);
+  }), [rootPath, tree, selectedPath, selectedIsDir, content, viewMode, orientation, showLineNumbers, relativeLineNumbers, showConfigInSidebar, lastNotePath]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

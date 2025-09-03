@@ -203,7 +203,7 @@ function TreeNode({ node, level, expanded, onToggle, isExpandedFn }: { node: FsN
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const modal = useModal();
-  const { rootPath, pickRoot, tree, selectedPath, selectedIsDir, createFolder, createNote } = useApp();
+  const { rootPath, pickRoot, tree, selectedPath, selectedIsDir, createFolder, createNote, showConfigInSidebar, selectPath } = useApp();
   const parentForNew = selectedPath && selectedIsDir ? selectedPath : rootPath ?? "";
 
   const normalizePath = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/,"");
@@ -231,6 +231,45 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setExpandedPaths(next);
   };
   const collapseAll = () => setExpandedPaths(new Set());
+
+  // Auto-expand ancestor folders to reveal the selected note (excluding config file)
+  React.useEffect(() => {
+    if (!rootPath) return;
+    if (!selectedPath) return;
+    if (selectedIsDir) return;
+
+    const norm = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/, "");
+    const cfgPath = `${norm(rootPath)}/carnet.config.json`;
+    if (norm(selectedPath) === norm(cfgPath)) return;
+
+    // Find ancestor directories for selectedPath within the current tree
+    const ancestors: string[] = [];
+    const walk = (nodes: FsNode[], parents: string[]): boolean => {
+      for (const n of nodes) {
+        if (n.is_dir) {
+          const newParents = [...parents, norm(n.path)];
+          if (n.children && n.children.length) {
+            if (walk(n.children, newParents)) return true;
+          }
+        } else {
+          if (norm(n.path) === norm(selectedPath)) {
+            ancestors.push(...parents);
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    walk(tree, []);
+
+    if (ancestors.length) {
+      setExpandedPaths((prev) => {
+        const next = new Set(prev);
+        for (const a of ancestors) next.add(norm(a));
+        return next;
+      });
+    }
+  }, [rootPath, tree, selectedPath, selectedIsDir]);
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -325,6 +364,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {tree.map((n) => (
             <TreeNode key={n.path} node={n} level={0} expanded={isExpanded(n.path)} onToggle={togglePath} isExpandedFn={isExpanded} />
           ))}
+          {showConfigInSidebar && rootPath && (
+            <>
+              <div className="border-t my-2" />
+              {(() => {
+                const norm = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/, "");
+                const cfgPath = `${norm(rootPath)}/carnet.config.json`;
+                const isSelected = selectedPath && norm(selectedPath) === norm(cfgPath);
+                return (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-accent",
+                      isSelected && "bg-accent"
+                    )}
+                    onClick={() => selectPath(cfgPath, false)}
+                    title={cfgPath}
+                  >
+                    <span className="w-4 inline-block" />
+                    <FileText className="size-4 text-muted-foreground" />
+                    <span className="text-xs">carnet.config.json</span>
+                  </div>
+                );
+              })()}
+            </>
+          )}
         </div>
       </SidebarContent>
     </Sidebar>

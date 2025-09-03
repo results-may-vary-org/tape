@@ -245,11 +245,14 @@ fn pick_root() -> Option<String> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")] // Keep JSON keys in camelCase for frontend
+#[serde(rename_all = "camelCase")]
+#[serde(default)] // Allow missing fields when deserializing from older configs
 struct Settings {
     view_mode: String,
     show_line_numbers: bool,
     relative_line_numbers: bool,
+    show_config_in_sidebar: bool,
+    last_note_path: Option<String>,
 }
 
 impl Default for Settings {
@@ -258,6 +261,8 @@ impl Default for Settings {
             view_mode: "edit".to_string(),
             show_line_numbers: true,
             relative_line_numbers: false,
+            show_config_in_sidebar: false,
+            last_note_path: None,
         }
     }
 }

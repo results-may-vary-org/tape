@@ -1,5 +1,6 @@
-import {useLayoutEffect, useRef, useState} from 'react';
+import {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {useApp} from "@/context/AppContext.tsx";
+import { useModal } from "@/context/ModalContext";
 import CodeMirror from '@uiw/react-codemirror';
 import {markdown, markdownLanguage} from '@codemirror/lang-markdown';
 import {languages} from '@codemirror/language-data';
@@ -16,6 +17,13 @@ export function MarkdownEditor({divider}: {divider: number}) {
   const {theme} = useTheme();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = useState<{ width: number; height: number } | null>(null);
+  const modal = useModal();
+  const reloadPromptedRef = useRef(false);
+
+  // Reset the reload prompt flag whenever the selected file changes
+  useEffect(() => {
+    reloadPromptedRef.current = false;
+  }, [selectedPath]);
 
   /**
    * Measures and calculates the dimensions (width and height) for Codemirror based on the viewport size and other offsets.
@@ -70,9 +78,27 @@ export function MarkdownEditor({divider}: {divider: number}) {
    */
   useDebouncedEffect(() => {
     if (!rootPath || !selectedPath || selectedIsDir) return;
+    const norm = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/, "");
+    const cfgPath = `${norm(rootPath)}/carnet.config.json`;
+    const isConfig = norm(selectedPath) === norm(cfgPath);
+
     fsService
       .writeNote(rootPath, selectedPath, content)
-      .then(() => toast.success("note saved"))
+      .then(async () => {
+        toast.success("note saved");
+        if (isConfig && !reloadPromptedRef.current) {
+          reloadPromptedRef.current = true;
+          const confirmed = await modal.confirm({
+            title: "Recharger requis",
+            description: "Vous avez modifié le fichier de configuration. Voulez-vous recharger l'interface pour appliquer les changements ?",
+            confirmText: "Recharger",
+            cancelText: "Plus tard",
+          });
+          if (confirmed) {
+            window.location.reload();
+          }
+        }
+      })
       .catch((err) => toast.error(err.message));
   }, [content, selectedPath, selectedIsDir, rootPath], 250);
 

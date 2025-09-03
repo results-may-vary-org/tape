@@ -4,6 +4,8 @@ export type AppSettings = {
   viewMode: "edit" | "preview" | "split-vertical" | "split-horizontal";
   showLineNumbers: boolean;
   relativeLineNumbers: boolean;
+  showConfigInSidebar: boolean;
+  lastNotePath?: string | null;
 };
 
 export const settingsService = {
