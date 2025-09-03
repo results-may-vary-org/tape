@@ -250,3 +250,17 @@ code {
     line-height: 1.25rem;
     font-weight: 600;
 }
+
+
+/* breadcrumb */
+@media (max-width: 695px) {
+  /* Hide all breadcrumb items except the last (file name) */
+  .app-breadcrumb .app-breadcrumb-item { display: none; }
+  .app-breadcrumb .app-breadcrumb-item.app-breadcrumb-last { display: inline-flex; }
+  /* Hide separators entirely on small screens */
+  .app-breadcrumb .app-breadcrumb-sep { display: none; }
+}
+
+@media (max-width: 400px) {
+  .app-breadcrumb { display: none; }
+}

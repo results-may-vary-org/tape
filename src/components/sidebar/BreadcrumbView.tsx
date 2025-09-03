@@ -15,7 +15,7 @@ export function BreadcrumbView() {
   const breadcrumbParts = cleanedPath ? cleanedPath.split("/").filter(Boolean) : ["no selection"];
 
   return (
-    <Breadcrumb>
+    <Breadcrumb className="app-breadcrumb">
       <BreadcrumbList className="flex-nowrap">
         {breadcrumbParts.map((value, index) => {
           // keep the first and two lasts part of the path
@@ -25,10 +25,18 @@ export function BreadcrumbView() {
           const isLast = index === breadcrumbParts.length - 1;
           return (
             <Fragment key={value+index}>
-              {isPartToShow && <BreadcrumbItem><BreadcrumbPage className={isLast ? "truncate max-w-30" : ""}>{value}</BreadcrumbPage></BreadcrumbItem>}
-              {isEllipsisToShow && <BreadcrumbItem><BreadcrumbEllipsis/></BreadcrumbItem>}
-              {isEllipsisToShow && <BreadcrumbSeparator/>}
-              {isPartToShow && !isLast && <BreadcrumbSeparator/>}
+              {isPartToShow && (
+                <BreadcrumbItem className={`app-breadcrumb-item ${isLast ? 'app-breadcrumb-last' : ''}`}>
+                  <BreadcrumbPage className={isLast ? "truncate max-w-30" : ""}>{value}</BreadcrumbPage>
+                </BreadcrumbItem>
+              )}
+              {isEllipsisToShow && (
+                <BreadcrumbItem className="app-breadcrumb-item app-breadcrumb-ellipsis">
+                  <BreadcrumbEllipsis/>
+                </BreadcrumbItem>
+              )}
+              {isEllipsisToShow && <BreadcrumbSeparator className="app-breadcrumb-sep"/>}
+              {isPartToShow && !isLast && <BreadcrumbSeparator className="app-breadcrumb-sep"/>}
             </Fragment>
           )
         })}
