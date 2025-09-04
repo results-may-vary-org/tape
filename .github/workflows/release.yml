@@ -43,7 +43,7 @@ jobs:
 
   publish-tauri:
     needs: check-version
-    if: needs.check-version.outputs.should_release == 'true'
+    #if: needs.check-version.outputs.should_release == 'true'
     permissions:
       contents: write
     strategy:
