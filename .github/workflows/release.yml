@@ -84,6 +84,7 @@ jobs:
         working-directory: ./
         run: |
           curl -fsSL https://bun.sh/install | bash
+          source /home/runner/.bashrc
           bun install
 
       - name: Import GPG key
