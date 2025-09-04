@@ -3,12 +3,16 @@
 A debloated Markdown note-taking app.
 
 <p align="center">
-  <img src="./app-icon.png" alt="Carnet icon" width="100" />
+  <img src="./app-icon.png" alt="Carnet icon" width="100"/>
 </p>
 
 <img alt="Static Badge" src="https://img.shields.io/badge/Still_maintened-Yes_%3A)-green">
 
 ---
+
+<p align="center">
+  <img src="./screenshot.png" alt="Carnet screenshot"/>
+</p>
 
 ## Why do you have made another note-taking app?
 
@@ -49,14 +53,17 @@ You can embark with me by contributing or via a [tips](https://github.com/sponso
 
 - Tauri 2
 - React, TypeScript, Vite
-- Shadcn, Lucide icons
-- CodeMirror 6 (Markdown), Markdoc
-- Prism for syntax highlighting
+- [Shadcn](https://ui.shadcn.com/), [Lucide icons](https://lucide.dev/)
+- [CodeMirror 6 (Markdown)](https://codemirror.net/), [Markdoc](https://markdoc.dev/)
+- [Prism for syntax highlighting](https://prismjs.com/)
+- [CSS for the markdown comes from here](https://github.com/sindresorhus/github-markdown-css)
 
 ## Some idea for the future
 
+- Edit the config directly in Carnet
 - Global search across notes
-- Command palette and keyboard shortcuts
+- Keyboard shortcuts
+- Command palette
 
 ## Contributing
 
@@ -64,7 +71,6 @@ Contributions are welcome! Feel free to submit a PR.
 
 ## Code of conduct, license, authors, changelog, contributing
 
-See the following file :
 - [code of conduct](CODE_OF_CONDUCT.md)
 - [license](LICENSE)
 - [authors](AUTHORS)
