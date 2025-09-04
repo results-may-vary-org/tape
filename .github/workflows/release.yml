@@ -82,9 +82,11 @@ jobs:
 
       - name: install frontend dependencies
         working-directory: ./
+        shell: bash
         run: |
           curl -fsSL https://bun.sh/install | bash
-          source /home/runner/.bashrc
+          export BUN_INSTALL="$HOME/.bun"
+          export PATH="$BUN_INSTALL/bin:$PATH"
           bun install
 
       - name: Import GPG key
