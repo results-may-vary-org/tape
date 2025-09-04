@@ -1,9 +1,9 @@
-# Carnet
+# Cassette
 
 A debloated Markdown note-taking app.
 
 <p align="center">
-  <img src="./app-icon.png" alt="Carnet icon" width="100"/>
+  <img src="./app-icon.png" alt="cassette icon" width="100"/>
 </p>
 
 <img alt="Static Badge" src="https://img.shields.io/badge/Still_maintened-Yes_%3A)-green">
@@ -11,7 +11,7 @@ A debloated Markdown note-taking app.
 ---
 
 <p align="center">
-  <img src="./screenshot.png" alt="Carnet screenshot"/>
+  <img src="./screenshot.png" alt="cassette screenshot"/>
 </p>
 
 ## Why do you have made another note-taking app?
@@ -24,6 +24,8 @@ Plus I have searched for an OSS note-taking app that is simple and not based on 
 So I started this project. I know that developing this kind of stuff implies a lot of stuff (or maybe not if I want to keep it simple) but this is a cool adventure so - let's go :)
 
 You can embark with me by contributing or via a [tips](https://github.com/sponsors/bouteillerAlan).
+
+[What the duck is a cassette?](https://en.wikipedia.org/wiki/Cassette_tape)
 
 ## Features
 
@@ -60,7 +62,7 @@ You can embark with me by contributing or via a [tips](https://github.com/sponso
 
 ## Some idea for the future
 
-- Edit the config directly in Carnet
+- Edit the config directly in Cassette
 - Global search across notes
 - Keyboard shortcuts
 - Command palette
