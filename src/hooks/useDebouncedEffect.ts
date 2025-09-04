@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 export function useDebouncedEffect(effect: () => void | (() => void), deps: unknown[], delay = 500) {
-  const cleanupRef = useRef<void | (() => void)>();
+  const cleanupRef = useRef<void | (() => void)>(null);
   useEffect(() => {
     const id = setTimeout(() => {
       cleanupRef.current = effect() || undefined;

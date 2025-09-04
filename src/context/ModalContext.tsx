@@ -30,8 +30,8 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [promptOpen, setPromptOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const resolvePromptRef = useRef<(value: string | null) => void>();
-  const resolveConfirmRef = useRef<(value: boolean) => void>();
+  const resolvePromptRef = useRef<(value: string | null) => void>(null);
+  const resolveConfirmRef = useRef<(value: boolean) => void>(null);
 
   const [promptState, setPromptState] = useState<PromptOptions>({});
   const [confirmState, setConfirmState] = useState<ConfirmOptions>({});
