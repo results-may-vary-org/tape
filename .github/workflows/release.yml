@@ -89,22 +89,22 @@ jobs:
           export PATH="$BUN_INSTALL/bin:$PATH"
           bun install
 
-      - name: Import GPG key
-        if: matrix.platform == 'ubuntu-22.04'
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v5
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      #- name: Import GPG key
+      #  if: matrix.platform == 'ubuntu-22.04'
+      #  id: import_gpg
+      #  uses: crazy-max/ghaction-import-gpg@v5
+      #  with:
+      #    gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+      #    passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: build and publish
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WEBKIT_DISABLE_COMPOSITING_MODE: 1
-          SIGN: 1
-          SIGN_KEY: ${{ steps.import_gpg.outputs.keyid }}
-          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      #   SIGN: 1
+      #   SIGN_KEY: ${{ steps.import_gpg.outputs.keyid }}
+      #   APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         with:
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "Carnet v__VERSION__"
