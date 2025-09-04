@@ -4,11 +4,13 @@ import React, {JSX, ReactNode, useLayoutEffect, useRef, useState} from "react";
 import {Prism} from "react-syntax-highlighter";
 import {oneDark, oneLight} from "react-syntax-highlighter/dist/esm/styles/prism";
 import {useTheme} from "@/context/theme-provider.tsx";
+import '@/gh-mk-light.css';
+import '@/gh-mk-dark.css';
 
 // todo merge with MarkdownEditor measure and stuff for better code
 export function MarkdownPreview({divider}: {divider: number}): JSX.Element {
   const {content, viewMode} = useApp();
-  const {theme} = useTheme();
+  const {themeStrict} = useTheme();
   const [rn, setRn] = useState<ReactNode>(<div>Loading...</div>);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = useState<{ width: number; height: number } | null>(null);
@@ -65,7 +67,7 @@ export function MarkdownPreview({divider}: {divider: number}): JSX.Element {
     return <Prism
       key={language}
       language={language}
-      style={theme === "light" ? oneLight : oneDark}
+      style={themeStrict === "light" ? oneLight : oneDark}
     >
       {children}
     </Prism>;
@@ -86,12 +88,12 @@ export function MarkdownPreview({divider}: {divider: number}): JSX.Element {
     const rtn: RenderableTreeNode = Markdoc.transform(ast, {nodes: {fence}});
     const reactNode: ReactNode = Markdoc.renderers.react(rtn, React, {components: {Fence}});
     setRn(reactNode);
-  }, [content, theme]);
+  }, [content, themeStrict]);
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
       {dims && dims.width > 0 && dims.height > 0 ? (
-        <div style={{height: dims.height}} className="p-2 overflow-y-scroll">{rn}</div>
+        <div style={{height: dims.height}} className={`p-2 overflow-y-scroll gh-mk markdown-body-${themeStrict}`}>{rn}</div>
       ) : <div className="h-full w-full text-muted-foreground flex flex-col items-center justify-center">
         Something goes wrong with the editor.
         <a href="https://github.com/results-may-vary-org" target="_blank" rel="noopener noreferrer">Contact-us</a>

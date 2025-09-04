@@ -145,113 +145,6 @@ button {
   }
 }
 
-/**
- * TYPOGRAPHY for the markdown viewer
- */
-:root {
-    --muted: #f3f4f6;
-    --border: #e5e7eb;
-}
-
-h1, h2, h3, h4 {
-    scroll-margin-top: 5rem;
-    letter-spacing: -0.025em;
-    font-weight: 600;
-}
-
-h1 {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-    font-weight: 800;
-    text-wrap: balance;
-}
-
-h2 {
-    padding-bottom: 0.5rem;
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-}
-h2:first-child {
-    margin-top: 0;
-}
-
-h3 {
-    font-size: 1.5rem;
-    line-height: 2rem;
-}
-
-h4 {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-}
-
-p {
-    line-height: 1.75rem;
-}
-p:not(:first-child) {
-    margin-top: 1.5rem;
-}
-
-blockquote {
-    margin-top: 1.5rem;
-    border-left: 2px solid var(--border);
-    padding-left: 1.5rem;
-    font-style: italic;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-table tr {
-    margin: 0;
-    padding: 0;
-    border-top: 1px solid var(--border);
-}
-table tbody tr:nth-child(even) {
-    background-color: var(--muted);
-}
-
-table th {
-    border: 1px solid var(--border);
-    padding: 0.5rem 1rem;
-    text-align: left;
-    font-weight: 700;
-}
-table th[align="center"] { text-align: center; }
-table th[align="right"]  { text-align: right;  }
-
-table td {
-    border: 1px solid var(--border);
-    padding: 0.5rem 1rem;
-    text-align: left;
-}
-table td[align="center"] { text-align: center; }
-table td[align="right"]  { text-align: right;  }
-
-ul {
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
-    margin-left: 1.5rem;
-    list-style-type: disc;
-}
-ul > li {
-    margin-top: 0.5rem;
-}
-
-code {
-    position: relative;
-    background-color: var(--muted);
-    border-radius: 0.25rem;
-    padding: 0.2rem 0.3rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 600;
-}
-
-
 /* breadcrumb */
 @media (max-width: 695px) {
   /* Hide all breadcrumb items except the last (file name) */
@@ -263,4 +156,24 @@ code {
 
 @media (max-width: 400px) {
   .app-breadcrumb { display: none; }
+}
+
+/*github style markdown*/
+.gh-mk ul, .gh-mk ol { /* revert style defined by tailwindcss */
+    all: revert;
+}
+
+.gh-mk {
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+@media (max-width: 767px) {
+    .gh-mk {
+        padding: 5px;
+    }
+}
+.gh-mk table {
+    display: table;
 }
