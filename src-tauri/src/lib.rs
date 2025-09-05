@@ -366,7 +366,7 @@ fn save_last_root(app: tauri::AppHandle, root: Option<String>) -> Result<(), Str
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1"); // https://github.com/tauri-apps/tauri/issues/11994
-    std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1"); // alternatively `WEBKIT_DISABLE_COMPOSITING_MODE` if this one is not enough
+    std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
