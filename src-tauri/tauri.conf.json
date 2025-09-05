@@ -20,7 +20,7 @@
     "security": {
       "csp": null
     }
-  },
+},
   "bundle": {
     "active": true,
     "targets": "all",
@@ -31,15 +31,5 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
-  },
-  "plugins": {
-    "fs": {
-      "scope": [
-        { "path": "all" }
-      ]
-    },
-    "dialog": {
-      "scope": ["all"]
-    }
   }
 }
