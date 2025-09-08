@@ -1,9 +1,9 @@
 # Tape
 
-A debloated Markdown note-taking app.
+A debloated markdown note-taking app.
 
 <p align="center">
-  <img src="./app-icon.png" alt="tape icon" width="100"/>
+  <img src="./tape_logo.png" alt="tape icon" width="100"/>
 </p>
 
 <img alt="Static Badge" src="https://img.shields.io/badge/Still_maintened-Yes_%3A)-green">
