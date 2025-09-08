@@ -1,9 +1,9 @@
-# Cassette
+# Tape
 
 A debloated Markdown note-taking app.
 
 <p align="center">
-  <img src="./app-icon.png" alt="cassette icon" width="100"/>
+  <img src="./app-icon.png" alt="tape icon" width="100"/>
 </p>
 
 <img alt="Static Badge" src="https://img.shields.io/badge/Still_maintened-Yes_%3A)-green">
@@ -11,7 +11,7 @@ A debloated Markdown note-taking app.
 ---
 
 <p align="center">
-  <img src="./screenshot.png" alt="cassette screenshot"/>
+  <img src="./screenshot.png" alt="tape screenshot"/>
 </p>
 
 ## Why do you have made another note-taking app?
@@ -25,7 +25,7 @@ So I started this project. I know that developing this kind of stuff implies a l
 
 You can embark with me by contributing or via a [tips](https://github.com/sponsors/bouteillerAlan).
 
-[What the duck is a cassette?](https://en.wikipedia.org/wiki/Cassette_tape)
+[What the duck is a tape?](https://en.wikipedia.org/wiki/Cassette_tape)
 
 ## Features
 
@@ -62,7 +62,7 @@ You can embark with me by contributing or via a [tips](https://github.com/sponso
 
 ## Some idea for the future
 
-- Edit the config directly in Cassette
+- Edit the config directly in Tape (wip)
 - Global search across notes
 - Keyboard shortcuts
 - Command palette

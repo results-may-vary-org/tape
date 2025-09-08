@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "cassette",
+  "productName": "tape",
   "version": "2.0.0",
-  "identifier": "org.rmv.cassette",
+  "identifier": "org.rmv.tape",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "cassette",
+        "title": "tape",
         "width": 800,
         "height": 600
       }
