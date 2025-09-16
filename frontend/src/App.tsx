@@ -210,7 +210,7 @@ function App() {
     }
   };
 
-  // Global keyboard handler for Ctrl+S
+  // Global keyboard handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 's') {
@@ -218,6 +218,10 @@ function App() {
         if (selectedFilePath && hasUnsavedChanges) {
           handleSave();
         }
+      }
+      if (e.ctrlKey && e.key === 'Tab') {
+        e.preventDefault();
+        setViewMode(viewMode === "reader" ? "editor" : "reader")
       }
     };
 
@@ -355,7 +359,7 @@ function App() {
           <div className="welcome-screen">
             <div>
               <img src={appIcon} alt="Tape app icon"/>
-              <h1 className="workbench">Tape</h1>
+            <h1 className="workbench">Tape</h1>
             </div>
             <div className="welcome-buttons">
               <Tooltip content="Select a directory to browse markdown files">
@@ -385,12 +389,12 @@ function App() {
             </div>
             <div className="file-info">
               <span className="current-path">{fileTree.path}</span >
-              {selectedFilePath ? (
+              {selectedFilePath && selectedFilePath.split('/').pop() ? (
                 <span className="current-file">
-                  {selectedFilePath.split('/').pop()?.slice(0, 30)}
-                  {selectedFilePath.split('/').pop()?.length > 30 && '...'}
+                  {selectedFilePath?.split('/').pop()?.slice(0, 30)}
+                  {selectedFilePath?.split('/').pop()?.length > 30 ? '...' : ''}
                 </span>
-              ) : <span className="current-file">no file selected</span>}
+              ) : <span className="current-file">no tape selected</span>}
             </div>
           </div>
           <div className="header-right">
