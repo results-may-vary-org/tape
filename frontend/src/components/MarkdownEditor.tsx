@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import * as Tooltip from '@radix-ui/react-tooltip';
 
 interface MarkdownEditorProps {
   content: string;

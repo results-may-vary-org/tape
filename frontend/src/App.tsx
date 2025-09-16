@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import '@radix-ui/themes/styles.css';
-import { Theme as RadixTheme } from '@radix-ui/themes';
+import {SegmentedControl, Theme as RadixTheme } from '@radix-ui/themes';
 import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
@@ -13,18 +13,11 @@ import {
   RefreshCw,
   Edit,
   Eye,
-  Save,
-  Settings,
   Sun,
   Moon,
-  Monitor,
-  ChevronDown,
-  Check
+  Monitor, CassetteTape
 } from 'lucide-react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import * as Select from '@radix-ui/react-select';
-import * as Tooltip from '@radix-ui/react-tooltip';
-import * as Toast from '@radix-ui/react-toast';
+import { DropdownMenu, Select, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 import {
   OpenDirectoryDialog,
   GetDirectoryTree,
@@ -42,6 +35,7 @@ import {
   SaveViewMode,
   SaveTheme
 } from "../wailsjs/go/main/App";
+import appIcon from './assets/images/appicon.png';
 
 interface FileItem {
   name: string;
@@ -62,6 +56,13 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Modal states
+  const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
+  const [newFolderName, setNewFolderName] = useState('');
+  const [currentParentPath, setCurrentParentPath] = useState<string>('');
 
   // Load last opened folder on app startup
   useEffect(() => {
@@ -235,50 +236,60 @@ function App() {
     }
   };
 
-  const handleCreateFile = async (parentPath?: string) => {
+  const handleCreateFile = (parentPath?: string) => {
     if (!fileTree && !parentPath) return;
+    setCurrentParentPath(parentPath || fileTree!.path);
+    setNewFileName('');
+    setShowCreateFileDialog(true);
+  };
 
-    const basePath = parentPath || fileTree!.path;
-    const fileName = prompt('Enter file name (without .md extension):');
-    if (!fileName) return;
+  const confirmCreateFile = async () => {
+    if (!newFileName.trim()) return;
 
     try {
-      const filePath = `${basePath}/${fileName}.md`;
+      const filePath = `${currentParentPath}/${newFileName}.md`;
 
       // Check if file already exists
       const exists = await FileExists(filePath);
       if (exists) {
-        alert(`File "${fileName}.md" already exists in this directory.`);
+        alert(`File "${newFileName}.md" already exists in this directory.`);
         return;
       }
 
       await CreateFile(filePath);
       await refreshFileTree();
+      setShowCreateFileDialog(false);
+      setNewFileName('');
     } catch (error) {
       console.error('Error creating file:', error);
       alert('Error creating file. Please try again.');
     }
   };
 
-  const handleCreateFolder = async (parentPath?: string) => {
+  const handleCreateFolder = (parentPath?: string) => {
     if (!fileTree && !parentPath) return;
+    setCurrentParentPath(parentPath || fileTree!.path);
+    setNewFolderName('');
+    setShowCreateFolderDialog(true);
+  };
 
-    const basePath = parentPath || fileTree!.path;
-    const folderName = prompt('Enter folder name:');
-    if (!folderName) return;
+  const confirmCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
 
     try {
-      const folderPath = `${basePath}/${folderName}`;
+      const folderPath = `${currentParentPath}/${newFolderName}`;
 
       // Check if folder already exists
       const exists = await FileExists(folderPath);
       if (exists) {
-        alert(`Folder "${folderName}" already exists in this directory.`);
+        alert(`Folder "${newFolderName}" already exists in this directory.`);
         return;
       }
 
       await CreateDirectory(folderPath);
       await refreshFileTree();
+      setShowCreateFolderDialog(false);
+      setNewFolderName('');
     } catch (error) {
       console.error('Error creating folder:', error);
       alert('Error creating folder. Please try again.');
@@ -339,28 +350,20 @@ function App() {
 
   if (!fileTree) {
     return (
-      <RadixTheme appearance={resolvedTheme}>
+      <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
         <div className="app-container">
           <div className="welcome-screen">
-            <h1>Markdown Note Taker</h1>
-            <p>Get started by opening a directory or file</p>
+            <div>
+              <img src={appIcon} alt="Tape app icon"/>
+              <h1 className="workbench">Tape</h1>
+            </div>
             <div className="welcome-buttons">
-              <Tooltip.Provider>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <button onClick={handleOpenDirectory} className="primary-button">
-                      <FolderOpen size={20} />
-                      Open Directory
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content className="tooltip-content" sideOffset={5}>
-                      Select a directory to browse markdown files
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-
-              </Tooltip.Provider>
+              <Tooltip content="Select a directory to browse markdown files">
+                <Button onClick={handleOpenDirectory} className="primary-button">
+                  <FolderOpen size={20}/>
+                  Open your tape box
+                </Button>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -369,109 +372,85 @@ function App() {
   }
 
   return (
-    <RadixTheme appearance={resolvedTheme}>
+    <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
       <div className="app-container">
         <div className="header">
           <div className="header-left">
-            <h1>Markdown Notes</h1>
+            <div className="logo">
+              <img src={appIcon} alt="Tape app icon"/>
+              <h1 className="workbench">Tape</h1>
+              <div id="info" className="info vt32">
+                {hasUnsavedChanges && "unsaved file_"}
+              </div>
+            </div>
             <div className="file-info">
-              <span className="current-path">{fileTree.path}</span>
-              {selectedFilePath && (
+              <span className="current-path">{fileTree.path}</span >
+              {selectedFilePath ? (
                 <span className="current-file">
-                  {selectedFilePath.split('/').pop()}
-                  {hasUnsavedChanges && <span className="unsaved-indicator">●</span>}
+                  {selectedFilePath.split('/').pop()?.slice(0, 30)}
+                  {selectedFilePath.split('/').pop()?.length > 30 && '...'}
                 </span>
-              )}
+              ) : <span className="current-file">no file selected</span>}
             </div>
           </div>
           <div className="header-right">
-            <Tooltip.Provider>
               <Select.Root value={themeMode} onValueChange={(value: ThemeMode) => handleThemeChange(value)}>
                 <Select.Trigger className="theme-select-trigger">
-                  <Select.Value>
-                    {themeMode === 'system' ? <Monitor size={16} /> : themeMode === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
-                  </Select.Value>
-                  <Select.Icon>
-                    <ChevronDown size={14} />
-                  </Select.Icon>
+                  <Flex as="span" align="center" gap="2">
+                    {themeMode === 'system'
+                      ? <Monitor size={16}/>
+                      : themeMode === 'dark'
+                        ? <Moon size={16}/>
+                        : <Sun size={16}/>
+                    }
+                    {themeMode === 'system'
+                      ? "System"
+                      : themeMode === 'dark'
+                        ? "Dark"
+                        : "Light"
+                    }
+                  </Flex>
                 </Select.Trigger>
-                <Select.Portal>
-                  <Select.Content className="select-content">
-                    <Select.Viewport className="select-viewport">
-                      <Select.Item value="system" className="select-item">
-                        <Select.ItemIndicator className="select-item-indicator">
-                          <Check size={16} />
-                        </Select.ItemIndicator>
-                        <Select.ItemText>
-                          <div className="select-item-content">
-                            <Monitor size={16} />
-                            System
-                          </div>
-                        </Select.ItemText>
-                      </Select.Item>
-                      <Select.Item value="light" className="select-item">
-                        <Select.ItemIndicator className="select-item-indicator">
-                          <Check size={16} />
-                        </Select.ItemIndicator>
-                        <Select.ItemText>
-                          <div className="select-item-content">
-                            <Sun size={16} />
-                            Light
-                          </div>
-                        </Select.ItemText>
-                      </Select.Item>
-                      <Select.Item value="dark" className="select-item">
-                        <Select.ItemIndicator className="select-item-indicator">
-                          <Check size={16} />
-                        </Select.ItemIndicator>
-                        <Select.ItemText>
-                          <div className="select-item-content">
-                            <Moon size={16} />
-                            Dark
-                          </div>
-                        </Select.ItemText>
-                      </Select.Item>
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
+                <Select.Content className="select-content" position="popper">
+                  <Select.Item value="system" className="select-item">
+                    <Flex as="span" align="center" gap="2">
+                      <Monitor size={16} />
+                      System
+                    </Flex>
+                  </Select.Item>
+                  <Select.Item value="light" className="select-item">
+                    <Flex as="span" align="center" gap="2">
+                      <Sun size={16} />
+                      Light
+                    </Flex>
+                  </Select.Item>
+                  <Select.Item value="dark" className="select-item">
+                    <Flex as="span" align="center" gap="2">
+                      <Moon size={16} />
+                      Dark
+                    </Flex>
+                  </Select.Item>
+                </Select.Content>
               </Select.Root>
 
               <div className="view-toggle">
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <button
-                      className={viewMode === 'editor' ? 'active' : ''}
-                      onClick={() => handleViewModeChange('editor')}
-                    >
-                      <Edit size={16} />
-                      Editor
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content className="tooltip-content" sideOffset={5}>
-                      Switch to editor mode
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <button
-                      className={viewMode === 'reader' ? 'active' : ''}
-                      onClick={() => handleViewModeChange('reader')}
-                    >
-                      <Eye size={16} />
-                      Reader
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content className="tooltip-content" sideOffset={5}>
-                      Switch to reader mode
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
+                <Button
+                  size="2"
+                  variant={viewMode === "editor" ? "solid" : "soft"}
+                  onClick={() => handleViewModeChange('editor')}
+                  style={{borderBottomRightRadius: 0, borderTopRightRadius: 0}}
+                >
+                  <Edit size="16"/> Editor
+                </Button>
+                <Button
+                  size="2"
+                  variant={viewMode === "reader" ? "solid" : "soft"}
+                  onClick={() => handleViewModeChange('reader')}
+                  style={{borderBottomLeftRadius: 0, borderTopLeftRadius: 0}}
+                >
+                  <Eye size="16"/> Reader
+                </Button>
               </div>
-            </Tooltip.Provider>
           </div>
         </div>
 
@@ -480,53 +459,35 @@ function App() {
             <div className="sidebar-header">
               <h3>Files</h3>
               <div className="file-actions">
-                <Tooltip.Provider>
-                  <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                      <button onClick={handleOpenDirectory} className="action-button">
-                        <FolderOpen size={16} />
-                      </button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Portal>
-                      <Tooltip.Content className="tooltip-content" sideOffset={5}>
-                        Select another folder
-                      </Tooltip.Content>
-                    </Tooltip.Portal>
-                  </Tooltip.Root>
+                <Tooltip content="Select another root">
+                  <button onClick={handleOpenDirectory} className="action-button">
+                    <FolderOpen size={16} />
+                  </button>
+                </Tooltip>
 
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild>
-                      <button className="action-button">
-                        <Plus size={16} />
-                      </button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Portal>
-                      <DropdownMenu.Content className="dropdown-content" sideOffset={5}>
-                        <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFile()}>
-                          <FileText size={16} />
-                          New File
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFolder()}>
-                          <FolderPlus size={16} />
-                          New Folder
-                        </DropdownMenu.Item>
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Portal>
-                  </DropdownMenu.Root>
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger>
+                    <button className="action-button">
+                      <Plus size={16} />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Content className="dropdown-content" sideOffset={5}>
+                    <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFile()}>
+                      <FileText size={16} />
+                      New File
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFolder()}>
+                      <FolderPlus size={16} />
+                      New Folder
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Root>
 
-                  <Tooltip.Root>
-                    <Tooltip.Trigger asChild>
-                      <button onClick={refreshFileTree} className="action-button">
-                        <RefreshCw size={16} />
-                      </button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Portal>
-                      <Tooltip.Content className="tooltip-content" sideOffset={5}>
-                        Refresh file tree
-                      </Tooltip.Content>
-                    </Tooltip.Portal>
-                  </Tooltip.Root>
-                </Tooltip.Provider>
+                <Tooltip content="Refresh file tree">
+                  <button onClick={refreshFileTree} className="action-button">
+                    <RefreshCw size={16} />
+                  </button>
+                </Tooltip>
               </div>
             </div>
             <FileTree
@@ -560,6 +521,90 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Create File Dialog */}
+      <Dialog.Root open={showCreateFileDialog} onOpenChange={setShowCreateFileDialog}>
+        <Dialog.Content maxWidth="450px">
+          <Dialog.Title>Create New File</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
+            Enter a name for the new markdown file.
+          </Dialog.Description>
+
+          <Flex direction="column" gap="3">
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                File name
+              </Text>
+              <TextField.Root
+                value={newFileName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewFileName(e.target.value)}
+                placeholder="my-document"
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    confirmCreateFile();
+                  }
+                }}
+              >
+                <TextField.Slot side="right">
+                  <Text size="2" color="gray">.md</Text>
+                </TextField.Slot>
+              </TextField.Root>
+            </label>
+          </Flex>
+
+          <Flex gap="3" mt="4" justify="end">
+            <Dialog.Close>
+              <Button variant="soft" color="gray">
+                Cancel
+              </Button>
+            </Dialog.Close>
+            <Button onClick={confirmCreateFile} disabled={!newFileName.trim()}>
+              Create File
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+
+      {/* Create Folder Dialog */}
+      <Dialog.Root open={showCreateFolderDialog} onOpenChange={setShowCreateFolderDialog}>
+        <Dialog.Content maxWidth="450px">
+          <Dialog.Title>Create New Folder</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
+            Enter a name for the new folder.
+          </Dialog.Description>
+
+          <Flex direction="column" gap="3">
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                Folder name
+              </Text>
+              <TextField.Root
+                value={newFolderName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewFolderName(e.target.value)}
+                placeholder="my-folder"
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    confirmCreateFolder();
+                  }
+                }}
+              />
+            </label>
+          </Flex>
+
+          <Flex gap="3" mt="4" justify="end">
+            <Dialog.Close>
+              <Button variant="soft" color="gray">
+                Cancel
+              </Button>
+            </Dialog.Close>
+            <Button onClick={confirmCreateFolder} disabled={!newFolderName.trim()}>
+              Create Folder
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
     </RadixTheme>
   );
 }

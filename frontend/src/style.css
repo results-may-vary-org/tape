@@ -1,17 +1,3 @@
-html {
-    background-color: rgba(27, 38, 54, 1);
-    text-align: center;
-    color: white;
-}
-
-body {
-    margin: 0;
-    color: white;
-    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-}
-
 @font-face {
     font-family: "Nunito";
     font-style: normal;
@@ -20,7 +6,34 @@ body {
     url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
 }
 
-#app {
-    height: 100vh;
-    text-align: center;
+@font-face {
+    font-family: "Workbench";
+    font-style: normal;
+    font-weight: 400;
+    src: local(""),
+    url("assets/fonts/Workbench-Regular.ttf") format("truetype");
+    font-display: swap;
+}
+
+@font-face {
+  font-family: "vt32";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+  url("assets/fonts/VT323-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+.workbench {
+    font-family: "Workbench", monospace;
+    font-optical-sizing: auto;
+    font-variation-settings:
+            "BLED" 0,
+            "SCAN" 0;
+}
+
+.vt32 {
+  font-family: "vt32", monospace;
+  font-weight: 400;
+  font-style: normal;
 }
