@@ -236,7 +236,24 @@ button:hover {
   color: var(--gray-10);
 }
 
-/* Editor */
+/* Editor & reader */
+
+.markdown-reader {
+  padding: 1.5rem;
+  overflow: auto;
+}
+
+.reader-empty {
+  font-family: "vt32", monospace;
+  padding: 1.5rem;
+  color: var(--gray-10);
+  font-size: 1.2rem;
+}
+
+.reader-empty p {
+  margin: 0;
+}
+
 .editor-placeholder {
   display: flex;
   align-items: center;
