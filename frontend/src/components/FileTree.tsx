@@ -27,6 +27,8 @@ interface FileTreeProps {
   onCreateFolder: (parentPath: string) => void;
   onRenameItem: (itemPath: string, newName: string) => void;
   onDeleteItem: (itemPath: string, isDir: boolean) => void;
+  expandedFolders: string[];
+  onExpandedFoldersChange: (expandedFolders: string[]) => void;
 }
 
 interface FileTreeNodeProps {
@@ -39,6 +41,8 @@ interface FileTreeNodeProps {
   onRenameItem: (itemPath: string, newName: string) => void;
   onDeleteItem: (itemPath: string, isDir: boolean) => void;
   isRootFolder?: boolean;
+  expandedFolders: string[];
+  onExpandedFoldersChange: (expandedFolders: string[]) => void;
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({
@@ -50,16 +54,21 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   onCreateFolder,
   onRenameItem,
   onDeleteItem,
-  isRootFolder = false
+  isRootFolder = false,
+  expandedFolders,
+  onExpandedFoldersChange
 }) => {
-  const [isExpanded, setIsExpanded] = useState(level < 2);
+  const isExpanded = expandedFolders.includes(item.path);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newName, setNewName] = useState(item.name);
 
   const handleClick = () => {
     if (item.isDir) {
-      setIsExpanded(!isExpanded);
+      const newExpandedFolders = isExpanded
+        ? expandedFolders.filter(path => path !== item.path)
+        : [...expandedFolders, item.path];
+      onExpandedFoldersChange(newExpandedFolders);
     } else {
       onFileSelect(item.path);
     }
@@ -159,6 +168,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               onRenameItem={onRenameItem}
               onDeleteItem={onDeleteItem}
               isRootFolder={false}
+              expandedFolders={expandedFolders}
+              onExpandedFoldersChange={onExpandedFoldersChange}
             />
           ))}
         </div>
@@ -247,7 +258,9 @@ const FileTree: React.FC<FileTreeProps> = ({
   onCreateFile,
   onCreateFolder,
   onRenameItem,
-  onDeleteItem
+  onDeleteItem,
+  expandedFolders,
+  onExpandedFoldersChange
 }) => {
   if (!fileTree) {
     return (
@@ -270,6 +283,8 @@ const FileTree: React.FC<FileTreeProps> = ({
         onRenameItem={onRenameItem}
         onDeleteItem={onDeleteItem}
         isRootFolder={true}
+        expandedFolders={expandedFolders}
+        onExpandedFoldersChange={onExpandedFoldersChange}
       />
     </div>
   );

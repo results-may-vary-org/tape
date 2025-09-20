@@ -45,7 +45,7 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
 
   if (!filePath) {
     return (
-      <div className="reader-placeholder">
+      <div className="reader-empty">
         <p>Select a markdown file to view its content</p>
       </div>
     );

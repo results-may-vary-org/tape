@@ -2,6 +2,8 @@ export namespace main {
 	
 	export class Config {
 	    lastOpenedFolder: string;
+	    lastOpenedFile: string;
+	    expandedFolders: string[];
 	    viewMode: string;
 	    theme: string;
 	
@@ -12,6 +14,8 @@ export namespace main {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.lastOpenedFolder = source["lastOpenedFolder"];
+	        this.lastOpenedFile = source["lastOpenedFile"];
+	        this.expandedFolders = source["expandedFolders"];
 	        this.viewMode = source["viewMode"];
 	        this.theme = source["theme"];
 	    }
@@ -51,6 +55,28 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class SearchResult {
+	    path: string;
+	    name: string;
+	    isDir: boolean;
+	    matchType: string;
+	    matchText: string;
+	    contextText: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SearchResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.name = source["name"];
+	        this.isDir = source["isDir"];
+	        this.matchType = source["matchType"];
+	        this.matchText = source["matchText"];
+	        this.contextText = source["contextText"];
+	    }
 	}
 
 }

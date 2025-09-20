@@ -36,7 +36,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   if (!filePath) {
     return (
-      <div className="editor-placeholder">
+      <div className="empty-editor">
         <p>Select a markdown file to start editing</p>
       </div>
     );

@@ -5,6 +5,7 @@ import {SegmentedControl, Theme as RadixTheme } from '@radix-ui/themes';
 import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
+import SearchModal from './components/SearchModal';
 import {
   FolderOpen,
   FileText,
@@ -32,8 +33,11 @@ import {
   LoadInitialConfig,
   LoadConfig,
   SaveLastOpenedFolder,
+  SaveLastOpenedFile,
+  SaveExpandedFolders,
   SaveViewMode,
-  SaveTheme
+  SaveTheme,
+  SearchFiles
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/appicon.png';
 
@@ -42,6 +46,15 @@ interface FileItem {
   path: string;
   isDir: boolean;
   children?: FileItem[];
+}
+
+interface SearchResult {
+  path: string;
+  name: string;
+  isDir: boolean;
+  matchType: 'filename' | 'foldername' | 'content';
+  matchText: string;
+  contextText: string;
 }
 
 type ViewMode = 'editor' | 'reader';
@@ -56,6 +69,8 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
@@ -76,7 +91,7 @@ function App() {
             const tree = await GetDirectoryTree(initialConfig.lastOpenedFolder);
             setFileTree(tree);
 
-            // Load folder-specific config including view mode and theme
+            // Load folder-specific config including view mode, theme, expanded folders, and last file
             const folderConfig = await LoadConfig(initialConfig.lastOpenedFolder);
             if (folderConfig.viewMode) {
               setViewMode(folderConfig.viewMode as ViewMode);
@@ -90,6 +105,27 @@ function App() {
             } else if (initialConfig.theme) {
               // Fallback to old config theme
               setThemeMode(initialConfig.theme as ThemeMode);
+            }
+
+            // Restore expanded folders
+            if (folderConfig.expandedFolders) {
+              setExpandedFolders(folderConfig.expandedFolders);
+            }
+
+            // Restore last opened file
+            if (folderConfig.lastOpenedFile) {
+              try {
+                const fileExists = await FileExists(folderConfig.lastOpenedFile);
+                if (fileExists) {
+                  const content = await ReadFile(folderConfig.lastOpenedFile);
+                  setSelectedFilePath(folderConfig.lastOpenedFile);
+                  setFileContent(content);
+                  setOriginalContent(content);
+                  setHasUnsavedChanges(false);
+                }
+              } catch (error) {
+                console.log('Last opened file no longer exists or cannot be read:', error);
+              }
             }
           } catch (treeError) {
             console.log('Previous folder no longer exists:', treeError);
@@ -154,7 +190,7 @@ function App() {
         setOriginalContent('');
         setHasUnsavedChanges(false);
 
-        // Load folder-specific config including view mode and theme
+        // Load folder-specific config including view mode, theme, expanded folders, and last file
         try {
           const folderConfig = await LoadConfig(dirPath);
           if (folderConfig.viewMode) {
@@ -163,9 +199,31 @@ function App() {
           if (folderConfig.theme) {
             setThemeMode(folderConfig.theme as ThemeMode);
           }
+          if (folderConfig.expandedFolders) {
+            setExpandedFolders(folderConfig.expandedFolders);
+          } else {
+            setExpandedFolders([]);
+          }
+
+          // Restore last opened file if it exists
+          if (folderConfig.lastOpenedFile) {
+            try {
+              const fileExists = await FileExists(folderConfig.lastOpenedFile);
+              if (fileExists) {
+                const content = await ReadFile(folderConfig.lastOpenedFile);
+                setSelectedFilePath(folderConfig.lastOpenedFile);
+                setFileContent(content);
+                setOriginalContent(content);
+                setHasUnsavedChanges(false);
+              }
+            } catch (error) {
+              console.log('Last opened file no longer exists or cannot be read:', error);
+            }
+          }
         } catch (error) {
           // If no config exists, use defaults
           console.log('No config found for this folder, using defaults');
+          setExpandedFolders([]);
         }
 
         // Save to config for future sessions
@@ -185,10 +243,46 @@ function App() {
       setFileContent(content);
       setOriginalContent(content);
       setHasUnsavedChanges(false);
+
+      // Save last opened file to config
+      if (fileTree?.path) {
+        try {
+          await SaveLastOpenedFile(fileTree.path, filePath);
+        } catch (error) {
+          console.error('Error saving last opened file:', error);
+        }
+      }
     } catch (error) {
       console.error('Error reading file:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleExpandedFoldersChange = async (newExpandedFolders: string[]) => {
+    setExpandedFolders(newExpandedFolders);
+
+    // Save expanded folders to config
+    if (fileTree?.path) {
+      try {
+        await SaveExpandedFolders(fileTree.path, newExpandedFolders);
+      } catch (error) {
+        console.error('Error saving expanded folders:', error);
+      }
+    }
+  };
+
+  const handleSearch = async (query: string): Promise<SearchResult[]> => {
+    if (!fileTree?.path || !query.trim()) {
+      return [];
+    }
+
+    try {
+      const results = await SearchFiles(fileTree.path, query);
+      return results as SearchResult[];
+    } catch (error) {
+      console.error('Search error:', error);
+      return [];
     }
   };
 
@@ -223,11 +317,15 @@ function App() {
         e.preventDefault();
         setViewMode(viewMode === "reader" ? "editor" : "reader")
       }
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFilePath, hasUnsavedChanges, handleSave]);
+  }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode]);
 
   const refreshFileTree = async () => {
     if (!fileTree) return;
@@ -392,7 +490,6 @@ function App() {
               {selectedFilePath && selectedFilePath.split('/').pop() ? (
                 <span className="current-file">
                   {selectedFilePath?.split('/').pop()?.slice(0, 30)}
-                  {selectedFilePath?.split('/').pop()?.length > 30 ? '...' : ''}
                 </span>
               ) : <span className="current-file">no tape selected</span>}
             </div>
@@ -502,6 +599,8 @@ function App() {
               onCreateFolder={handleCreateFolder}
               onRenameItem={handleRenameItem}
               onDeleteItem={handleDeleteItem}
+              expandedFolders={expandedFolders}
+              onExpandedFoldersChange={handleExpandedFoldersChange}
             />
           </div>
 
@@ -609,6 +708,14 @@ function App() {
           </Flex>
         </Dialog.Content>
       </Dialog.Root>
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onFileSelect={handleFileSelect}
+        onSearch={handleSearch}
+      />
     </RadixTheme>
   );
 }

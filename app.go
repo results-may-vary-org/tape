@@ -21,8 +21,19 @@ type FileItem struct {
 
 type Config struct {
 	LastOpenedFolder string   `json:"lastOpenedFolder"`
+	LastOpenedFile   string   `json:"lastOpenedFile"`
+	ExpandedFolders  []string `json:"expandedFolders"`
 	ViewMode         string   `json:"viewMode"`
 	Theme            string   `json:"theme"`
+}
+
+type SearchResult struct {
+	Path        string `json:"path"`
+	Name        string `json:"name"`
+	IsDir       bool   `json:"isDir"`
+	MatchType   string `json:"matchType"`   // "filename", "foldername", "content"
+	MatchText   string `json:"matchText"`   // The actual matched text for content matches
+	ContextText string `json:"contextText"` // Surrounding context for content matches
 }
 
 // App struct
@@ -277,6 +288,30 @@ func (a *App) SaveTheme(folderPath string, theme string) error {
 	return a.SaveConfig(config, folderPath)
 }
 
+// SaveLastOpenedFile saves the last opened file to config
+func (a *App) SaveLastOpenedFile(folderPath string, filePath string) error {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		config = &Config{}
+	}
+
+	config.LastOpenedFile = filePath
+	config.LastOpenedFolder = folderPath
+	return a.SaveConfig(config, folderPath)
+}
+
+// SaveExpandedFolders saves the expanded folders state to config
+func (a *App) SaveExpandedFolders(folderPath string, expandedFolders []string) error {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		config = &Config{}
+	}
+
+	config.ExpandedFolders = expandedFolders
+	config.LastOpenedFolder = folderPath
+	return a.SaveConfig(config, folderPath)
+}
+
 // LoadInitialConfig loads config from old location for initial app startup
 func (a *App) LoadInitialConfig() (*Config, error) {
 	// Try to load from old location first (for migration)
@@ -303,4 +338,149 @@ func (a *App) LoadInitialConfig() (*Config, error) {
 	}
 
 	return &Config{}, nil
+}
+
+// fuzzyMatch performs a simple fuzzy search
+func fuzzyMatch(pattern, text string) bool {
+	pattern = strings.ToLower(pattern)
+	text = strings.ToLower(text)
+
+	if pattern == "" {
+		return true
+	}
+
+	patternIdx := 0
+	for _, char := range text {
+		if patternIdx < len(pattern) && char == rune(pattern[patternIdx]) {
+			patternIdx++
+		}
+	}
+
+	return patternIdx == len(pattern)
+}
+
+// getContextAroundMatch returns context around a match in content
+func getContextAroundMatch(content, query string, matchIndex int) (string, string) {
+	const contextLength = 100
+
+	start := matchIndex - contextLength
+	if start < 0 {
+		start = 0
+	}
+
+	end := matchIndex + len(query) + contextLength
+	if end > len(content) {
+		end = len(content)
+	}
+
+	context := content[start:end]
+	matchText := content[matchIndex : matchIndex+len(query)]
+
+	// Clean up context - remove newlines and extra spaces
+	context = strings.ReplaceAll(context, "\n", " ")
+	context = strings.ReplaceAll(context, "\r", " ")
+	context = strings.Join(strings.Fields(context), " ")
+
+	return matchText, context
+}
+
+// SearchFiles searches for files and folders by name and content
+func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error) {
+	if query == "" {
+		return []SearchResult{}, nil
+	}
+
+	var results []SearchResult
+	query = strings.ToLower(query)
+
+	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip files with errors
+		}
+
+		// Skip hidden files and directories
+		if strings.HasPrefix(info.Name(), ".") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Get relative path for display
+		relPath, _ := filepath.Rel(rootPath, path)
+		if relPath == "." {
+			return nil // Skip root directory
+		}
+
+		// Search in directory names
+		if info.IsDir() && fuzzyMatch(query, info.Name()) {
+			results = append(results, SearchResult{
+				Path:      path,
+				Name:      info.Name(),
+				IsDir:     true,
+				MatchType: "foldername",
+				MatchText: info.Name(),
+			})
+		}
+
+		// Search in file names and content (only .md files)
+		if !info.IsDir() {
+			// Check filename match
+			if fuzzyMatch(query, info.Name()) {
+				results = append(results, SearchResult{
+					Path:      path,
+					Name:      info.Name(),
+					IsDir:     false,
+					MatchType: "filename",
+					MatchText: info.Name(),
+				})
+			}
+
+			// Check content match for markdown files
+			if strings.HasSuffix(strings.ToLower(info.Name()), ".md") {
+				content, err := os.ReadFile(path)
+				if err == nil {
+					contentStr := string(content)
+					contentLower := strings.ToLower(contentStr)
+
+					// Look for query in content
+					if strings.Contains(contentLower, query) {
+						matchIndex := strings.Index(contentLower, query)
+						matchText, contextText := getContextAroundMatch(contentStr, query, matchIndex)
+
+						results = append(results, SearchResult{
+							Path:        path,
+							Name:        info.Name(),
+							IsDir:       false,
+							MatchType:   "content",
+							MatchText:   matchText,
+							ContextText: contextText,
+						})
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Sort results: filename matches first, then folder matches, then content matches
+	sort.Slice(results, func(i, j int) bool {
+		if results[i].MatchType != results[j].MatchType {
+			order := map[string]int{"filename": 0, "foldername": 1, "content": 2}
+			return order[results[i].MatchType] < order[results[j].MatchType]
+		}
+		return results[i].Name < results[j].Name
+	})
+
+	// Limit results to prevent UI overload
+	if len(results) > 50 {
+		results = results[:50]
+	}
+
+	return results, nil
 }
