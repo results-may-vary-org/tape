@@ -79,6 +79,7 @@ jobs:
 
       - name: Set platform name for artifact
         id: platform
+        shell: bash
         run: |
           platform_name="${{ matrix.build.platform }}"
           platform_name="${platform_name//\//.}"
