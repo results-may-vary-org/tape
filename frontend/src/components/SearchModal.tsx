@@ -18,18 +18,23 @@ interface SearchModalProps {
   onSearch: (query: string) => Promise<SearchResult[]>;
 }
 
+type resultLength = {
+  d: string
+  f: string
+  s: string
+}
+
 const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect, onSearch}) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [isBlinking, setIsBlinking] = useState(true);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<number>();
 
-  // Auto-focus input when modal opens
+  // Autofocus input when modal opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
@@ -41,9 +46,7 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
 
   // Debounced search
   useEffect(() => {
-    if (debounceRef.current) {
-      window.clearTimeout(debounceRef.current);
-    }
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
 
     if (query.trim() === '') {
       setResults([]);
@@ -53,10 +56,10 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
     }
 
     setIsLoading(true);
+
     debounceRef.current = window.setTimeout(async () => {
       try {
         const searchResults = await onSearch(query);
-        console.log({searchResults, query})
         setResults(searchResults);
         setSelectedIndex(0);
       } catch (error) {
@@ -68,9 +71,7 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
     }, 300);
 
     return () => {
-      if (debounceRef.current) {
-        window.clearTimeout(debounceRef.current);
-      }
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
   }, [query, onSearch]);
 
@@ -172,6 +173,14 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
     );
   };
 
+  const getResultLength = (): resultLength => {
+    return {
+      d: results.filter((value) => value.isDir).length.toString(),
+      f: results.filter((value) => value.matchType === "filename").length.toString(),
+      s: results.filter((value) => value.matchType === "content").length.toString()
+    };
+  }
+
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Content className="search-modal" maxWidth="600px">
@@ -196,7 +205,7 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
             </TextField.Slot>
           </TextField.Root>
           <div id="search-info" className="vt32">
-            Folder: 0 File: 0 String: 0
+            Folder: {getResultLength().d} File: {getResultLength().f} String: {getResultLength().s}
           </div>
           <Separator style={{width: "100%"}}/>
         </Flex>
@@ -217,19 +226,28 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
               <div
                 key={`${result.path}-${index}`}
                 data-result-index={index}
-                className={`search-result-item ${selectedIndex === index ? 'selected' : ''} ${result.isDir ? 'disabled' : ''}`}
+                className={`search-result-item ${result.isDir ? 'disabled' : ''} ${selectedIndex === index ? 'selected' : ''}`}
                 onClick={() => handleResultClick(result)}
                 tabIndex={-1}
               >
-                {getMatchTypeIcon(result.matchType)}
-                {highlightMatch(result.name, query)}
-                {getMatchTypeLabel(result.matchType)}
-                {result.contextText && (
-                  <span className="result-context">
-                    {' • '}
+                <div className="search-result-item-header">
+                  <div className="search-result-item-target">
+                    {getMatchTypeIcon(result.matchType)}
+                    <div>
+                      {highlightMatch(result.name, query)}
+                    </div>
+                  </div>
+                  <div className="search-result-item-type">
+                    {getMatchTypeLabel(result.matchType)}
+                  </div>
+                </div>
+                <div className="search-result-item-context">
+                  {result.contextText && (
+                    <span className="result-context">
                     {highlightMatch(result.contextText, query)}
                   </span>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>

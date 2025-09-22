@@ -33,7 +33,7 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
           contentRef.current.innerHTML = htmlContent;
 
           // Apply syntax highlighting to code blocks
-          contentRef.current.querySelectorAll('pre code').forEach((block) => {
+          contentRef.current.querySelectorAll('code').forEach((block) => {
             hljs.highlightElement(block as HTMLElement);
           });
         }

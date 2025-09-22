@@ -340,6 +340,10 @@ func (a *App) LoadInitialConfig() (*Config, error) {
 	return &Config{}, nil
 }
 
+/**
+ * --- Search
+ */
+
 // fuzzyMatch performs a simple fuzzy search
 func fuzzyMatch(pattern, text string) bool {
 	pattern = strings.ToLower(pattern)
@@ -471,13 +475,13 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 	// Sort results: filename matches first, then folder matches, then content matches
 	sort.Slice(results, func(i, j int) bool {
 		if results[i].MatchType != results[j].MatchType {
-			order := map[string]int{"filename": 0, "foldername": 1, "content": 2}
+			order := map[string]int{"foldername": 0, "filename": 1, "content": 2}
 			return order[results[i].MatchType] < order[results[j].MatchType]
 		}
 		return results[i].Name < results[j].Name
 	})
 
-	// Limit results to prevent UI overload
+	// todo: atm Limit results to prevent UI overload
 	if len(results) > 50 {
 		results = results[:50]
 	}

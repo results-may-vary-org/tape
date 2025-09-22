@@ -367,7 +367,6 @@ button:hover {
   flex: 1;
   overflow-y: auto;
   max-height: 400px;
-  padding: 2rem 0;
   border-right: solid 1px var(--gray-a6); /* separator color */
   border-left: solid 1px var(--gray-a6);
 }
@@ -385,17 +384,48 @@ button:hover {
 
 .search-result-item {
   display: flex;
+  flex-direction: column;
   gap: 3px;
-  align-items: center;
   padding: 0.75rem;
 }
 
+.search-result-item:hover {
+  background: var(--accent-a4);
+  cursor: pointer;
+}
+
+.search-result-item-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.search-result-item-target {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.search-result-item-type {
+  color: var(--accent-a8);
+}
+
+.search-result-item-context {
+  color: var(--accent-a10);
+}
+
 .selected {
-  background: var(--accent-a6);
+  background: var(--accent-a6) !important;
 }
 
 .disabled {
-  background: var(--red-a6);
+  background: var(--accent-3);
+  cursor: not-allowed !important;
+}
+
+.search-highlight {
+  background: var(--orange-7);
+  border-radius: 2px;
 }
 
 /* Responsive */
