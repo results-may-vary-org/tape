@@ -7,6 +7,16 @@ on:
         description: 'Release tag (optional, uses latest if empty)'
         required: false
         type: string
+      create_release:
+        description: 'Create GitHub release'
+        required: false
+        default: true
+        type: boolean
+      draft_release:
+        description: 'Create as draft release'
+        required: false
+        default: true
+        type: boolean
 
 env:
   TAPE_VERSION: ${{ github.event.inputs.release_tag || github.ref_name }}
@@ -114,7 +124,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.release_tag != '' || startsWith(github.ref, 'refs/tags/')
+    if: github.event.inputs.create_release == 'true' || github.event.inputs.create_release == true
 
     steps:
       - name: Download all artifacts
@@ -128,7 +138,7 @@ jobs:
         with:
           tag_name: ${{ env.TAPE_VERSION }}
           name: Release ${{ env.TAPE_VERSION }}
-          draft: false
+          draft: ${{ github.event.inputs.draft_release == 'true' || github.event.inputs.draft_release == true }}
           prerelease: false
           files: ./artifacts/*
         env:
