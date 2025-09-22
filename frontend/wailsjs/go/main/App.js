@@ -30,6 +30,10 @@ export function GetFileInfo(arg1) {
   return window['go']['main']['App']['GetFileInfo'](arg1);
 }
 
+export function GetVersion() {
+  return window['go']['main']['App']['GetVersion']();
+}
+
 export function LoadConfig(arg1) {
   return window['go']['main']['App']['LoadConfig'](arg1);
 }

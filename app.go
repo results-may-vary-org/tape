@@ -193,6 +193,15 @@ func (a *App) FileExists(filePath string) bool {
 	return !os.IsNotExist(err)
 }
 
+// GetVersion returns the TAPE_VERSION environment variable
+func (a *App) GetVersion() string {
+	version := os.Getenv("TAPE_VERSION")
+	if version == "" {
+		return "dev"
+	}
+	return version
+}
+
 // GetFileInfo returns file information
 func (a *App) GetFileInfo(filePath string) (fs.FileInfo, error) {
 	return os.Stat(filePath)

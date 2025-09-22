@@ -37,7 +37,8 @@ import {
   SaveExpandedFolders,
   SaveViewMode,
   SaveTheme,
-  SearchFiles
+  SearchFiles,
+  GetVersion
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/appicon.png';
 
@@ -61,6 +62,7 @@ type ViewMode = 'editor' | 'reader';
 type ThemeMode = 'system' | 'light' | 'dark';
 
 function App() {
+  const [version, setVersion] = useState<string>("dev");
   const [fileTree, setFileTree] = useState<FileItem | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
@@ -78,6 +80,19 @@ function App() {
   const [newFileName, setNewFileName] = useState('');
   const [newFolderName, setNewFolderName] = useState('');
   const [currentParentPath, setCurrentParentPath] = useState<string>('');
+
+  // Load version from environment variable
+  useEffect(() => {
+    const loadVersion = async () => {
+      try {
+        const appVersion = await GetVersion();
+        setVersion(appVersion);
+      } catch (error) {
+        console.log('Error loading version:', error);
+      }
+    };
+    loadVersion();
+  }, []);
 
   // Load last opened folder on app startup
   useEffect(() => {
@@ -456,8 +471,10 @@ function App() {
         <div className="app-container">
           <div className="welcome-screen">
             <div>
-              <img src={appIcon} alt="Tape app icon"/>
-            <h1 className="workbench">Tape</h1>
+              <Tooltip content={version}>
+                <img src={appIcon} alt="Tape app icon"/>
+                <h1 className="workbench">Tape</h1>
+              </Tooltip>
             </div>
             <div className="welcome-buttons">
               <Tooltip content="Select a directory to browse markdown files">

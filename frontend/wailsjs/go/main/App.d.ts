@@ -17,6 +17,8 @@ export function GetDirectoryTree(arg1:string):Promise<main.FileItem>;
 
 export function GetFileInfo(arg1:string):Promise<fs.FileInfo>;
 
+export function GetVersion():Promise<string>;
+
 export function LoadConfig(arg1:string):Promise<main.Config>;
 
 export function LoadInitialConfig():Promise<main.Config>;
