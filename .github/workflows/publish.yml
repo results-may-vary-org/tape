@@ -77,10 +77,17 @@ jobs:
           package: false
           go-version: '1.23'
 
+      - name: Set platform name for artifact
+        id: platform
+        run: |
+          platform_name="${{ matrix.build.platform }}"
+          platform_name="${platform_name//\//.}"
+          echo "name=${platform_name}" >> $GITHUB_OUTPUT
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.build.name }}-${{ replace(matrix.build.platform, '/', '-') }}.${{ needs.get-tag.outputs.tag }}
+          name: ${{ matrix.build.name }}.${{ steps.platform.outputs.name }}.${{ needs.get-tag.outputs.tag }}
           path: |
             build/bin/*
             ${{ steps.build.outputs.binary-path }}
