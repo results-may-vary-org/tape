@@ -5,7 +5,6 @@ on:
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
-  TAPE_VERSION: ${{ github.ref_name }}
 
 jobs:
   build:
@@ -30,17 +29,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get latest tag
+      - name: Get latest tag (Linux/macOS)
+        if: runner.os != 'Windows'
         id: get_tag
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            $tag = git describe --tags --abbrev=0 2>$null
-            if (-not $tag) { $tag = "v0.0.0" }
-            echo "TAPE_VERSION=$tag" >> $env:GITHUB_ENV
-          else
-            tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-            echo "TAPE_VERSION=$tag" >> $GITHUB_ENV
-          fi
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "TAPE_VERSION=$tag" >> $GITHUB_ENV
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
+      - name: Get latest tag (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        id: get_tag
+        run: |
+          $tag = git describe --tags --abbrev=0 2>$null
+          if (-not $tag) { $tag = "v0.0.0" }
+          echo "TAPE_VERSION=$tag" >> $env:GITHUB_ENV
+          echo "tag=$tag" | Out-File -Encoding utf8 -NoNewline $env:GITHUB_OUTPUT
 
       - name: Build wails
         uses: dAppServer/wails-build-action@main
@@ -74,6 +79,7 @@ jobs:
         run: |
           tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "TAPE_VERSION=$tag" >> $GITHUB_ENV
+          echo "tag=$tag" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -84,8 +90,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAPE_VERSION }}
-          name: Release ${{ env.TAPE_VERSION }}
+          tag_name: ${{ steps.get_tag.outputs.tag }}
+          name: Release ${{ steps.get_tag.outputs.tag }}
           draft: true
           prerelease: false
           files: ./artifacts/*
