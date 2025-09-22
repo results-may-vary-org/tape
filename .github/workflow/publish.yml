@@ -1,2 +1,135 @@
-- name: Wails Build Action
-  uses: dAppServer/wails-build-action@v2.2
+name: Build and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (optional, uses latest if empty)'
+        required: false
+        type: string
+
+env:
+  TAPE_VERSION: ${{ github.event.inputs.release_tag || github.ref_name }}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - platform: ubuntu-latest
+            os: linux
+            arch: amd64
+            ext: ""
+          - platform: windows-latest
+            os: windows
+            arch: amd64
+            ext: ".exe"
+          - platform: macos-latest
+            os: darwin
+            arch: amd64
+            ext: ""
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag if not provided
+        if: github.event.inputs.release_tag == ''
+        id: get_tag
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            $tag = git describe --tags --abbrev=0 2>$null
+            if (-not $tag) { $tag = "v0.0.0" }
+            echo "TAPE_VERSION=$tag" >> $env:GITHUB_ENV
+          else
+            tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            echo "TAPE_VERSION=$tag" >> $GITHUB_ENV
+          fi
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Build application
+        run: wails build -platform ${{ matrix.os }}/${{ matrix.arch }}
+
+      - name: Create archive (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd build/bin
+          tar -czf tape-${{ env.TAPE_VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz tape${{ matrix.ext }}
+
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd build/bin
+          7z a tape-${{ env.TAPE_VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.zip tape${{ matrix.ext }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tape-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            build/bin/tape-${{ env.TAPE_VERSION }}-${{ matrix.os }}-${{ matrix.arch }}.*
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event.inputs.release_tag != '' || startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: ./artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAPE_VERSION }}
+          name: Release ${{ env.TAPE_VERSION }}
+          draft: false
+          prerelease: false
+          files: ./artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
