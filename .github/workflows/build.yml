@@ -94,3 +94,11 @@ jobs:
           go-version: '1.21'
         env:
           TAPE_VERSION: ${{ env.TAPE_VERSION }}
+
+      # Upload artifacts using v4
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tape-${{ matrix.build.platform }}
+          path: build/bin/*
+          if-no-files-found: warn
