@@ -80,7 +80,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.build.name }}-${{ matrix.build.platform }}
+          name: ${{ matrix.build.name }}-${{ replace(matrix.build.platform, '/', '-') }}.${{ needs.get-tag.outputs.tag }}
           path: |
             build/bin/*
             ${{ steps.build.outputs.binary-path }}
