@@ -3,11 +3,32 @@ name: Build and Publish
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: read
+
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
 
 jobs:
+  get-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get_tag.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
   build:
+    needs: get-tag
     strategy:
       fail-fast: false
       matrix:
@@ -23,29 +44,29 @@ jobs:
             os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
+    env:
+      TAPE_VERSION: ${{ needs.get-tag.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get latest tag (Linux/macOS)
-        if: runner.os != 'Windows'
-        id: get_tag
-        run: |
-          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "TAPE_VERSION=$tag" >> $GITHUB_ENV
-          echo "tag=$tag" >> $GITHUB_OUTPUT
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+          cache: true
 
-      - name: Get latest tag (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        id: get_tag
-        run: |
-          $tag = git describe --tags --abbrev=0 2>$null
-          if (-not $tag) { $tag = "v0.0.0" }
-          echo "TAPE_VERSION=$tag" >> $env:GITHUB_ENV
-          echo "tag=$tag" | Out-File -Encoding utf8 -NoNewline $env:GITHUB_OUTPUT
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Build wails
         uses: dAppServer/wails-build-action@main
@@ -66,20 +87,13 @@ jobs:
           compression-level: 0
 
   publish:
-    needs: build
+    needs: [get-tag, build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Get latest tag
-        id: get_tag
-        run: |
-          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "TAPE_VERSION=$tag" >> $GITHUB_ENV
-          echo "tag=$tag" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -90,8 +104,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.get_tag.outputs.tag }}
-          name: Release ${{ steps.get_tag.outputs.tag }}
+          tag_name: ${{ needs.get-tag.outputs.tag }}
+          name: Release ${{ needs.get-tag.outputs.tag }}
           draft: true
           prerelease: false
           files: ./artifacts/*
