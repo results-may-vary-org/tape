@@ -81,7 +81,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.build.name }}-${{ matrix.build.platform }}
-          path: ${{ steps.build.outputs.binary-path }}
+          path: |
+            build/bin/*
+            ${{ steps.build.outputs.binary-path }}
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
