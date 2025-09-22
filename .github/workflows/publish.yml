@@ -74,50 +74,7 @@ jobs:
         with:
           build-name: ${{ matrix.build.name }}
           build-platform: ${{ matrix.build.platform }}
-          package: false
+          package: true
           go-version: '1.23'
+          wails-version: 'v2.9.0'
 
-      - name: Set platform name for artifact
-        id: platform
-        shell: bash
-        run: |
-          platform_name="${{ matrix.build.platform }}"
-          platform_name="${platform_name//\//.}"
-          echo "name=${platform_name}" >> $GITHUB_OUTPUT
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.build.name }}.${{ steps.platform.outputs.name }}.${{ needs.get-tag.outputs.tag }}
-          path: |
-            build/bin/*
-            ${{ steps.build.outputs.binary-path }}
-          if-no-files-found: error
-          retention-days: 30
-          compression-level: 0
-
-  publish:
-    needs: [get-tag, build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-          path: ./artifacts
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.get-tag.outputs.tag }}
-          name: Release ${{ needs.get-tag.outputs.tag }}
-          draft: true
-          prerelease: false
-          files: ./artifacts/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
