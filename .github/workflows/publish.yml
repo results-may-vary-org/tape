@@ -128,3 +128,12 @@ jobs:
             build/*.deb
             build/*.rpm
             build/*.apk
+
+      - name: Upload Linux packages to release (Linux only)
+        if: matrix.build.os == 'ubuntu-latest'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/*.deb
+            build/*.rpm
+            build/*.apk
