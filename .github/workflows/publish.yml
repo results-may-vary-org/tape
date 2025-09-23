@@ -37,12 +37,15 @@ jobs:
         build:
           - name: 'tape'
             platform: 'linux/amd64'
+            platform_hyphen: 'linux-amd64'
             os: 'ubuntu-latest'
           - name: 'tape'
             platform: 'windows/amd64'
+            platform_hyphen: 'windows-amd64'
             os: 'windows-latest'
           - name: 'tape'
             platform: 'darwin/universal'
+            platform_hyphen: 'darwin-universal'
             os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
@@ -74,7 +77,7 @@ jobs:
         uses: dAppServer/wails-build-action@main
         id: build
         with:
-          build-name: ${{ matrix.build.name }}.${{ needs.get-tag.outputs.tag }}
+          build-name: ${{ matrix.build.name }}-${{ matrix.build.platform_hyphen }}-${{ needs.get-tag.outputs.tag }}
           build-platform: ${{ matrix.build.platform }}
           package: true
           nsis: ${{ matrix.build.platform == 'windows/amd64' }}
