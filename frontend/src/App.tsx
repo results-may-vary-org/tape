@@ -62,7 +62,7 @@ type ViewMode = 'editor' | 'reader';
 type ThemeMode = 'system' | 'light' | 'dark';
 
 function App() {
-  const [version, setVersion] = useState<string>("dev");
+  const [version, setVersion] = useState<string>("nover");
   const [fileTree, setFileTree] = useState<FileItem | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
@@ -474,12 +474,10 @@ function App() {
       <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
         <div className="app-container">
           <div className="welcome-screen">
-            <Tooltip content={version}>
-              <div>
-                <img src={appIcon} alt="Tape app icon"/>
-                <h1 className="workbench">Tape</h1>
-              </div>
-            </Tooltip>
+            <div>
+              <img src={appIcon} alt="Tape app icon"/>
+              <h1 className="workbench">Tape</h1>
+            </div>
             <div className="welcome-buttons">
               <Tooltip content="Select a directory to browse markdown files">
                 <Button onClick={handleOpenDirectory} className="primary-button">
@@ -501,7 +499,7 @@ function App() {
           <div className="header-left">
             <div className="logo">
               <img src={appIcon} alt="Tape app icon"/>
-              <h1 className="workbench">Tape</h1>
+              <h1 className="workbench">Tape <small style={{fontSize: 'xx-small'}}>{version}</small></h1>
               <div id="info" className="info vt32">
                 {hasUnsavedChanges && "unsaved file_"}
               </div>
