@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import '@radix-ui/themes/styles.css';
-import {SegmentedControl, Theme as RadixTheme } from '@radix-ui/themes';
+import {Theme as RadixTheme } from '@radix-ui/themes';
 import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
@@ -16,7 +16,7 @@ import {
   Eye,
   Sun,
   Moon,
-  Monitor, CassetteTape
+  Monitor
 } from 'lucide-react';
 import { DropdownMenu, Select, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 import {
@@ -83,7 +83,8 @@ function App() {
 
   // Load version from environment variable
   useEffect(() => {
-    const loadVersion = async () => {
+    try {
+     const loadVersion = async () => {
       try {
         const appVersion = await GetVersion();
         setVersion(appVersion);
@@ -92,6 +93,9 @@ function App() {
       }
     };
     loadVersion();
+    } catch (e) {
+      console.log(`error loading version: ${e}`)
+    }
   }, []);
 
   // Load last opened folder on app startup
@@ -470,12 +474,12 @@ function App() {
       <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
         <div className="app-container">
           <div className="welcome-screen">
-            <div>
-              <Tooltip content={version}>
+            <Tooltip content={version}>
+              <div>
                 <img src={appIcon} alt="Tape app icon"/>
                 <h1 className="workbench">Tape</h1>
-              </Tooltip>
-            </div>
+              </div>
+            </Tooltip>
             <div className="welcome-buttons">
               <Tooltip content="Select a directory to browse markdown files">
                 <Button onClick={handleOpenDirectory} className="primary-button">
