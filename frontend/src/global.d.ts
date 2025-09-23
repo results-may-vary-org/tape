@@ -1,0 +1,1 @@
+declare const __TAPE_VERSION__: string;
