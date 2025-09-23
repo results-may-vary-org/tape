@@ -77,7 +77,7 @@ jobs:
           build-name: ${{ matrix.build.name }}.${{ needs.get-tag.outputs.tag }}
           build-platform: ${{ matrix.build.platform }}
           package: true
-          nsis: true
+          nsis: ${{ matrix.build.platform == 'windows/amd64' }}
           go-version: '1.23'
           wails-version: 'v2.9.0'
 
