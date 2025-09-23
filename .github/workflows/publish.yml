@@ -78,7 +78,7 @@ jobs:
         id: build
         with:
           build-cache: false
-          build-name: ${{ matrix.build.name }}-${{ matrix.build.platform_hyphen }}-${{ needs.get-tag.outputs.tag }}
+          build-name: ${{ matrix.build.platform == 'darwin/universal' && matrix.build.name || format('{0}-{1}-{2}', matrix.build.name, matrix.build.platform_hyphen, needs.get-tag.outputs.tag) }}
           build-platform: ${{ matrix.build.platform }}
           package: true
           nsis: ${{ matrix.build.platform == 'windows/amd64' }}
@@ -137,28 +137,3 @@ jobs:
             build/*.deb
             build/*.rpm
             build/*.apk
-
-      # manual step because the build generate is own file so ditto failed to find the right one
-      # Built '/Users/runner/work/tape/tape/build/bin/tape.app/Contents/MacOS/tape'
-      - name: Package macOS app (macOS only)
-        if: matrix.build.os == 'macos-latest'
-        run: |
-          # List what Wails actually created
-          ls -la build/bin/
-
-          # Make sure the binary is executable
-          chmod +x build/bin/*/Contents/MacOS/*
-
-          # Create zip archive with versioned name (using the actual tape.app)
-          cd build/bin
-          ditto -c -k --keepParent tape.app tape-darwin-universal-${{ needs.get-tag.outputs.tag }}.app.zip
-          cd ../..
-
-          # List final result
-          ls -la build/bin/*.zip
-
-      - name: Upload macOS app to release (macOS only)
-        if: matrix.build.os == 'macos-latest'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: build/bin/*.zip
