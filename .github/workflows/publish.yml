@@ -85,4 +85,40 @@ jobs:
           go-version: '1.23'
           wails-version: 'v2.9.0'
 
+      - name: Setup nFPM (Linux only)
+        if: matrix.build.os == 'ubuntu-latest'
+        run: |
+          curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh
+          sudo mv ./bin/nfpm /usr/local/bin/
 
+      - name: Create Linux packages (Linux only)
+        if: matrix.build.os == 'ubuntu-latest'
+        run: |
+          # Verify binary exists
+          ls -la build/bin/
+
+          # Copy icon if it doesn't exist in the expected location
+          if [ ! -f build/appicon.png ]; then
+            echo "Warning: appicon.png not found in build/, creating placeholder"
+            mkdir -p build
+            # Create a simple placeholder icon file
+            echo "PNG placeholder" > build/appicon.png
+          fi
+
+          # Generate packages
+          TAPE_VERSION=${{ needs.get-tag.outputs.tag }} nfpm package --packager deb --target ./build/
+          TAPE_VERSION=${{ needs.get-tag.outputs.tag }} nfpm package --packager rpm --target ./build/
+          TAPE_VERSION=${{ needs.get-tag.outputs.tag }} nfpm package --packager apk --target ./build/
+
+          # List generated packages
+          ls -la build/*.{deb,rpm,apk} || echo "Some packages may not have been generated"
+
+      - name: Upload Linux packages (Linux only)
+        if: matrix.build.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages-${{ needs.get-tag.outputs.tag }}
+          path: |
+            build/*.deb
+            build/*.rpm
+            build/*.apk

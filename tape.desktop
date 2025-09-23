@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Tape
+Comment=A markdown editor with no bloat
+Exec=tape
+Icon=tape
+Type=Application
+Categories=Office;TextEditor;
+StartupNotify=true
+MimeType=text/markdown;text/x-markdown;
