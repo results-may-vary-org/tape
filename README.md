@@ -1,95 +1,159 @@
-[//]: # (note for me - Linux/Unix Desktops > Desktop Extensions > KDE Plasma Extensions > Plasma Wallpaper Plugins)
-
 <p align="center">
-  <a href="https://www.pling.com/p/2017888/">
-    <img alt="ActiveBlur" src="assets/store-img.png" width="220"/>
+  <a href="https://github.com/results-may-vary-org/tape">
+    <img alt="Tape" src="assets/tape-icon.png" width="220"/>
   </a>
 </p>
-<h1 align="center">Active Blur <i>- a plasma wallpaper plugin</i></h1>
+<h1 align="center">Tape <i>- a markdown editor with no bloat</i></h1>
 
-<img alt="Static Badge" src="https://img.shields.io/badge/Still_maintened-Yes_%3A)-green">
-
-https://user-images.githubusercontent.com/30547569/233472177-a752d175-291a-4ba3-877d-dcd25a79b6e4.mp4
+<img alt="Static Badge" src="https://img.shields.io/badge/Still_maintained-Yes_%3A)-green">
 
 ## Description
 
-Blur the wallpaper if a windows is active.
+A powerful markdown note-taking application built with Wails that includes built-in MCP (Model Context Protocol) server support for seamless AI integration.
 
-### main feature
+### Main Features
 
-- live thumbnail preview
-- keep all the behavior of the default `image` plugin made by kde like :
-    - auto apply the wallpaper on click
-    - add color and blur option in function of the positioning
-- give you the ability to deactivate the effect
-- give you the ability to change the blur radius and the animation delay
-- the slideshow wallpaper type is available too
-- `new` now you can also darken the wallpaper and choose the color and the transparency of this effect
+- **Markdown Editor & Reader**: Switch between editing and rendered preview modes with live preview
+- **File Tree Navigation**: Organized file browser with folders-first, alphabetical sorting
+- **File Operations**: Create, rename, delete files and folders with existence validation
+- **Auto-save**: Ctrl+S to save with visual unsaved changes indicators
+- **Persistent Workspace**: Remembers last opened folder via `tape.json` config
+- **Context Menus**: Right-click file operations (create, rename, delete)
+- **Full-text Search**: Search across all markdown files with fuzzy matching
+- **AI Integration**: Built-in MCP server for AI assistant compatibility
+- **Cross-platform**: Available for Linux, Windows, and macOS
 
-### history
+### History
 
-My own code for replacing [inactiveblur](https://github.com/Zren/plasma-wallpapers/tree/master/inactiveblur) that it seems to be abandoned.
-
-I have duplicated the default KDE `image` plugin so all the default effect and behavior is still present.
+Tape is designed as a no-bloat markdown editor that focuses on simplicity and efficiency. Built with modern technologies (Go + React + Wails) to provide a native desktop experience while maintaining the flexibility of web technologies.
 
 ## Installation
 
-### Plasma 6
-- Download via [the KDE store](https://www.kling.com/p/2134907/)
-- Install it via the wallpaper plugin ("get new plugin" button into Desktop Folder Settings)
-- Download the last release and extract it and place the folder into `~/.local/share/plasma/wallpapers/` next you need to rename it into `a2n.blur`
-- Download via :
-  - [the AUR (for arch linux users)](https://aur.archlinux.org/packages/plasma6-wallpapers-blurredwallpaper), thanks to [dr460nf1r3](https://github.com/dr460nf1r3)
-  - [the AUR (git release)(for arch linux users)](https://aur.archlinux.org/packages/plasma6-wallpapers-blurredwallpaper-git)
+### Linux
+- Download via [AUR (Arch Linux)](https://aur.archlinux.org/packages/tape-bin)
+- Download the `.deb`, `.rpm`, or `.apk` package from [releases](https://github.com/results-may-vary-org/tape/releases)
+- Install manually:
+  ```bash
+  # For Debian/Ubuntu
+  sudo dpkg -i tape_*.deb
 
-### Plasma 5
-- Download via [the KDE store](https://www.pling.com/p/2017888/)
-- Download the V2.2.0 release and extract it and place the folder into `~/.local/share/plasma/wallpapers/` next you need to rename it into `a2n.blur`
+  # For Red Hat/Fedora
+  sudo rpm -i tape_*.rpm
 
-### How to help with the AUR package?
+  # For Alpine Linux
+  sudo apk add --allow-untrusted tape_*.apk
+  ```
 
-Go here: [https://github.com/bouteillerAlan/plasma6-wallpapers-blurredwallpaper-git](https://github.com/bouteillerAlan/plasma6-wallpapers-blurredwallpaper-git).
+### Windows
+- Download the installer from [releases](https://github.com/results-may-vary-org/tape/releases)
+- Run the `tape-windows-amd64-*.exe` installer
+
+### macOS
+- Download the `.app` bundle from [releases](https://github.com/results-may-vary-org/tape/releases)
+- Drag to Applications folder
+
+### Build from Source
+```bash
+# Prerequisites: Go 1.23+, Node.js, Wails v2.9.0+
+git clone https://github.com/results-may-vary-org/tape.git
+cd tape
+wails build
+```
 
 ## Configuration
 
-| Name              | Description                                                                | Result                                                       |
-|-------------------|----------------------------------------------------------------------------|--------------------------------------------------------------|
-| Active Blur       | If you want the effect or not                                              | The effect is active or not                                  |
-| Slideshow         | If you want your wallpaper to be in slideshow                              | Your wallpaper is a slideshow or a single image              |
-| Blur Radius       | Give you the possibility to customize the blur radius                      | The blur is stronger or weaker                               |
-| Animation Delay   | Give you the possibility to customize the delay of the animation           | The blur appears and disappears more quickly or less quickly |
-| Active Color      | If you want the darken effect or not                                       | The color effect is activated or not                         |
-| Color transparency | Give you the possibility to customize the color transparency               | The darken color is more or less transparent                 |
-| Color | Give you the possibility to customize the color of the Active Color option | The darken color is red if you choose red for example        |
+| Feature | Description | Usage |
+|---------|-------------|--------|
+| Workspace | Root folder for your markdown notes | Select via "Open Folder" dialog |
+| View Mode | Switch between editor and reader modes | Toggle button in header |
+| Theme | Light/dark theme support | Auto-detected from system |
+| Auto-save | Automatic saving with visual indicators | Ctrl+S or auto-save on changes |
+| File Search | Full-text search across all files | Search bar with fuzzy matching |
+| MCP Server | AI assistant integration | Runs automatically when configured |
 
-![pres](assets/main-screenshot.png)
+![Tape Screenshot](assets/tape-screenshot.png)
+
+## AI Integration (MCP Server)
+
+Tape includes a built-in MCP server that allows AI assistants to interact with your markdown notes:
+
+### Available Tools
+- **File Operations**: Read, write, create, delete markdown files
+- **Directory Operations**: Create folders, list files
+- **Content Search**: Full-text search across all markdown files
+- **Workspace Navigation**: Explore and understand file structure
+
+### Setup for Claude Desktop
+Add to your Claude Desktop config:
+```json
+{
+  "mcpServers": {
+    "tape-markdown": {
+      "command": "/path/to/tape-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}
+```
+
+## Development
+
+### Tech Stack
+- **Backend**: Go with Wails framework
+- **Frontend**: React + TypeScript with Vite
+- **UI Components**: Radix UI with custom styling
+- **Markdown**: Marked.js with syntax highlighting
+
+### Building
+```bash
+# Install dependencies
+npm install
+
+# Build frontend
+npm run build
+
+# Build application
+wails build
+
+# Build MCP server
+cd cmd/mcp && go build -o ../../build/bin/tape-mcp .
+```
+
+### Project Structure
+```
+tape/
+├── main.go              # Main application entry
+├── app.go               # Core application logic
+├── cmd/mcp/            # MCP server implementation
+├── frontend/           # React frontend
+├── build/              # Build outputs
+└── assets/             # Icons and resources
+```
 
 ## Code of conduct, license, authors, changelog, contributing
 
-See the following file :
-- [code of conduct](CODE_OF_CONDUCT.md)
+See the following files:
 - [license](LICENSE)
-- [authors](AUTHORS)
-- [contributing](CONTRIBUTING.md)
-- [changelog](CHANGELOG)
-- [security](SECURITY.md)
+- [contributing guidelines](CONTRIBUTING.md)
+- [changelog](CHANGELOG.md)
+- [code of conduct](CODE_OF_CONDUCT.md)
 
 ## Want to participate? Have a bug or a request feature?
 
-Do not hesitate to open a pr or an issue. I reply when I can.
+Do not hesitate to open a PR or an issue. I reply when I can.
 
-### Another cool project to check (wallpaper/blur related)
+### Related Projects
 
-- [Plasma 6 Wallpaper plugin to play videos on the Desktop/Lock Screen](https://github.com/luisbocanegra/plasma-smart-video-wallpaper-reborn)
-- [Plasma Widget to enable Active Blur and other effects in front of all Wallpaper Plugins](https://github.com/luisbocanegra/plasma-wallpaper-effects)
-- [Better Blur, a fork of the Plasma 6 blur effect with additional features and bug fixes](https://github.com/taj-ny/kwin-effects-forceblur)
+- [Wails](https://wails.io/) - Build desktop applications using Go and web technologies
+- [MCP Protocol](https://modelcontextprotocol.io/) - Model Context Protocol for AI assistant integration
+- [Radix UI](https://www.radix-ui.com/) - Low-level UI primitives for React
 
 ## Want to support my work?
 
-- [Give me a tips](https://ko-fi.com/a2n00)
-- [Give a star on github](https://github.com/bouteillerAlan/blurredwallpaper)
-- [Add a rating and a comment on Pling](https://www.pling.com/p/2134907/)
-- [Become a fan on Pling](https://www.pling.com/p/2134907/)
-- Or just participate to the developement :D
+- [Give me a tip](https://ko-fi.com/a2n00)
+- [Give a star on GitHub](https://github.com/results-may-vary-org/tape)
+- [Report issues or contribute](https://github.com/results-may-vary-org/tape/issues)
+- Or just participate in the development :D
 
-### Thanks !
+### Thanks!
