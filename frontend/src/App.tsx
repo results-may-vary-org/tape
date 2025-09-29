@@ -87,7 +87,9 @@ function App() {
 
   // Load last opened folder on app startup
   useEffect(() => {
+    console.log('App starting up');
     const loadLastFolder = async () => {
+      console.log('Loading last opened folder');
       try {
         // First try to load from the old config location
         const initialConfig = await LoadInitialConfig();

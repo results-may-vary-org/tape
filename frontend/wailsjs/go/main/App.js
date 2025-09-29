@@ -30,18 +30,6 @@ export function GetDirectoryTree(arg1) {
   return window['go']['main']['App']['GetDirectoryTree'](arg1);
 }
 
-export function GetFileInfo(arg1) {
-  return window['go']['main']['App']['GetFileInfo'](arg1);
-}
-
-export function GetMCPServerInfo() {
-  return window['go']['main']['App']['GetMCPServerInfo']();
-}
-
-export function GetMCPServerStatus() {
-  return window['go']['main']['App']['GetMCPServerStatus']();
-}
-
 export function GetVersion() {
   return window['go']['main']['App']['GetVersion']();
 }
@@ -56,10 +44,6 @@ export function LoadInitialConfig() {
 
 export function OpenDirectoryDialog() {
   return window['go']['main']['App']['OpenDirectoryDialog']();
-}
-
-export function OpenFileDialog() {
-  return window['go']['main']['App']['OpenFileDialog']();
 }
 
 export function ReadFile(arg1) {
@@ -96,14 +80,6 @@ export function SaveViewMode(arg1, arg2) {
 
 export function SearchFiles(arg1, arg2) {
   return window['go']['main']['App']['SearchFiles'](arg1, arg2);
-}
-
-export function StartMCPServer() {
-  return window['go']['main']['App']['StartMCPServer']();
-}
-
-export function StopMCPServer() {
-  return window['go']['main']['App']['StopMCPServer']();
 }
 
 export function WriteFile(arg1, arg2) {

@@ -16,6 +16,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onChange,
   onSave,
   filePath,
+  originalContent,
   autoFocus = true
 }) => {
   const [localContent, setLocalContent] = useState(content);
@@ -64,7 +65,11 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   return (
     <div className="markdown-editor">
-      <Stats/>
+      <Stats
+        originalContent={originalContent}
+        currentContent={localContent}
+        filePath={filePath}
+      />
       <textarea
         ref={textareaRef}
         value={localContent}

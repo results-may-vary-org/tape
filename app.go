@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
+	"unicode"
 
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -65,12 +65,123 @@ type DiffService struct {
 	mutex sync.RWMutex
 }
 
+// countWords counts words in text
+func countWords(text string) int {
+	count := 0
+	inWord := false
+	for _, char := range text {
+		if unicode.IsSpace(char) || unicode.IsPunct(char) {
+			if inWord {
+				count++
+				inWord = false
+			}
+		} else {
+			inWord = true
+		}
+	}
+	if inWord {
+		count++
+	}
+	return count
+}
+
+// countLines counts lines in text
+func countLines(text string) int {
+	if text == "" {
+		return 0
+	}
+	lines := strings.Count(text, "\n")
+	if !strings.HasSuffix(text, "\n") {
+		lines++
+	}
+	return lines
+}
+
+// CalculateDiff computes detailed diff statistics between original and modified text
+func (ds *DiffService) CalculateDiff(original, modified, cacheKey string) *DiffResult {
+	ds.mutex.Lock()
+	defer ds.mutex.Unlock()
+
+	// Check cache first
+	if result, exists := ds.cache[cacheKey]; exists {
+		return result
+	}
+
+	// Initialize diff matcher
+	dmp := diffmatchpatch.New()
+	diffs := dmp.DiffMain(original, modified, false)
+
+	// Clean up diffs for better results
+	diffs = dmp.DiffCleanupSemantic(diffs)
+
+	result := &DiffResult{}
+
+	// Count character-level changes
+	var addedText, removedText strings.Builder
+	var modifiedLinesCount int
+
+	for _, diff := range diffs {
+		switch diff.Type {
+		case diffmatchpatch.DiffInsert:
+			result.CharsAdded += len(diff.Text)
+			result.WordsAdded += countWords(diff.Text)
+			addedText.WriteString(diff.Text)
+		case diffmatchpatch.DiffDelete:
+			result.CharsRemoved += len(diff.Text)
+			result.WordsRemoved += countWords(diff.Text)
+			removedText.WriteString(diff.Text)
+		}
+	}
+
+	// Calculate line-level changes
+	originalLines := strings.Split(original, "\n")
+	modifiedLines := strings.Split(modified, "\n")
+
+	// Simple line diff for line counts
+	lineDiffs := dmp.DiffMain(strings.Join(originalLines, "\n"), strings.Join(modifiedLines, "\n"), true)
+	lineDiffs = dmp.DiffCleanupSemantic(lineDiffs)
+
+	for _, diff := range lineDiffs {
+		switch diff.Type {
+		case diffmatchpatch.DiffInsert:
+			result.LinesAdded += countLines(diff.Text)
+		case diffmatchpatch.DiffDelete:
+			result.LinesRemoved += countLines(diff.Text)
+		}
+	}
+
+	// Estimate modified lines (lines that have both additions and deletions nearby)
+	// This is a simplified heuristic
+	if result.LinesAdded > 0 && result.LinesRemoved > 0 {
+		modifiedLinesCount = min(result.LinesAdded, result.LinesRemoved)
+		result.LinesModified = modifiedLinesCount
+	}
+
+	// Calculate totals for current state
+	result.TotalLines = countLines(modified)
+	result.TotalChars = len(modified)
+	result.TotalWords = countWords(modified)
+
+	// Optional: store raw diff for expandable view
+	result.DiffContent = dmp.DiffPrettyText(diffs)
+
+	// Cache the result
+	ds.cache[cacheKey] = result
+
+	return result
+}
+
+// min helper function
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // App struct
 type App struct {
 	ctx         context.Context
-	mcpCmd      *exec.Cmd
-	mcpMutex    sync.Mutex
-	mcpRunning  bool
 	diffService *DiffService
 }
 
@@ -96,18 +207,6 @@ func (a *App) OpenDirectoryDialog() (string, error) {
 	})
 }
 
-// OpenFileDialog opens a file selection dialog for markdown files
-func (a *App) OpenFileDialog() (string, error) {
-	return runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Select markdown file",
-		Filters: []runtime.FileFilter{
-			{
-				DisplayName: "Markdown Files",
-				Pattern:     "*.md",
-			},
-		},
-	})
-}
 
 // GetDirectoryTree returns the file tree structure for a given directory
 func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
@@ -239,31 +338,15 @@ func (a *App) GetVersion() string {
 	return version
 }
 
-// GetFileInfo returns file information
-func (a *App) GetFileInfo(filePath string) (fs.FileInfo, error) {
-	return os.Stat(filePath)
+
+// getConfigPath returns the path to the config file in the selected folder
+func (a *App) getConfigPath(folderPath string) string {
+	return filepath.Join(folderPath, "tape.json")
 }
 
-// getConfigPath returns the path to the config file
-func (a *App) getConfigPath(folderPath string) (string, error) {
-	if folderPath == "" {
-		// Fallback to old behavior if no folder is selected
-		executable, err := os.Executable()
-		if err != nil {
-			return "", err
-		}
-		execDir := filepath.Dir(executable)
-		return filepath.Join(execDir, "tape.json"), nil
-	}
-	return filepath.Join(folderPath, "tape.json"), nil
-}
-
-// LoadConfig loads the configuration from tape.json
+// LoadConfig loads the configuration from tape.json in the folder
 func (a *App) LoadConfig(folderPath string) (*Config, error) {
-	configPath, err := a.getConfigPath(folderPath)
-	if err != nil {
-		return &Config{}, err
-	}
+	configPath := a.getConfigPath(folderPath)
 
 	// If config file doesn't exist, return empty config
 	if !a.FileExists(configPath) {
@@ -284,12 +367,9 @@ func (a *App) LoadConfig(folderPath string) (*Config, error) {
 	return &config, nil
 }
 
-// SaveConfig saves the configuration to tape.json
+// SaveConfig saves the configuration to tape.json in the folder
 func (a *App) SaveConfig(config *Config, folderPath string) error {
-	configPath, err := a.getConfigPath(folderPath)
-	if err != nil {
-		return err
-	}
+	configPath := a.getConfigPath(folderPath)
 
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
@@ -358,31 +438,8 @@ func (a *App) SaveExpandedFolders(folderPath string, expandedFolders []string) e
 	return a.SaveConfig(config, folderPath)
 }
 
-// LoadInitialConfig loads config from old location for initial app startup
+// LoadInitialConfig loads initial configuration - returns empty config if no previous folder
 func (a *App) LoadInitialConfig() (*Config, error) {
-	// Try to load from old location first (for migration)
-	executable, err := os.Executable()
-	if err != nil {
-		return &Config{}, err
-	}
-	execDir := filepath.Dir(executable)
-	oldConfigPath := filepath.Join(execDir, "tape.json")
-
-	if a.FileExists(oldConfigPath) {
-		data, err := os.ReadFile(oldConfigPath)
-		if err != nil {
-			return &Config{}, err
-		}
-
-		var config Config
-		err = json.Unmarshal(data, &config)
-		if err != nil {
-			return &Config{}, err
-		}
-
-		return &config, nil
-	}
-
 	return &Config{}, nil
 }
 
@@ -534,3 +591,15 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 
 	return results, nil
 }
+
+
+// GetContentDiff calculates diff between two text contents (matching frontend expectation)
+func (a *App) GetContentDiff(originalContent, currentContent string) (*DiffResult, error) {
+	// Use a combination of contents as cache key for this comparison
+	cacheKey := "direct_diff_" + string(len(originalContent)) + "_" + string(len(currentContent))
+
+	// Calculate diff
+	result := a.diffService.CalculateDiff(originalContent, currentContent, cacheKey)
+	return result, nil
+}
+
