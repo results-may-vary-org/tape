@@ -239,6 +239,13 @@ button:hover {
 /* Editor & reader */
 
 .markdown-reader {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.reader-content {
+  flex: 1;
   padding: 1.5rem;
   overflow: auto;
 }
@@ -360,6 +367,40 @@ button:hover {
 
 /* Search Modal */
 #search-info {
+  color: var(--orange-9);
+}
+
+/* Note Status Bar */
+.note-status-bar {
+  color: var(--gray-11);
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--gray-6);
+  background: var(--color-panel);
+  font-size: 0.875rem;
+}
+
+.note-status-bar .stat-changed {
+  color: var(--orange-9);
+}
+
+.note-status-bar .stat-positive {
+  color: var(--green-9);
+}
+
+.note-status-bar .stat-negative {
+  color: var(--orange-9);
+}
+
+.note-status-bar .stat-delta {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.note-status-bar .stat-delta-positive {
+  color: var(--green-9);
+}
+
+.note-status-bar .stat-delta-negative {
   color: var(--orange-9);
 }
 

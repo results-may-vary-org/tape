@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 interface MarkdownEditorProps {
   content: string;
@@ -6,6 +6,7 @@ interface MarkdownEditorProps {
   onSave: () => void;
   filePath: string | null;
   hasUnsavedChanges: boolean;
+  originalContent: string;
   autoFocus?: boolean;
 }
 
@@ -15,6 +16,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onSave,
   filePath,
   hasUnsavedChanges,
+  originalContent,
   autoFocus = true
 }) => {
   const [localContent, setLocalContent] = useState(content);
@@ -46,12 +48,47 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       e.preventDefault();
       onSave();
     }
-    // Let browser handle undo/redo naturally for the textarea
-    if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
-      // Don't prevent default - let browser handle undo/redo
-      return;
-    }
+    // Let browser handle undo/redo naturally - no need to intercept
   }, [onSave]);
+
+  const noteStats = useMemo(() => {
+    if (!filePath || !localContent) return {
+      chars: 0, words: 0, lines: 0,
+      originalChars: 0, originalWords: 0, originalLines: 0,
+      charsDelta: 0, wordsDelta: 0, linesDelta: 0
+    };
+
+    const chars = localContent.length;
+    const words = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+    const lines = localContent.split('\n').length;
+
+    const originalChars = originalContent.length;
+    const originalWords = originalContent.trim() ? originalContent.trim().split(/\s+/).length : 0;
+    const originalLines = originalContent.split('\n').length;
+
+    const charsDelta = chars - originalChars;
+    const wordsDelta = words - originalWords;
+    const linesDelta = lines - originalLines;
+
+    return { chars, words, lines, originalChars, originalWords, originalLines, charsDelta, wordsDelta, linesDelta };
+  }, [filePath, localContent, originalContent]);
+
+  const formatDelta = (delta: number): string => {
+    if (delta === 0) return '';
+    return delta > 0 ? `+${delta}` : `${delta}`;
+  };
+
+  const getDeltaClass = (delta: number): string => {
+    if (delta === 0) return 'stat-delta';
+    return delta > 0 ? 'stat-delta stat-delta-positive' : 'stat-delta stat-delta-negative';
+  };
+
+  const getStatClass = (hasChanged: boolean, delta: number): string => {
+    if (!hasUnsavedChanges || !hasChanged) return '';
+    if (delta > 0) return 'stat-positive';
+    if (delta < 0) return 'stat-negative';
+    return 'stat-changed';
+  };
 
   if (!filePath) {
     return (
@@ -63,6 +100,9 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   return (
     <div className="markdown-editor">
+      <div className="note-status-bar vt32">
+        <span className={getStatClass(noteStats.chars !== noteStats.originalChars, noteStats.charsDelta)}>Characters: {noteStats.chars}</span>{hasUnsavedChanges && noteStats.charsDelta !== 0 && <span className={getDeltaClass(noteStats.charsDelta)}> ({formatDelta(noteStats.charsDelta)})</span>} <span className={getStatClass(noteStats.words !== noteStats.originalWords, noteStats.wordsDelta)}>Words: {noteStats.words}</span>{hasUnsavedChanges && noteStats.wordsDelta !== 0 && <span className={getDeltaClass(noteStats.wordsDelta)}> ({formatDelta(noteStats.wordsDelta)})</span>} <span className={getStatClass(noteStats.lines !== noteStats.originalLines, noteStats.linesDelta)}>Lines: {noteStats.lines}</span>{hasUnsavedChanges && noteStats.linesDelta !== 0 && <span className={getDeltaClass(noteStats.linesDelta)}> ({formatDelta(noteStats.linesDelta)})</span>}
+      </div>
       <textarea
         ref={textareaRef}
         value={localContent}

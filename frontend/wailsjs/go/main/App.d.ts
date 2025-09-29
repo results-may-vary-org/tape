@@ -17,6 +17,10 @@ export function GetDirectoryTree(arg1:string):Promise<main.FileItem>;
 
 export function GetFileInfo(arg1:string):Promise<fs.FileInfo>;
 
+export function GetMCPServerInfo():Promise<Record<string, any>>;
+
+export function GetMCPServerStatus():Promise<boolean>;
+
 export function GetVersion():Promise<string>;
 
 export function LoadConfig(arg1:string):Promise<main.Config>;
@@ -45,13 +49,8 @@ export function SaveViewMode(arg1:string,arg2:string):Promise<void>;
 
 export function SearchFiles(arg1:string,arg2:string):Promise<Array<main.SearchResult>>;
 
-export function WriteFile(arg1:string,arg2:string):Promise<void>;
-
-// MCP Server functions
 export function StartMCPServer():Promise<void>;
 
 export function StopMCPServer():Promise<void>;
 
-export function GetMCPServerStatus():Promise<boolean>;
-
-export function GetMCPServerInfo():Promise<{[key: string]: any}>;
+export function WriteFile(arg1:string,arg2:string):Promise<void>;

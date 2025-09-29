@@ -30,6 +30,14 @@ export function GetFileInfo(arg1) {
   return window['go']['main']['App']['GetFileInfo'](arg1);
 }
 
+export function GetMCPServerInfo() {
+  return window['go']['main']['App']['GetMCPServerInfo']();
+}
+
+export function GetMCPServerStatus() {
+  return window['go']['main']['App']['GetMCPServerStatus']();
+}
+
 export function GetVersion() {
   return window['go']['main']['App']['GetVersion']();
 }
@@ -86,11 +94,6 @@ export function SearchFiles(arg1, arg2) {
   return window['go']['main']['App']['SearchFiles'](arg1, arg2);
 }
 
-export function WriteFile(arg1, arg2) {
-  return window['go']['main']['App']['WriteFile'](arg1, arg2);
-}
-
-// MCP Server functions
 export function StartMCPServer() {
   return window['go']['main']['App']['StartMCPServer']();
 }
@@ -99,10 +102,6 @@ export function StopMCPServer() {
   return window['go']['main']['App']['StopMCPServer']();
 }
 
-export function GetMCPServerStatus() {
-  return window['go']['main']['App']['GetMCPServerStatus']();
-}
-
-export function GetMCPServerInfo() {
-  return window['go']['main']['App']['GetMCPServerInfo']();
+export function WriteFile(arg1, arg2) {
+  return window['go']['main']['App']['WriteFile'](arg1, arg2);
 }
