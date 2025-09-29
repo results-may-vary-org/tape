@@ -778,7 +778,16 @@ function App() {
       {/* Search Modal */}
       <SearchModal
         isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
+        onClose={() => {
+          setIsSearchModalOpen(false);
+          // Refocus editor in editor mode after modal closes
+          if (viewMode === 'editor') {
+            setTimeout(() => {
+              const textarea = document.querySelector('.editor-textarea') as HTMLTextAreaElement;
+              textarea?.focus();
+            }, 100);
+          }
+        }}
         onFileSelect={handleFileSelect}
         onSearch={handleSearch}
       />
@@ -786,7 +795,16 @@ function App() {
       {/* Shortcuts Modal */}
       <ShortcutsModal
         isOpen={isShortcutsModalOpen}
-        onClose={() => setIsShortcutsModalOpen(false)}
+        onClose={() => {
+          setIsShortcutsModalOpen(false);
+          // Refocus editor in editor mode after modal closes
+          if (viewMode === 'editor') {
+            setTimeout(() => {
+              const textarea = document.querySelector('.editor-textarea') as HTMLTextAreaElement;
+              textarea?.focus();
+            }, 100);
+          }
+        }}
         version={version}
       />
     </RadixTheme>
