@@ -404,6 +404,10 @@ button:hover {
   color: var(--orange-9);
 }
 
+.note-status-bar .stat-delta-modified {
+  color: var(--blue-9);
+}
+
 .search-results {
   flex: 1;
   overflow-y: auto;

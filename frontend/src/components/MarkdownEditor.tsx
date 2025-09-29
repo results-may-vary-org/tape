@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useDiffStats } from '../hooks/useDiffStats';
 
 interface MarkdownEditorProps {
   content: string;
@@ -23,8 +24,12 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setLocalContent(content);
-  }, [content]);
+    // Only update local content if it's different from what the user is typing
+    // This preserves the browser's native undo stack
+    if (content !== localContent) {
+      setLocalContent(content);
+    }
+  }, [content, localContent]);
 
   // Auto-focus the textarea when editor becomes visible
   useEffect(() => {
@@ -47,31 +52,63 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     if (e.ctrlKey && e.key === 's') {
       e.preventDefault();
       onSave();
+      return;
     }
-    // Let browser handle undo/redo naturally - no need to intercept
+
+    // Explicitly allow undo/redo to pass through without interference
+    if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+      // Let the browser handle Ctrl+Z (undo) naturally
+      return;
+    }
+
+    if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) {
+      // Let the browser handle Ctrl+Y (redo) naturally
+      return;
+    }
+
+    // Also handle Ctrl+Shift+Z for redo (common alternative)
+    if (e.ctrlKey && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+      // Let the browser handle Ctrl+Shift+Z (redo) naturally
+      return;
+    }
   }, [onSave]);
+
+  // Use the new Git-powered diff stats
+  const { diffResult } = useDiffStats(originalContent, localContent);
 
   const noteStats = useMemo(() => {
     if (!filePath || !localContent) return {
       chars: 0, words: 0, lines: 0,
-      originalChars: 0, originalWords: 0, originalLines: 0,
-      charsDelta: 0, wordsDelta: 0, linesDelta: 0
+      charsDelta: 0, wordsDelta: 0, linesDelta: 0,
+      linesAdded: 0, linesRemoved: 0, linesModified: 0
     };
 
-    const chars = localContent.length;
-    const words = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
-    const lines = localContent.split('\n').length;
+    if (!diffResult) {
+      // Fallback to basic calculations if diff not ready
+      const chars = localContent.length;
+      const words = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+      const lines = localContent.split('\n').length;
 
-    const originalChars = originalContent.length;
-    const originalWords = originalContent.trim() ? originalContent.trim().split(/\s+/).length : 0;
-    const originalLines = originalContent.split('\n').length;
+      return {
+        chars, words, lines,
+        charsDelta: 0, wordsDelta: 0, linesDelta: 0,
+        linesAdded: 0, linesRemoved: 0, linesModified: 0
+      };
+    }
 
-    const charsDelta = chars - originalChars;
-    const wordsDelta = words - originalWords;
-    const linesDelta = lines - originalLines;
-
-    return { chars, words, lines, originalChars, originalWords, originalLines, charsDelta, wordsDelta, linesDelta };
-  }, [filePath, localContent, originalContent]);
+    // Use Git diff results
+    return {
+      chars: diffResult.totalChars,
+      words: diffResult.totalWords,
+      lines: diffResult.totalLines,
+      charsDelta: diffResult.charsAdded - diffResult.charsRemoved,
+      wordsDelta: diffResult.wordsAdded - diffResult.wordsRemoved,
+      linesDelta: diffResult.linesAdded - diffResult.linesRemoved,
+      linesAdded: diffResult.linesAdded,
+      linesRemoved: diffResult.linesRemoved,
+      linesModified: diffResult.linesModified
+    };
+  }, [filePath, localContent, diffResult]);
 
   const formatDelta = (delta: number): string => {
     if (delta === 0) return '';
@@ -90,6 +127,18 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     return 'stat-changed';
   };
 
+  const formatGitLineDelta = (): string => {
+    if (!hasUnsavedChanges || !diffResult) return '';
+    const { linesAdded, linesRemoved, linesModified } = noteStats;
+
+    let parts: string[] = [];
+    if (linesAdded > 0) parts.push(`+${linesAdded}`);
+    if (linesRemoved > 0) parts.push(`-${linesRemoved}`);
+    if (linesModified > 0) parts.push(`~${linesModified}`);
+
+    return parts.length > 0 ? ` (${parts.join('/')})` : '';
+  };
+
   if (!filePath) {
     return (
       <div className="empty-editor">
@@ -101,7 +150,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   return (
     <div className="markdown-editor">
       <div className="note-status-bar vt32">
-        <span className={getStatClass(noteStats.chars !== noteStats.originalChars, noteStats.charsDelta)}>Characters: {noteStats.chars}</span>{hasUnsavedChanges && noteStats.charsDelta !== 0 && <span className={getDeltaClass(noteStats.charsDelta)}> ({formatDelta(noteStats.charsDelta)})</span>} <span className={getStatClass(noteStats.words !== noteStats.originalWords, noteStats.wordsDelta)}>Words: {noteStats.words}</span>{hasUnsavedChanges && noteStats.wordsDelta !== 0 && <span className={getDeltaClass(noteStats.wordsDelta)}> ({formatDelta(noteStats.wordsDelta)})</span>} <span className={getStatClass(noteStats.lines !== noteStats.originalLines, noteStats.linesDelta)}>Lines: {noteStats.lines}</span>{hasUnsavedChanges && noteStats.linesDelta !== 0 && <span className={getDeltaClass(noteStats.linesDelta)}> ({formatDelta(noteStats.linesDelta)})</span>}
+        <span className={getStatClass(noteStats.linesDelta !== 0, noteStats.linesDelta)}>Lines: {noteStats.lines}</span><span className="stat-delta stat-delta-positive">{formatGitLineDelta()}</span> <span className={getStatClass(noteStats.charsDelta !== 0, noteStats.charsDelta)}>Characters: {noteStats.chars}</span>{hasUnsavedChanges && noteStats.charsDelta !== 0 && <span className={getDeltaClass(noteStats.charsDelta)}> ({formatDelta(noteStats.charsDelta)})</span>} <span className={getStatClass(noteStats.wordsDelta !== 0, noteStats.wordsDelta)}>Words: {noteStats.words}</span>{hasUnsavedChanges && noteStats.wordsDelta !== 0 && <span className={getDeltaClass(noteStats.wordsDelta)}> ({formatDelta(noteStats.wordsDelta)})</span>}
       </div>
       <textarea
         ref={textareaRef}

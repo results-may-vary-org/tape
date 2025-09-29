@@ -22,6 +22,10 @@ export function FileExists(arg1) {
   return window['go']['main']['App']['FileExists'](arg1);
 }
 
+export function GetContentDiff(arg1, arg2) {
+  return window['go']['main']['App']['GetContentDiff'](arg1, arg2);
+}
+
 export function GetDirectoryTree(arg1) {
   return window['go']['main']['App']['GetDirectoryTree'](arg1);
 }

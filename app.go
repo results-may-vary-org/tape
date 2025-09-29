@@ -2,16 +2,20 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
 
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -39,17 +43,49 @@ type SearchResult struct {
 	ContextText string `json:"contextText"` // Surrounding context for content matches
 }
 
+type DiffResult struct {
+	// Git-style line stats
+	LinesAdded    int `json:"linesAdded"`
+	LinesRemoved  int `json:"linesRemoved"`
+	LinesModified int `json:"linesModified"`
+
+	// Enhanced stats
+	CharsAdded   int `json:"charsAdded"`
+	CharsRemoved int `json:"charsRemoved"`
+	WordsAdded   int `json:"wordsAdded"`
+	WordsRemoved int `json:"wordsRemoved"`
+
+	// Totals (current values)
+	TotalLines int `json:"totalLines"`
+	TotalChars int `json:"totalChars"`
+	TotalWords int `json:"totalWords"`
+
+	// Optional: Raw diff for expandable view
+	DiffContent string `json:"diffContent,omitempty"`
+}
+
+// DiffService handles diff calculations with caching
+type DiffService struct {
+	cache map[string]*DiffResult
+	mutex sync.RWMutex
+}
+
 // App struct
 type App struct {
 	ctx context.Context
 	mcpCmd *exec.Cmd
 	mcpMutex sync.Mutex
 	mcpRunning bool
+	diffService *DiffService
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{
+		diffService: &DiffService{
+			cache: make(map[string]*DiffResult),
+		},
+	}
 }
 
 // startup is called when the app starts. The context is saved
@@ -608,4 +644,204 @@ func (a *App) GetMCPServerInfo() map[string]interface{} {
 	}
 
 	return info
+}
+
+/**
+ * --- Diff Service Implementation
+ */
+
+// getCacheKey generates a cache key for the diff
+func (ds *DiffService) getCacheKey(original, current string) string {
+	h := sha256.Sum256([]byte(original + "|" + current))
+	return hex.EncodeToString(h[:])
+}
+
+// countWords counts words in text
+func countWords(text string) int {
+	if strings.TrimSpace(text) == "" {
+		return 0
+	}
+	// Split on whitespace and count non-empty parts
+	words := regexp.MustCompile(`\s+`).Split(strings.TrimSpace(text), -1)
+	count := 0
+	for _, word := range words {
+		if word != "" {
+			count++
+		}
+	}
+	return count
+}
+
+// calculateLineDiff analyzes line-level differences
+func (ds *DiffService) calculateLineDiff(original, current string) (int, int, int) {
+	dmp := diffmatchpatch.New()
+
+	// Perform line-based diff by splitting into lines
+	originalLines := strings.Split(original, "\n")
+	currentLines := strings.Split(current, "\n")
+
+	// Convert to single strings for diff calculation
+	originalText := strings.Join(originalLines, "\n")
+	currentText := strings.Join(currentLines, "\n")
+
+	diffs := dmp.DiffMain(originalText, currentText, false)
+
+	linesAdded := 0
+	linesRemoved := 0
+	linesModified := 0
+
+	for _, d := range diffs {
+		switch d.Type {
+		case diffmatchpatch.DiffDelete:
+			// Count lines in deleted text
+			linesRemoved += len(strings.Split(d.Text, "\n")) - 1
+			if len(d.Text) > 0 && !strings.HasSuffix(d.Text, "\n") {
+				linesRemoved++
+			}
+		case diffmatchpatch.DiffInsert:
+			// Count lines in inserted text
+			linesAdded += len(strings.Split(d.Text, "\n")) - 1
+			if len(d.Text) > 0 && !strings.HasSuffix(d.Text, "\n") {
+				linesAdded++
+			}
+		case diffmatchpatch.DiffEqual:
+			// No change
+		}
+	}
+
+	// Calculate modified lines (heuristic: if we have both adds and removes, some are modifications)
+	if linesAdded > 0 && linesRemoved > 0 {
+		modifications := min(linesAdded, linesRemoved)
+		linesModified = modifications
+		linesAdded -= modifications
+		linesRemoved -= modifications
+	}
+
+	return linesAdded, linesRemoved, linesModified
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// calculateWordCharDiff analyzes word and character level differences
+func (ds *DiffService) calculateWordCharDiff(original, current string) (int, int, int, int) {
+	originalWords := countWords(original)
+	currentWords := countWords(current)
+
+	originalChars := len(original)
+	currentChars := len(current)
+
+	wordsAdded := 0
+	wordsRemoved := 0
+	charsAdded := 0
+	charsRemoved := 0
+
+	if currentWords > originalWords {
+		wordsAdded = currentWords - originalWords
+	} else if currentWords < originalWords {
+		wordsRemoved = originalWords - currentWords
+	}
+
+	if currentChars > originalChars {
+		charsAdded = currentChars - originalChars
+	} else if currentChars < originalChars {
+		charsRemoved = originalChars - currentChars
+	}
+
+	return charsAdded, charsRemoved, wordsAdded, wordsRemoved
+}
+
+// CalculateDiff computes comprehensive diff statistics
+func (ds *DiffService) CalculateDiff(original, current string) *DiffResult {
+	// Check cache first
+	cacheKey := ds.getCacheKey(original, current)
+	ds.mutex.RLock()
+	if cached, exists := ds.cache[cacheKey]; exists {
+		ds.mutex.RUnlock()
+		return cached
+	}
+	ds.mutex.RUnlock()
+
+	// If identical content, return zero diff
+	if original == current {
+		result := &DiffResult{
+			TotalLines: len(strings.Split(current, "\n")),
+			TotalChars: len(current),
+			TotalWords: countWords(current),
+		}
+
+		// Cache the result
+		ds.mutex.Lock()
+		ds.cache[cacheKey] = result
+		// Limit cache size to prevent memory issues
+		if len(ds.cache) > 100 {
+			// Simple cache eviction: remove oldest half
+			newCache := make(map[string]*DiffResult)
+			count := 0
+			for k, v := range ds.cache {
+				if count > 50 {
+					newCache[k] = v
+				}
+				count++
+			}
+			ds.cache = newCache
+		}
+		ds.mutex.Unlock()
+
+		return result
+	}
+
+	// Calculate line-level differences
+	linesAdded, linesRemoved, linesModified := ds.calculateLineDiff(original, current)
+
+	// Calculate word and character level differences
+	charsAdded, charsRemoved, wordsAdded, wordsRemoved := ds.calculateWordCharDiff(original, current)
+
+	// Calculate totals
+	totalLines := len(strings.Split(current, "\n"))
+	totalChars := len(current)
+	totalWords := countWords(current)
+
+	result := &DiffResult{
+		LinesAdded:    linesAdded,
+		LinesRemoved:  linesRemoved,
+		LinesModified: linesModified,
+		CharsAdded:    charsAdded,
+		CharsRemoved:  charsRemoved,
+		WordsAdded:    wordsAdded,
+		WordsRemoved:  wordsRemoved,
+		TotalLines:    totalLines,
+		TotalChars:    totalChars,
+		TotalWords:    totalWords,
+	}
+
+	// Cache the result
+	ds.mutex.Lock()
+	ds.cache[cacheKey] = result
+	// Limit cache size to prevent memory issues
+	if len(ds.cache) > 100 {
+		// Simple cache eviction: remove oldest half
+		newCache := make(map[string]*DiffResult)
+		count := 0
+		for k, v := range ds.cache {
+			if count > 50 {
+				newCache[k] = v
+			}
+			count++
+		}
+		ds.cache = newCache
+	}
+	ds.mutex.Unlock()
+
+	return result
+}
+
+// GetContentDiff is the Wails binding for diff calculation
+func (a *App) GetContentDiff(originalContent, currentContent string) *DiffResult {
+	return a.diffService.CalculateDiff(originalContent, currentContent)
 }

@@ -20,6 +20,38 @@ export namespace main {
 	        this.theme = source["theme"];
 	    }
 	}
+	export class DiffResult {
+	    linesAdded: number;
+	    linesRemoved: number;
+	    linesModified: number;
+	    charsAdded: number;
+	    charsRemoved: number;
+	    wordsAdded: number;
+	    wordsRemoved: number;
+	    totalLines: number;
+	    totalChars: number;
+	    totalWords: number;
+	    diffContent?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DiffResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.linesAdded = source["linesAdded"];
+	        this.linesRemoved = source["linesRemoved"];
+	        this.linesModified = source["linesModified"];
+	        this.charsAdded = source["charsAdded"];
+	        this.charsRemoved = source["charsRemoved"];
+	        this.wordsAdded = source["wordsAdded"];
+	        this.wordsRemoved = source["wordsRemoved"];
+	        this.totalLines = source["totalLines"];
+	        this.totalChars = source["totalChars"];
+	        this.totalWords = source["totalWords"];
+	        this.diffContent = source["diffContent"];
+	    }
+	}
 	export class FileItem {
 	    name: string;
 	    path: string;

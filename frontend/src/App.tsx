@@ -37,7 +37,8 @@ import {
   SaveExpandedFolders,
   SaveViewMode,
   SaveTheme,
-  SearchFiles
+  SearchFiles,
+  GetContentDiff
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/appicon.png';
 
@@ -327,9 +328,13 @@ function App() {
         setIsSearchModalOpen(true);
       }
       // Allow browser to handle undo/redo in editor mode
-      if (e.ctrlKey && (e.key === 'z' || e.key === 'y') && viewMode === 'editor') {
-        // Don't prevent default - let the textarea handle undo/redo naturally
-        return;
+      if (e.ctrlKey && (e.key === 'z' || e.key === 'y' || (e.shiftKey && e.key === 'z')) && viewMode === 'editor') {
+        // Check if focus is on a textarea (our editor)
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.tagName.toLowerCase() === 'textarea') {
+          // Don't prevent default - let the textarea handle undo/redo naturally
+          return;
+        }
       }
     };
 
