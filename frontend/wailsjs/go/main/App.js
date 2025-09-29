@@ -89,3 +89,20 @@ export function SearchFiles(arg1, arg2) {
 export function WriteFile(arg1, arg2) {
   return window['go']['main']['App']['WriteFile'](arg1, arg2);
 }
+
+// MCP Server functions
+export function StartMCPServer() {
+  return window['go']['main']['App']['StartMCPServer']();
+}
+
+export function StopMCPServer() {
+  return window['go']['main']['App']['StopMCPServer']();
+}
+
+export function GetMCPServerStatus() {
+  return window['go']['main']['App']['GetMCPServerStatus']();
+}
+
+export function GetMCPServerInfo() {
+  return window['go']['main']['App']['GetMCPServerInfo']();
+}

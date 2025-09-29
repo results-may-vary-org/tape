@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -39,6 +42,9 @@ type SearchResult struct {
 // App struct
 type App struct {
 	ctx context.Context
+	mcpCmd *exec.Cmd
+	mcpMutex sync.Mutex
+	mcpRunning bool
 }
 
 // NewApp creates a new App application struct
@@ -496,4 +502,110 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 	}
 
 	return results, nil
+}
+
+/**
+ * --- MCP Server Management
+ */
+
+// StartMCPServer starts the MCP server subprocess
+func (a *App) StartMCPServer() error {
+	a.mcpMutex.Lock()
+	defer a.mcpMutex.Unlock()
+
+	if a.mcpRunning {
+		return nil // Already running
+	}
+
+	// Get the path to the MCP server binary
+	executable, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	execDir := filepath.Dir(executable)
+	mcpPath := filepath.Join(execDir, "tape-mcp")
+
+	// Check if Windows, add .exe extension
+	if filepath.Ext(executable) == ".exe" {
+		mcpPath += ".exe"
+	}
+
+	// Check if MCP server binary exists
+	if !a.FileExists(mcpPath) {
+		return fmt.Errorf("MCP server binary not found at: %s", mcpPath)
+	}
+
+	// Start the MCP server process
+	a.mcpCmd = exec.Command(mcpPath)
+	err = a.mcpCmd.Start()
+	if err != nil {
+		return err
+	}
+
+	a.mcpRunning = true
+
+	// Monitor the process in a goroutine
+	go func() {
+		a.mcpCmd.Wait()
+		a.mcpMutex.Lock()
+		a.mcpRunning = false
+		a.mcpCmd = nil
+		a.mcpMutex.Unlock()
+	}()
+
+	return nil
+}
+
+// StopMCPServer stops the MCP server subprocess
+func (a *App) StopMCPServer() error {
+	a.mcpMutex.Lock()
+	defer a.mcpMutex.Unlock()
+
+	if !a.mcpRunning || a.mcpCmd == nil {
+		return nil // Not running
+	}
+
+	err := a.mcpCmd.Process.Kill()
+	if err != nil {
+		return err
+	}
+
+	a.mcpRunning = false
+	a.mcpCmd = nil
+	return nil
+}
+
+// GetMCPServerStatus returns the current status of the MCP server
+func (a *App) GetMCPServerStatus() bool {
+	a.mcpMutex.Lock()
+	defer a.mcpMutex.Unlock()
+	return a.mcpRunning
+}
+
+// GetMCPServerInfo returns information about the MCP server
+func (a *App) GetMCPServerInfo() map[string]interface{} {
+	a.mcpMutex.Lock()
+	defer a.mcpMutex.Unlock()
+
+	info := map[string]interface{}{
+		"running": a.mcpRunning,
+		"name":    "tape-markdown-editor",
+		"version": "1.0.0",
+		"port":    "stdio", // MCP uses stdio, not a port
+		"capabilities": []string{
+			"read_file",
+			"write_file",
+			"create_file",
+			"delete_file",
+			"list_files",
+			"create_folder",
+			"search_content",
+		},
+	}
+
+	if a.mcpRunning && a.mcpCmd != nil {
+		info["pid"] = a.mcpCmd.Process.Pid
+	}
+
+	return info
 }

@@ -6,6 +6,7 @@ import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
 import SearchModal from './components/SearchModal';
+import MCPStatus from './components/MCPStatus';
 import {
   FolderOpen,
   FileText,
@@ -527,6 +528,8 @@ function App() {
             </div>
           </div>
           <div className="header-right">
+              <MCPStatus />
+
               <Select.Root value={themeMode} onValueChange={(value: ThemeMode) => handleThemeChange(value)}>
                 <Select.Trigger className="theme-select-trigger">
                   <Flex as="span" align="center" gap="2">

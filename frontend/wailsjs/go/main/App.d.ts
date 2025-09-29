@@ -46,3 +46,12 @@ export function SaveViewMode(arg1:string,arg2:string):Promise<void>;
 export function SearchFiles(arg1:string,arg2:string):Promise<Array<main.SearchResult>>;
 
 export function WriteFile(arg1:string,arg2:string):Promise<void>;
+
+// MCP Server functions
+export function StartMCPServer():Promise<void>;
+
+export function StopMCPServer():Promise<void>;
+
+export function GetMCPServerStatus():Promise<boolean>;
+
+export function GetMCPServerInfo():Promise<{[key: string]: any}>;

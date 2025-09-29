@@ -446,6 +446,36 @@ button:hover {
   border-radius: 2px;
 }
 
+/* MCP Status */
+.mcp-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mcp-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mcp-info {
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  background: var(--color-panel);
+  border: 1px solid var(--gray-6);
+  border-radius: 4px;
+  color: var(--orange-9);
+}
+
+.mcp-info div {
+  margin-bottom: 0.25rem;
+}
+
+.mcp-info div:last-child {
+  margin-bottom: 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {
