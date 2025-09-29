@@ -62,6 +62,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newName, setNewName] = useState(item.name);
+  const itemRef = React.useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
     if (item.isDir) {
@@ -105,6 +106,30 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
     onCreateFolder(parentPath);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        handleClick();
+        break;
+      case 'ArrowRight':
+        if (item.isDir && !isExpanded) {
+          e.preventDefault();
+          const newExpandedFolders = [...expandedFolders, item.path];
+          onExpandedFoldersChange(newExpandedFolders);
+        }
+        break;
+      case 'ArrowLeft':
+        if (item.isDir && isExpanded) {
+          e.preventDefault();
+          const newExpandedFolders = expandedFolders.filter(path => path !== item.path);
+          onExpandedFoldersChange(newExpandedFolders);
+        }
+        break;
+    }
+  };
+
   const indent = level * 16;
   const isSelected = selectedFile === item.path;
 
@@ -113,9 +138,15 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
       <ContextMenu.Root>
         <ContextMenu.Trigger>
           <div
+            ref={itemRef}
             onClick={handleClick}
+            onKeyDown={handleKeyDown}
             className={`file-tree-item ${isSelected ? 'selected' : ''}`}
             style={{ paddingLeft: `${indent}px` }}
+            tabIndex={0}
+            role={item.isDir ? "treeitem" : "button"}
+            aria-expanded={item.isDir ? isExpanded : undefined}
+            aria-selected={isSelected}
           >
             <span className="file-tree-icon">
               {item.isDir ? (

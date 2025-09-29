@@ -6,6 +6,7 @@ import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
 import SearchModal from './components/SearchModal';
+import ShortcutsModal from './components/ShortcutsModal';
 import {
   FolderOpen,
   FileText,
@@ -73,6 +74,7 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
   const [isRestoringFolder, setIsRestoringFolder] = useState<boolean>(true);
 
   // Modal states
@@ -310,31 +312,53 @@ function App() {
     }
   };
 
-  // Global keyboard handler
+  // Global keyboard handler - app shortcuts work everywhere
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 's') {
+      const activeElement = document.activeElement;
+      const isInEditableElement = activeElement && (
+        activeElement.tagName.toLowerCase() === 'textarea' ||
+        activeElement.tagName.toLowerCase() === 'input' ||
+        (activeElement as HTMLElement).isContentEditable === true
+      );
+
+      // Ctrl+S: Save file (works everywhere)
+      if (e.ctrlKey && e.key === 's' && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         if (selectedFilePath && hasUnsavedChanges) {
           handleSave();
         }
+        return;
       }
-      if (e.ctrlKey && e.key === 'Tab') {
-        e.preventDefault();
-        setViewMode(viewMode === "reader" ? "editor" : "reader")
-      }
-      if (e.ctrlKey && e.key === 'k') {
+
+      // Ctrl+K: Open search modal (works everywhere)
+      if (e.ctrlKey && e.key === 'k' && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         setIsSearchModalOpen(true);
+        return;
       }
-      // Allow browser to handle undo/redo in editor mode
-      if (e.ctrlKey && (e.key === 'z' || e.key === 'y' || (e.shiftKey && e.key === 'z')) && viewMode === 'editor') {
-        // Check if focus is on a textarea (our editor)
-        const activeElement = document.activeElement;
-        if (activeElement && activeElement.tagName.toLowerCase() === 'textarea') {
-          // Don't prevent default - let the textarea handle undo/redo naturally
-          return;
-        }
+
+      // Ctrl+H: Open help modal (works everywhere)
+      if (e.ctrlKey && e.key === 'h' && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        setIsShortcutsModalOpen(true);
+        return;
+      }
+
+      // Ctrl+Tab: Switch view mode (works everywhere)
+      if (e.ctrlKey && e.key === 'Tab' && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        setViewMode(viewMode === "reader" ? "editor" : "reader");
+        return;
+      }
+
+      // IMPORTANT: Only let textarea handle Ctrl+Z/Y naturally, don't prevent them here
+      if (isInEditableElement && e.ctrlKey && (
+        e.key === 'z' || e.key === 'y' ||
+        (e.shiftKey && e.key === 'Z') || (e.shiftKey && e.key === 'z')
+      )) {
+        // Let the textarea handle undo/redo naturally - don't prevent or interfere
+        return;
       }
     };
 
@@ -757,6 +781,13 @@ function App() {
         onClose={() => setIsSearchModalOpen(false)}
         onFileSelect={handleFileSelect}
         onSearch={handleSearch}
+      />
+
+      {/* Shortcuts Modal */}
+      <ShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
+        version={version}
       />
     </RadixTheme>
   );

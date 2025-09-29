@@ -55,22 +55,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       return;
     }
 
-    // Explicitly allow undo/redo to pass through without interference
-    if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
-      // Let the browser handle Ctrl+Z (undo) naturally
-      return;
-    }
-
-    if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) {
-      // Let the browser handle Ctrl+Y (redo) naturally
-      return;
-    }
-
-    // Also handle Ctrl+Shift+Z for redo (common alternative)
-    if (e.ctrlKey && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
-      // Let the browser handle Ctrl+Shift+Z (redo) naturally
-      return;
-    }
+    // Let all other shortcuts (including Ctrl+Z, Ctrl+Y, etc.) pass through naturally
+    // The textarea will handle undo/redo by default
   }, [onSave]);
 
   // Use the new Git-powered diff stats

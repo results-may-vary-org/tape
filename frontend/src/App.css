@@ -187,9 +187,20 @@ button:hover {
   background: var(--gray-3);
 }
 
+.file-tree-item:focus {
+  outline: none;
+  background: var(--accent-a4);
+  box-shadow: inset 0 0 0 1px var(--accent-a6);
+}
+
 .file-tree-item.selected {
   background: var(--accent-3);
   color: var(--accent-11);
+}
+
+.file-tree-item.selected:focus {
+  background: var(--accent-4);
+  box-shadow: inset 0 0 0 2px var(--accent-8);
 }
 
 .file-tree-icon {
@@ -471,6 +482,80 @@ button:hover {
 .search-highlight {
   background: var(--orange-7);
   border-radius: 2px;
+}
+
+/* Shortcuts Modal Styles */
+.shortcuts-modal {
+  font-family: "vt32", monospace;
+}
+
+.shortcuts-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.shortcut-category {
+  margin-bottom: 1rem;
+}
+
+.category-title {
+  color: var(--accent-a11);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: var(--gray-a2);
+  border: 1px solid var(--gray-a4);
+}
+
+.shortcut-keys {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.shortcut-key {
+  background: var(--gray-a5);
+  border: 1px solid var(--gray-a6);
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  font-family: "vt32", monospace;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: var(--gray-a12);
+  box-shadow: 0 1px 2px var(--gray-a3);
+}
+
+.shortcut-plus {
+  color: var(--gray-a10);
+  font-size: 0.75rem;
+  margin: 0 0.1rem;
+}
+
+.shortcut-description {
+  color: var(--gray-a11);
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.shortcuts-footer {
+  margin-top: 1rem;
+}
+
+.github-link {
+  font-family: "vt32", monospace !important;
 }
 
 /* MCP Status */
