@@ -239,15 +239,8 @@ button:hover {
 /* Editor & reader */
 
 .markdown-reader {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.reader-content {
   padding: 1.5rem;
   overflow: auto;
-  flex: 1;
 }
 
 .reader-empty, .empty-editor {
@@ -368,17 +361,6 @@ button:hover {
 /* Search Modal */
 #search-info {
   color: var(--orange-9);
-}
-
-/* Note Stats */
-.note-stats {
-  color: var(--orange-9);
-  padding: 0.5rem 1rem;
-  font-size: 0.75rem;
-  border-bottom: 1px solid var(--gray-6);
-  background: var(--color-panel);
-  display: flex;
-  align-items: center;
 }
 
 .search-results {

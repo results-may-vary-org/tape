@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import NoteStats from './NoteStats';
 
 interface MarkdownEditorProps {
   content: string;
@@ -64,7 +63,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   return (
     <div className="markdown-editor">
-      <NoteStats content={localContent} filePath={filePath} debounceMs={300} />
       <textarea
         ref={textareaRef}
         value={localContent}
