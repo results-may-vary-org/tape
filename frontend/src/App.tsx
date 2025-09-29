@@ -72,6 +72,7 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
+  const [isRestoringFolder, setIsRestoringFolder] = useState<boolean>(true);
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
@@ -135,6 +136,8 @@ function App() {
         }
       } catch (error) {
         console.log('No previous config found');
+      } finally {
+        setIsRestoringFolder(false);
       }
     };
 
@@ -323,6 +326,11 @@ function App() {
         e.preventDefault();
         setIsSearchModalOpen(true);
       }
+      // Allow browser to handle undo/redo in editor mode
+      if (e.ctrlKey && (e.key === 'z' || e.key === 'y') && viewMode === 'editor') {
+        // Don't prevent default - let the textarea handle undo/redo naturally
+        return;
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -362,6 +370,10 @@ function App() {
 
       await CreateFile(filePath);
       await refreshFileTree();
+
+      // Auto-open the newly created file
+      await handleFileSelect(filePath);
+
       setShowCreateFileDialog(false);
       setNewFileName('');
     } catch (error) {
@@ -451,6 +463,24 @@ function App() {
   const resolvedTheme = themeMode === 'system'
     ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     : themeMode;
+
+  if (isRestoringFolder) {
+    return (
+      <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
+        <div className="app-container">
+          <div className="welcome-screen">
+            <div>
+              <img src={appIcon} alt="Tape app icon"/>
+              <h1 className="workbench">Tape</h1>
+            </div>
+            <div className="welcome-buttons">
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      </RadixTheme>
+    );
+  }
 
   if (!fileTree) {
     return (
@@ -611,11 +641,13 @@ function App() {
               <div className="loading">Loading...</div>
             ) : viewMode === 'editor' ? (
               <MarkdownEditor
+                key={`editor-${viewMode}`}
                 content={fileContent}
                 onChange={handleContentChange}
                 onSave={handleSave}
                 filePath={selectedFilePath}
                 hasUnsavedChanges={hasUnsavedChanges}
+                autoFocus={true}
               />
             ) : (
               <MarkdownReader

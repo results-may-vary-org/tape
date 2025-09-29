@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface MarkdownEditorProps {
   content: string;
@@ -6,6 +6,7 @@ interface MarkdownEditorProps {
   onSave: () => void;
   filePath: string | null;
   hasUnsavedChanges: boolean;
+  autoFocus?: boolean;
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
@@ -13,13 +14,26 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onChange,
   onSave,
   filePath,
-  hasUnsavedChanges
+  hasUnsavedChanges,
+  autoFocus = true
 }) => {
   const [localContent, setLocalContent] = useState(content);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setLocalContent(content);
   }, [content]);
+
+  // Auto-focus the textarea when editor becomes visible
+  useEffect(() => {
+    if (autoFocus && textareaRef.current) {
+      // Use a small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 10);
+      return () => clearTimeout(timer);
+    }
+  }, [autoFocus, filePath]); // Re-focus when file changes or autoFocus changes
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
@@ -31,6 +45,11 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     if (e.ctrlKey && e.key === 's') {
       e.preventDefault();
       onSave();
+    }
+    // Let browser handle undo/redo naturally for the textarea
+    if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
+      // Don't prevent default - let browser handle undo/redo
+      return;
     }
   }, [onSave]);
 
@@ -45,6 +64,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   return (
     <div className="markdown-editor">
       <textarea
+        ref={textareaRef}
         value={localContent}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
