@@ -38,11 +38,12 @@ import {
   SaveExpandedFolders,
   SaveViewMode,
   SaveTheme,
-  SearchFiles,
-  GetContentDiff
+  SearchFiles
 } from "../wailsjs/go/main/App";
-import appIcon from './assets/images/appicon.png';
+import appIcon from './assets/images/logo.png';
 import Stats from "./components/Stats";
+import {main} from "../wailsjs/go/models";
+import Config = main.Config;
 
 interface FileItem {
   name: string;
@@ -76,7 +77,6 @@ function App() {
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
-  const [isRestoringFolder, setIsRestoringFolder] = useState<boolean>(true);
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
@@ -87,66 +87,14 @@ function App() {
 
   // Load last opened folder on app startup
   useEffect(() => {
-    console.log('App starting up');
-    const loadLastFolder = async () => {
-      console.log('Loading last opened folder');
-      try {
-        // First try to load from the old config location
-        const initialConfig = await LoadInitialConfig();
-        if (initialConfig.lastOpenedFolder) {
-          try {
-            // Check if the folder still exists
-            const tree = await GetDirectoryTree(initialConfig.lastOpenedFolder);
-            setFileTree(tree);
-
-            // Load folder-specific config including view mode, theme, expanded folders, and last file
-            const folderConfig = await LoadConfig(initialConfig.lastOpenedFolder);
-            if (folderConfig.viewMode) {
-              setViewMode(folderConfig.viewMode as ViewMode);
-            } else if (initialConfig.viewMode) {
-              // Fallback to old config view mode
-              setViewMode(initialConfig.viewMode as ViewMode);
-            }
-
-            if (folderConfig.theme) {
-              setThemeMode(folderConfig.theme as ThemeMode);
-            } else if (initialConfig.theme) {
-              // Fallback to old config theme
-              setThemeMode(initialConfig.theme as ThemeMode);
-            }
-
-            // Restore expanded folders
-            if (folderConfig.expandedFolders) {
-              setExpandedFolders(folderConfig.expandedFolders);
-            }
-
-            // Restore last opened file
-            if (folderConfig.lastOpenedFile) {
-              try {
-                const fileExists = await FileExists(folderConfig.lastOpenedFile);
-                if (fileExists) {
-                  const content = await ReadFile(folderConfig.lastOpenedFile);
-                  setSelectedFilePath(folderConfig.lastOpenedFile);
-                  setFileContent(content);
-                  setOriginalContent(content);
-                  setHasUnsavedChanges(false);
-                }
-              } catch (error) {
-                console.log('Last opened file no longer exists or cannot be read:', error);
-              }
-            }
-          } catch (treeError) {
-            console.log('Previous folder no longer exists:', treeError);
-          }
-        }
-      } catch (error) {
-        console.log('No previous config found');
-      } finally {
-        setIsRestoringFolder(false);
-      }
-    };
-
-    loadLastFolder();
+    setIsLoading(true);
+    const lastOpenedFolder = localStorage.getItem('lastOpenedFolder');
+    if (lastOpenedFolder) {
+      handleRootOpen(lastOpenedFolder)
+        .then(() => console.log('Last opened folder loaded successfully'))
+        .catch((err) => console.warn('Error loading last opened folder:', err));
+    }
+    setIsLoading(false);
   }, []);
 
   // Listen for system theme changes when using 'system' mode
@@ -189,9 +137,9 @@ function App() {
     }
   };
 
-  const handleOpenDirectory = async () => {
+  const handleRootOpen = async (rootPath?: string) => {
     try {
-      const dirPath = await OpenDirectoryDialog();
+      const dirPath = rootPath ?? await OpenDirectoryDialog();
       if (dirPath) {
         const tree = await GetDirectoryTree(dirPath);
         setFileTree(tree);
@@ -237,6 +185,7 @@ function App() {
         }
 
         // Save to config for future sessions
+        localStorage.setItem('lastOpenedFolder', dirPath);
         await SaveLastOpenedFolder(dirPath);
       }
     } catch (error) {
@@ -494,25 +443,7 @@ function App() {
     ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     : themeMode;
 
-  if (isRestoringFolder) {
-    return (
-      <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
-        <div className="app-container">
-          <div className="welcome-screen">
-            <div>
-              <img src={appIcon} alt="Tape app icon"/>
-              <h1 className="workbench">Tape</h1>
-            </div>
-            <div className="welcome-buttons">
-              <p>Loading...</p>
-            </div>
-          </div>
-        </div>
-      </RadixTheme>
-    );
-  }
-
-  if (!fileTree) {
+  if (!fileTree && !isLoading) {
     return (
       <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
         <div className="app-container">
@@ -523,7 +454,7 @@ function App() {
             </div>
             <div className="welcome-buttons">
               <Tooltip content="Select a directory to browse markdown files">
-                <Button onClick={handleOpenDirectory} className="primary-button">
+                <Button disabled={isLoading} onClick={() => handleRootOpen()} className="primary-button">
                   <FolderOpen size={20}/>
                   Open your tape box
                 </Button>
@@ -548,7 +479,7 @@ function App() {
               </div>
             </div>
             <div className="file-info">
-              <span className="current-path">{fileTree.path}</span >
+              <span className="current-path">{fileTree && fileTree.path}</span >
               {selectedFilePath && selectedFilePath.split('/').pop() ? (
                 <span className="current-file">
                   {selectedFilePath?.split('/').pop()?.slice(0, 30)}
@@ -623,7 +554,7 @@ function App() {
               <h3>Files</h3>
               <div className="file-actions">
                 <Tooltip content="Select another root">
-                  <button onClick={handleOpenDirectory} className="action-button">
+                  <button onClick={() => handleRootOpen()} className="action-button">
                     <FolderOpen size={16} />
                   </button>
                 </Tooltip>

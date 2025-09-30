@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -80,8 +79,6 @@ func (a *App) GetContentDiff(originalContent, currentContent string) Diff {
 	if diffs == "" {
 		return Diff{diffs, diffsObject, edit, add, remove}
 	}
-
-	fmt.Printf("%s\n", diffsObject)
 
 	// calculate the diff
 	// todo we need to improve this
