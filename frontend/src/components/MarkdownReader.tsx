@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useMemo } from "react";
 import { marked } from "marked";
 import hljs from "highlight.js";
-import "highlight.js/styles/vs2015.css";
+import "highlight.js/styles/github.min.css";
+import "highlight.js/styles/github-dark.css";
 
 interface MarkdownReaderProps {
   content: string;

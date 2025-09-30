@@ -44,6 +44,7 @@ import appIcon from './assets/images/logo.png';
 import Stats from "./components/Stats";
 import {main} from "../wailsjs/go/models";
 import Config = main.Config;
+import handleKeys from "./services/handleKeys";
 
 interface FileItem {
   name: string;
@@ -264,54 +265,18 @@ function App() {
 
   // Global keyboard handler - app shortcuts work everywhere
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeElement = document.activeElement;
-      const isInEditableElement = activeElement && (
-        activeElement.tagName.toLowerCase() === 'textarea' ||
-        activeElement.tagName.toLowerCase() === 'input' ||
-        (activeElement as HTMLElement).isContentEditable === true
+    const handleKeyDown = (event: KeyboardEvent) => {
+      handleKeys(
+        event,
+        setIsSearchModalOpen,
+        setIsShortcutsModalOpen,
+        setViewMode,
+        viewMode,
+        selectedFilePath,
+        hasUnsavedChanges,
+        handleSave
       );
-
-      // Ctrl+S: Save file (works everywhere)
-      if (e.ctrlKey && e.key === 's' && !e.shiftKey && !e.altKey) {
-        e.preventDefault();
-        if (selectedFilePath && hasUnsavedChanges) {
-          handleSave();
-        }
-        return;
-      }
-
-      // Ctrl+K: Open search modal (works everywhere)
-      if (e.ctrlKey && e.key === 'k' && !e.shiftKey && !e.altKey) {
-        e.preventDefault();
-        setIsSearchModalOpen(true);
-        return;
-      }
-
-      // Ctrl+H: Open help modal (works everywhere)
-      if (e.ctrlKey && e.key === 'h' && !e.shiftKey && !e.altKey) {
-        e.preventDefault();
-        setIsShortcutsModalOpen(true);
-        return;
-      }
-
-      // Ctrl+Tab: Switch view mode (works everywhere)
-      if (e.ctrlKey && e.key === 'Tab' && !e.shiftKey && !e.altKey) {
-        e.preventDefault();
-        setViewMode(viewMode === "reader" ? "editor" : "reader");
-        return;
-      }
-
-      // IMPORTANT: Only let textarea handle Ctrl+Z/Y naturally, don't prevent them here
-      if (isInEditableElement && e.ctrlKey && (
-        e.key === 'z' || e.key === 'y' ||
-        (e.shiftKey && e.key === 'Z') || (e.shiftKey && e.key === 'z')
-      )) {
-        // Let the textarea handle undo/redo naturally - don't prevent or interfere
-        return;
-      }
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode]);
@@ -443,7 +408,7 @@ function App() {
     ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     : themeMode;
 
-  if (!fileTree && !isLoading) {
+  if (!fileTree) {
     return (
       <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
         <div className="app-container">
@@ -606,7 +571,6 @@ function App() {
                 key={`editor-${viewMode}`}
                 content={fileContent}
                 onChange={handleContentChange}
-                onSave={handleSave}
                 filePath={selectedFilePath}
                 autoFocus={true}
               />
