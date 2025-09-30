@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -15,10 +15,11 @@ import (
 )
 
 type Diff struct {
-	DiffString string `json:"diffString"`
-	Edit       int    `json:"edit"`
-	Add        int    `json:"add"`
-	Remove     int    `json:"remove"`
+	DiffString  string                `json:"diffString"`
+	DiffsObject []diffmatchpatch.Diff `json:"diffsObject"`
+	Edit        int                   `json:"edit"`
+	Add         int                   `json:"add"`
+	Remove      int                   `json:"remove"`
 }
 
 type FileItem struct {
@@ -73,35 +74,34 @@ func (a *App) GetContentDiff(originalContent, currentContent string) Diff {
 	remove := 0
 
 	dmp := diffmatchpatch.New()
-	txtDiffs := dmp.DiffMain(originalContent, currentContent, true)
-	diffs = dmp.DiffToDelta(txtDiffs)
+	diffsObject := dmp.DiffMain(originalContent, currentContent, true)
+	diffs = dmp.DiffToDelta(diffsObject) // tab separated operations
 
-	// todo: calculate the real diff with the number of string present after the + or - symbol
-	// clean the diffs to keep only the - and + mention
-	re := regexp.MustCompile(`[^+\-]`)
-	diffsClean := re.ReplaceAllString(diffs, "")
-
-	if diffsClean == "" {
-		return Diff{diffs, edit, add, remove}
+	if diffs == "" {
+		return Diff{diffs, diffsObject, edit, add, remove}
 	}
 
+	fmt.Printf("%s\n", diffsObject)
+
 	// calculate the diff
-	runes := []rune(diffsClean)
-	for i := 0; i < len(runes); i++ {
-		if runes[i] == '-' {
-			if i+1 < len(runes) && runes[i+1] == '+' {
-				edit++
-				// remove the count from the add for the loop just after
-				add--
+	// todo we need to improve this
+	// 	because an edit/delete could be remove 2 carac and add one
+	// 	eg: abcd => xcd, we edit the a, removed the c but the fc say we delete 2 carac and add 1
+	for i, diff := range diffsObject {
+		if diff.Type == diffmatchpatch.DiffDelete { // -
+			if i+1 < len(diffsObject) && diffsObject[i+1].Type == diffmatchpatch.DiffInsert { // +
+				add -= len(diff.Text) // we remove to the add count to avoir duplicate count
+				edit += len(diff.Text)
 			} else {
-				remove++
+				remove += len(diff.Text)
 			}
-		} else if runes[i] == '+' {
-			add++
+		}
+		if diff.Type == diffmatchpatch.DiffInsert {
+			add += len(diff.Text)
 		}
 	}
 
-	return Diff{diffs, edit, add, remove}
+	return Diff{diffs, diffsObject, edit, add, remove}
 }
 
 /**
