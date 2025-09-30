@@ -5,14 +5,21 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
-	"sync"
-	"unicode"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
+
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+type Diff struct {
+	DiffString string `json:"diffString"`
+	Edit       int    `json:"edit"`
+	Add        int    `json:"add"`
+	Remove     int    `json:"remove"`
+}
 
 type FileItem struct {
 	Name     string      `json:"name"`
@@ -38,160 +45,14 @@ type SearchResult struct {
 	ContextText string `json:"contextText"` // Surrounding context for content matches
 }
 
-type DiffResult struct {
-	// Git-style line stats
-	LinesAdded    int `json:"linesAdded"`
-	LinesRemoved  int `json:"linesRemoved"`
-	LinesModified int `json:"linesModified"`
-
-	// Enhanced stats
-	CharsAdded   int `json:"charsAdded"`
-	CharsRemoved int `json:"charsRemoved"`
-	WordsAdded   int `json:"wordsAdded"`
-	WordsRemoved int `json:"wordsRemoved"`
-
-	// Totals (current values)
-	TotalLines int `json:"totalLines"`
-	TotalChars int `json:"totalChars"`
-	TotalWords int `json:"totalWords"`
-
-	// Optional: Raw diff for expandable view
-	DiffContent string `json:"diffContent,omitempty"`
-}
-
-// DiffService handles diff calculations with caching
-type DiffService struct {
-	cache map[string]*DiffResult
-	mutex sync.RWMutex
-}
-
-// countWords counts words in text
-func countWords(text string) int {
-	count := 0
-	inWord := false
-	for _, char := range text {
-		if unicode.IsSpace(char) || unicode.IsPunct(char) {
-			if inWord {
-				count++
-				inWord = false
-			}
-		} else {
-			inWord = true
-		}
-	}
-	if inWord {
-		count++
-	}
-	return count
-}
-
-// countLines counts lines in text
-func countLines(text string) int {
-	if text == "" {
-		return 0
-	}
-	lines := strings.Count(text, "\n")
-	if !strings.HasSuffix(text, "\n") {
-		lines++
-	}
-	return lines
-}
-
-// CalculateDiff computes detailed diff statistics between original and modified text
-func (ds *DiffService) CalculateDiff(original, modified, cacheKey string) *DiffResult {
-	ds.mutex.Lock()
-	defer ds.mutex.Unlock()
-
-	// Check cache first
-	if result, exists := ds.cache[cacheKey]; exists {
-		return result
-	}
-
-	// Initialize diff matcher
-	dmp := diffmatchpatch.New()
-	diffs := dmp.DiffMain(original, modified, false)
-
-	// Clean up diffs for better results
-	diffs = dmp.DiffCleanupSemantic(diffs)
-
-	result := &DiffResult{}
-
-	// Count character-level changes
-	var addedText, removedText strings.Builder
-	var modifiedLinesCount int
-
-	for _, diff := range diffs {
-		switch diff.Type {
-		case diffmatchpatch.DiffInsert:
-			result.CharsAdded += len(diff.Text)
-			result.WordsAdded += countWords(diff.Text)
-			addedText.WriteString(diff.Text)
-		case diffmatchpatch.DiffDelete:
-			result.CharsRemoved += len(diff.Text)
-			result.WordsRemoved += countWords(diff.Text)
-			removedText.WriteString(diff.Text)
-		}
-	}
-
-	// Calculate line-level changes
-	originalLines := strings.Split(original, "\n")
-	modifiedLines := strings.Split(modified, "\n")
-
-	// Simple line diff for line counts
-	lineDiffs := dmp.DiffMain(strings.Join(originalLines, "\n"), strings.Join(modifiedLines, "\n"), true)
-	lineDiffs = dmp.DiffCleanupSemantic(lineDiffs)
-
-	for _, diff := range lineDiffs {
-		switch diff.Type {
-		case diffmatchpatch.DiffInsert:
-			result.LinesAdded += countLines(diff.Text)
-		case diffmatchpatch.DiffDelete:
-			result.LinesRemoved += countLines(diff.Text)
-		}
-	}
-
-	// Estimate modified lines (lines that have both additions and deletions nearby)
-	// This is a simplified heuristic
-	if result.LinesAdded > 0 && result.LinesRemoved > 0 {
-		modifiedLinesCount = min(result.LinesAdded, result.LinesRemoved)
-		result.LinesModified = modifiedLinesCount
-	}
-
-	// Calculate totals for current state
-	result.TotalLines = countLines(modified)
-	result.TotalChars = len(modified)
-	result.TotalWords = countWords(modified)
-
-	// Optional: store raw diff for expandable view
-	result.DiffContent = dmp.DiffPrettyText(diffs)
-
-	// Cache the result
-	ds.cache[cacheKey] = result
-
-	return result
-}
-
-// min helper function
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // App struct
 type App struct {
-	ctx         context.Context
-	diffService *DiffService
+	ctx context.Context
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{
-		diffService: &DiffService{
-			cache: make(map[string]*DiffResult),
-		},
-	}
+	return &App{}
 }
 
 // startup is called when the app starts. The context is saved
@@ -200,13 +61,59 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
+/**
+ * --- Diff
+ */
+
+// GetContentDiff calculates diffs between two text contents
+func (a *App) GetContentDiff(originalContent, currentContent string) Diff {
+	diffs := ""
+	edit := 0
+	add := 0
+	remove := 0
+
+	dmp := diffmatchpatch.New()
+	txtDiffs := dmp.DiffMain(originalContent, currentContent, true)
+	diffs = dmp.DiffToDelta(txtDiffs)
+
+	// todo: calculate the real diff with the number of string present after the + or - symbol
+	// clean the diffs to keep only the - and + mention
+	re := regexp.MustCompile(`[^+\-]`)
+	diffsClean := re.ReplaceAllString(diffs, "")
+
+	if diffsClean == "" {
+		return Diff{diffs, edit, add, remove}
+	}
+
+	// calculate the diff
+	runes := []rune(diffsClean)
+	for i := 0; i < len(runes); i++ {
+		if runes[i] == '-' {
+			if i+1 < len(runes) && runes[i+1] == '+' {
+				edit++
+				// remove the count from the add for the loop just after
+				add--
+			} else {
+				remove++
+			}
+		} else if runes[i] == '+' {
+			add++
+		}
+	}
+
+	return Diff{diffs, edit, add, remove}
+}
+
+/**
+ * --- File system
+ */
+
 // OpenDirectoryDialog opens a directory selection dialog
 func (a *App) OpenDirectoryDialog() (string, error) {
 	return runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select directory for markdown notes",
 	})
 }
-
 
 // GetDirectoryTree returns the file tree structure for a given directory
 func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
@@ -337,7 +244,6 @@ func (a *App) GetVersion() string {
 	}
 	return version
 }
-
 
 // getConfigPath returns the path to the config file in the selected folder
 func (a *App) getConfigPath(folderPath string) string {
@@ -591,15 +497,3 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 
 	return results, nil
 }
-
-
-// GetContentDiff calculates diff between two text contents (matching frontend expectation)
-func (a *App) GetContentDiff(originalContent, currentContent string) (*DiffResult, error) {
-	// Use a combination of contents as cache key for this comparison
-	cacheKey := "direct_diff_" + string(len(originalContent)) + "_" + string(len(currentContent))
-
-	// Calculate diff
-	result := a.diffService.CalculateDiff(originalContent, currentContent, cacheKey)
-	return result, nil
-}
-

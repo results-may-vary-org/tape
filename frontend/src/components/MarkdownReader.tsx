@@ -2,22 +2,14 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/vs2015.css';
-import Stats from "./Stats";
 
 interface MarkdownReaderProps {
   content: string;
   filePath: string | null;
-  hasUnsavedChanges: boolean;
-  originalContent: string;
 }
 
-const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, hasUnsavedChanges, originalContent }) => {
+const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) => {
   const contentRef = useRef<HTMLDivElement>(null);
-
-  const formatDelta = (delta: number): string => {
-    if (delta === 0) return '';
-    return delta > 0 ? `+${delta}` : `${delta}`;
-  };
 
   useEffect(() => {
     // Configure marked for GitHub Flavored Markdown
@@ -68,7 +60,6 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, hasU
 
   return (
     <div className="markdown-reader">
-      <Stats/>
       <div className="reader-content" ref={contentRef}>
       </div>
     </div>

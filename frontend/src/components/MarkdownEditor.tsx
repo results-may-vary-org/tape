@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Stats from "./Stats";
 
 interface MarkdownEditorProps {
   content: string;
   onChange: (content: string) => void;
   onSave: () => void;
   filePath: string | null;
-  hasUnsavedChanges: boolean;
-  originalContent: string;
   autoFocus?: boolean;
 }
 
@@ -16,7 +13,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onChange,
   onSave,
   filePath,
-  originalContent,
   autoFocus = true
 }) => {
   const [localContent, setLocalContent] = useState(content);
@@ -65,11 +61,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   return (
     <div className="markdown-editor">
-      <Stats
-        originalContent={originalContent}
-        currentContent={localContent}
-        filePath={filePath}
-      />
       <textarea
         ref={textareaRef}
         value={localContent}

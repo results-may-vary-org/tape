@@ -42,6 +42,7 @@ import {
   GetContentDiff
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/appicon.png';
+import Stats from "./components/Stats";
 
 interface FileItem {
   name: string;
@@ -83,7 +84,6 @@ function App() {
   const [newFileName, setNewFileName] = useState('');
   const [newFolderName, setNewFolderName] = useState('');
   const [currentParentPath, setCurrentParentPath] = useState<string>('');
-
 
   // Load last opened folder on app startup
   useEffect(() => {
@@ -243,7 +243,6 @@ function App() {
       console.error('Error opening directory:', error);
     }
   };
-
 
   const handleFileSelect = async (filePath: string) => {
     try {
@@ -668,6 +667,7 @@ function App() {
           </div>
 
           <div className="content-area">
+            <Stats original={originalContent} edited={fileContent}/>
             {isLoading ? (
               <div className="loading">Loading...</div>
             ) : viewMode === 'editor' ? (
@@ -677,16 +677,12 @@ function App() {
                 onChange={handleContentChange}
                 onSave={handleSave}
                 filePath={selectedFilePath}
-                hasUnsavedChanges={hasUnsavedChanges}
-                originalContent={originalContent}
                 autoFocus={true}
               />
             ) : (
               <MarkdownReader
                 content={fileContent}
                 filePath={selectedFilePath}
-                hasUnsavedChanges={hasUnsavedChanges}
-                originalContent={originalContent}
               />
             )}
           </div>

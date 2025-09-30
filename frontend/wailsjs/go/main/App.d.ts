@@ -12,7 +12,7 @@ export function DeleteFile(arg1:string):Promise<void>;
 
 export function FileExists(arg1:string):Promise<boolean>;
 
-export function GetContentDiff(arg1:string,arg2:string):Promise<main.DiffResult>;
+export function GetContentDiff(arg1:string,arg2:string):Promise<main.Diff>;
 
 export function GetDirectoryTree(arg1:string):Promise<main.FileItem>;
 

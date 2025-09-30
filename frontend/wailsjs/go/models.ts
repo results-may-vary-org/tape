@@ -20,36 +20,22 @@ export namespace main {
 	        this.theme = source["theme"];
 	    }
 	}
-	export class DiffResult {
-	    linesAdded: number;
-	    linesRemoved: number;
-	    linesModified: number;
-	    charsAdded: number;
-	    charsRemoved: number;
-	    wordsAdded: number;
-	    wordsRemoved: number;
-	    totalLines: number;
-	    totalChars: number;
-	    totalWords: number;
-	    diffContent?: string;
+	export class Diff {
+	    diffString: string;
+	    edit: number;
+	    add: number;
+	    remove: number;
 	
 	    static createFrom(source: any = {}) {
-	        return new DiffResult(source);
+	        return new Diff(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.linesAdded = source["linesAdded"];
-	        this.linesRemoved = source["linesRemoved"];
-	        this.linesModified = source["linesModified"];
-	        this.charsAdded = source["charsAdded"];
-	        this.charsRemoved = source["charsRemoved"];
-	        this.wordsAdded = source["wordsAdded"];
-	        this.wordsRemoved = source["wordsRemoved"];
-	        this.totalLines = source["totalLines"];
-	        this.totalChars = source["totalChars"];
-	        this.totalWords = source["totalWords"];
-	        this.diffContent = source["diffContent"];
+	        this.diffString = source["diffString"];
+	        this.edit = source["edit"];
+	        this.add = source["add"];
+	        this.remove = source["remove"];
 	    }
 	}
 	export class FileItem {
