@@ -40,7 +40,12 @@ button:hover {
   max-height: 200px;
   animation: rotate 10s linear infinite;
 }
-
+.spin {
+  animation: rotate 10s linear infinite;
+}
+.spin-fast {
+  animation: rotate 2s linear infinite;
+}
 @keyframes rotate {
   from {transform: rotate(0deg);}
   to {transform: rotate(360deg);}
@@ -389,6 +394,18 @@ button:hover {
   border-bottom: 1px solid var(--gray-6);
   background: var(--color-panel);
   font-size: 0.875rem;
+  display: flex;
+}
+
+/* align the text with the icon */
+.stat-text {
+  margin-top: 2px;
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
 }
 
 .note-status-bar .stat-changed {

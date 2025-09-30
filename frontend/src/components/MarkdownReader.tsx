@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/vs2015.css';
+import React, { useEffect, useRef, useMemo } from "react";
+import { marked } from "marked";
+import hljs from "highlight.js";
+import "highlight.js/styles/vs2015.css";
 
 interface MarkdownReaderProps {
   content: string;
@@ -20,7 +20,7 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
 
     // Configure highlight.js
     hljs.configure({
-      languages: ['javascript', 'typescript', 'python', 'java', 'c', 'cpp', 'go', 'rust', 'html', 'css', 'json', 'yaml', 'bash', 'sql']
+      languages: ["javascript", "typescript", "python", "java", "c", "cpp", "go", "rust", "html", "css", "json", "yaml", "bash", "sql"]
     });
   }, []);
 
@@ -32,7 +32,7 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
         if (contentRef.current) {
           contentRef.current.innerHTML = htmlContent;
           // Apply syntax highlighting to code blocks
-          contentRef.current.querySelectorAll('code').forEach((block) => {
+          contentRef.current.querySelectorAll("code").forEach((block) => {
             hljs.highlightElement(block as HTMLElement);
           });
         }

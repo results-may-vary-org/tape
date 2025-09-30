@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { GetContentDiff } from '../../wailsjs/go/main/App';
+import React, { useState, useEffect } from "react";
+import { GetContentDiff } from "../../wailsjs/go/main/App";
 import {main} from "../../wailsjs/go/models";
 import Diff = main.Diff;
+import {Bug, CircleCheck, Loader} from "lucide-react";
 
 type props = {
   original: string,
@@ -28,13 +29,14 @@ const Stats = (props: props) => {
 
   return (
     <div className="note-status-bar vt32">
-      {isLoading ? <div>Loading</div> : isError ? <div>Error</div> :
-        <div>
-          <span className="stat-delta-modified">E: {contentDiff ? contentDiff.edit : 0} </span>
-          <span className="stat-delta-positive">A: {contentDiff ? contentDiff.add : 0} </span>
-          <span className="stat-delta-negative">D: {contentDiff ? contentDiff.remove : 0} </span>
-        </div>
-      }
+      <div className="stat-icon">
+        {isLoading ? <Loader className="spin-fast" size="14"/> : isError ? <Bug size="14"/> : <CircleCheck size="14"/>}
+      </div>
+      <div className="stat-text">
+        <span className="stat-delta-modified">E: {contentDiff ? contentDiff.edit : 0} </span>
+        <span className="stat-delta-positive">A: {contentDiff ? contentDiff.add : 0} </span>
+        <span className="stat-delta-negative">D: {contentDiff ? contentDiff.remove : 0} </span>
+      </div>
     </div>
   );
 };
