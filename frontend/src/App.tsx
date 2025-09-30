@@ -31,7 +31,6 @@ import {
   DeleteDirectory,
   RenameFile,
   FileExists,
-  LoadInitialConfig,
   LoadConfig,
   SaveLastOpenedFolder,
   SaveLastOpenedFile,
@@ -41,9 +40,8 @@ import {
   SearchFiles
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/logo.png';
+import appIconBck from './assets/images/logo-background.png';
 import Stats from "./components/Stats";
-import {main} from "../wailsjs/go/models";
-import Config = main.Config;
 import handleKeys from "./services/handleKeys";
 
 interface FileItem {
@@ -437,7 +435,7 @@ function App() {
         <div className="header">
           <div className="header-left">
             <div className="logo">
-              <img src={appIcon} alt="Tape app icon"/>
+              <img src={appIconBck} alt="Tape app icon"/>
               <h1 className="workbench">Tape <small style={{fontSize: 'xx-small'}}>{version}</small></h1>
               <div id="info" className="info vt32">
                 {hasUnsavedChanges && "unsaved file_"}
