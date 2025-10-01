@@ -570,7 +570,6 @@ function App() {
                 content={fileContent}
                 onChange={handleContentChange}
                 filePath={selectedFilePath}
-                autoFocus={true}
               />
             ) : (
               <MarkdownReader

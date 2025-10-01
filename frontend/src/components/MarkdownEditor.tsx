@@ -1,45 +1,33 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {useState, useEffect, useCallback, useRef, useLayoutEffect} from 'react';
 
 interface MarkdownEditorProps {
   content: string;
   onChange: (content: string) => void;
   filePath: string | null;
-  autoFocus?: boolean;
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   content,
   onChange,
-  filePath,
-  autoFocus = true
+  filePath
 }) => {
   const [localContent, setLocalContent] = useState(content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    // Only update local content if it's different from what the user is typing
-    // This preserves the browser's native undo stack
-    if (content !== localContent) {
-      setLocalContent(content);
-    }
-  }, [content, localContent]);
-
+  // todo check autofocus
   // Auto-focus the textarea when editor becomes visible
-  useEffect(() => {
-    if (autoFocus && textareaRef.current) {
-      // Use a small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 10);
-      return () => clearTimeout(timer);
+  useLayoutEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      // place the cursor at the end
+      textareaRef.current.setSelectionRange(textareaRef.current.value.length,textareaRef.current.value.length);
     }
-  }, [autoFocus, filePath]); // Re-focus when file changes or autoFocus changes
+  }, [filePath]);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setLocalContent(newContent);
-    onChange(newContent);
-  }, [onChange]);
+  function handleChange(data: string) {
+    setLocalContent(data);
+    onChange(data);
+  }
 
   if (!filePath) {
     return (
@@ -54,10 +42,9 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       <textarea
         ref={textareaRef}
         value={localContent}
-        onChange={handleChange}
+        onChange={(e) => handleChange(e.target.value)}
         className="editor-textarea"
         placeholder="Start writing your markdown..."
-        spellCheck="false"
       />
     </div>
   );

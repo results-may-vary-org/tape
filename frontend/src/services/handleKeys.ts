@@ -11,8 +11,12 @@ function handleKeys(
 
   console.log("key event >>", event.key)
 
+  if (event.ctrlKey && event.key === 'z') {
+    return;
+  }
+
   // Ctrl+S: Save file
-  if (event.ctrlKey && event.key === 's' && !event.shiftKey && !event.altKey) {
+  if (event.ctrlKey && event.key === 's') {
     event.preventDefault();
     if (selectedFilePath && hasUnsavedChanges) {
       handleSave();
@@ -21,21 +25,21 @@ function handleKeys(
   }
 
   // Ctrl+K: Open search modal
-  if (event.ctrlKey && event.key === 'k' && !event.shiftKey && !event.altKey) {
+  if (event.ctrlKey && event.key === 'k') {
     event.preventDefault();
     setIsSearchModalOpen(true);
     return;
   }
 
   // Ctrl+H: Open help modal
-  if (event.ctrlKey && event.key === 'h' && !event.shiftKey && !event.altKey) {
+  if (event.ctrlKey && event.key === 'h') {
     event.preventDefault();
     setIsShortcutsModalOpen(true);
     return;
   }
 
   // Ctrl+Tab: Switch view mode
-  if (event.ctrlKey && event.key === 'Tab' && !event.shiftKey && !event.altKey) {
+  if (event.ctrlKey && event.key === 'Tab') {
     event.preventDefault();
     setViewMode(actualViewMode === "reader" ? "editor" : "reader");
     return;
