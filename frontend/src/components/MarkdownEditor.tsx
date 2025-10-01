@@ -11,12 +11,13 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, fileP
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useLayoutEffect(() => {
+    setLocalContent(content);
     if (textareaRef.current) {
       textareaRef.current.focus();
       // place the cursor at the end
       textareaRef.current.setSelectionRange(textareaRef.current.value.length,textareaRef.current.value.length);
     }
-  }, [filePath]);
+  }, [filePath, content]);
 
   function handleChange(data: string) {
     setLocalContent(data);
