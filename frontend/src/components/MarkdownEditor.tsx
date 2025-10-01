@@ -17,7 +17,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, fileP
       // place the cursor at the end
       textareaRef.current.setSelectionRange(textareaRef.current.value.length,textareaRef.current.value.length);
     }
-  }, [filePath, content]);
+  }, [filePath]);
 
   function handleChange(data: string) {
     setLocalContent(data);
