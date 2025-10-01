@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback, useRef, useLayoutEffect} from 'react';
+import React, {useState, useRef, useLayoutEffect} from 'react';
 
 interface MarkdownEditorProps {
   content: string;
@@ -6,16 +6,10 @@ interface MarkdownEditorProps {
   filePath: string | null;
 }
 
-const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
-  content,
-  onChange,
-  filePath
-}) => {
+const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, filePath}) => {
   const [localContent, setLocalContent] = useState(content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // todo check autofocus
-  // Auto-focus the textarea when editor becomes visible
   useLayoutEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.focus();
