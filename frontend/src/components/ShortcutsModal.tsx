@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Dialog, Text, Flex, Separator, Button } from '@radix-ui/themes';
-import { Keyboard, Github, Heart } from 'lucide-react';
+import {Keyboard, Heart, GithubIcon, Codepen, CodeIcon} from 'lucide-react';
 
 interface ShortcutItem {
   keys: string[];
@@ -20,20 +20,19 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
   const shortcuts: ShortcutItem[] = [
     // File operations
     { keys: ['Ctrl', 'S'], description: 'Save current file', category: 'file' },
-    { keys: ['Ctrl', 'O'], description: 'Open directory', category: 'file' },
 
     // Navigation
     { keys: ['Ctrl', 'K'], description: 'Open search modal', category: 'navigation' },
     { keys: ['Ctrl', 'Tab'], description: 'Switch between Editor/Reader', category: 'navigation' },
     { keys: ['Ctrl', 'H'], description: 'Show this shortcuts modal', category: 'navigation' },
     { keys: ['Tab'], description: 'Navigate between UI elements', category: 'navigation' },
+    { keys: ['Shift', 'Tab'], description: 'Navigate between UI elements', category: 'navigation' },
+    { keys: ['←↑↓→'], description: 'Navigate between search result', category: 'navigation' },
     { keys: ['Enter'], description: 'Open selected file/folder', category: 'navigation' },
     { keys: ['Esc'], description: 'Close modal', category: 'navigation' },
 
     // Editor
-    { keys: ['Ctrl', 'Z'], description: 'Undo', category: 'editor' },
-    { keys: ['Ctrl', 'Y'], description: 'Redo', category: 'editor' },
-    { keys: ['Ctrl', 'Shift', 'Z'], description: 'Redo (alternative)', category: 'editor' },
+    { keys: ['Ctrl', 'Z'], description: 'Dosen\'t work for now, were working on it', category: 'editor' },
   ];
 
   // Focus content when modal opens for keyboard navigation
@@ -82,7 +81,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
   };
 
   const openGitHub = () => {
-    window.open('https://github.com/a2n-s/tape', '_blank');
+    window.open('https://github.com/results-may-vary-org/tape', '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -105,7 +104,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
         </Dialog.Description>
 
         <div className="shortcuts-content">
-          {Object.entries(groupedShortcuts).map(([category, items]) => (
+          {Object.entries(groupedShortcuts).map(([category, items], index) => (
             <div key={category} className="shortcut-category">
               <Text size="3" weight="bold" mb="2" className="category-title vt32">
                 {categoryNames[category as keyof typeof categoryNames]}
@@ -123,8 +122,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
                   </div>
                 ))}
               </div>
-
-              <Separator style={{ width: "100%", margin: "16px 0" }} />
+              {index !== Object.entries(groupedShortcuts).length-1 && <Separator style={{width: "100%", margin: "16px 0"}}/>}
             </div>
           ))}
         </div>
@@ -151,14 +149,10 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
                 onClick={openGitHub}
                 className="github-link"
               >
-                <Github size={12} />
+                <CodeIcon size={12} />
                 GitHub
               </Button>
             </Flex>
-
-            <Text size="1" color="gray" className="vt32">
-              Press Esc to close
-            </Text>
           </Flex>
         </div>
       </Dialog.Content>

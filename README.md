@@ -1,52 +1,56 @@
 <p align="center">
   <a href="https://github.com/results-may-vary-org/tape">
-    <img alt="Tape" src="assets/tape-icon.png" width="220"/>
+    <img alt="Tape" src=".github/assets/Screenshot_20251001_094844.png"/>
   </a>
 </p>
-<h1 align="center">Tape <i>- a markdown editor with no bloat</i></h1>
+<h1 align="center">Tape - a <i>simple</i> markdown editor</h1>
 
 <img alt="Static Badge" src="https://img.shields.io/badge/Still_maintained-Yes_%3A)-green">
 
-## Description
+## Yet another md app?
 
-A powerful markdown note-taking application built with Wails that includes built-in MCP (Model Context Protocol) server support for seamless AI integration.
+Tape is designed as a no-bloat markdown editor that focuses on simplicity and efficiency.
 
-### Main Features
+I want it to be just what I need it for: taking notes.
 
-- **Markdown Editor & Reader**: Switch between editing and rendered preview modes with live preview
-- **File Tree Navigation**: Organized file browser with folders-first, alphabetical sorting
-- **File Operations**: Create, rename, delete files and folders with existence validation
-- **Auto-save**: Ctrl+S to save with visual unsaved changes indicators
-- **Persistent Workspace**: Remembers last opened folder via `tape.json` config
-- **Context Menus**: Right-click file operations (create, rename, delete)
-- **Full-text Search**: Search across all markdown files with fuzzy matching
-- **AI Integration**: Built-in MCP server for AI assistant compatibility
+No paywall, no outdated ui, no journaling system, simple and plain `.md` files.
+
+## Tape?!?
+
+Yeah `cassette` [is already taken](https://aur.archlinux.org/packages?K=cassette) :) 
+
+[What a tape or a cassette, you may ask.](https://en.wikipedia.org/wiki/Cassette_tape)
+
+The design is inspired by old cassette color, the logo represents the wheel of a cassette.
+
+## Main Features
+
+- **Markdown editor & reader**: Switch between editing and rendered preview modes with live preview `ctrl+tab`
+- **File tree**: Organized file browser with folders-first, alphabetical sorting
+- **File operations**: Create, rename, delete files and folders with existence validation
+- **Save**: `ctrl+s` to save with visual unsaved changes indicators
+- **Persistent workspace**: Remembers last opened folder, selection and config via `tape.json` config
+- **Context menus**: `right-click` for file and folder operations
+- **Full-text search**: `ctrl+k` to search across all markdown files with fuzzy matching
 - **Cross-platform**: Available for Linux, Windows, and macOS
+- **Full keyboard integration**: You can navigate the ui with `tab` and `shift+tab`, `enter` to open
+- **Shortcut help**: just hit `ctrl+h` to get the full list of shortcuts
+- **Sync yourself**: because the app handle plain `.md` files and the config file is place at the root of your notes folder, you can sync your notes with any other app you want
 
-### History
+### What's coming next?
 
-Tape is designed as a no-bloat markdown editor that focuses on simplicity and efficiency. Built with modern technologies (Go + React + Wails) to provide a native desktop experience while maintaining the flexibility of web technologies.
+- ctrl+z working
+- auto save
+- mcp server
 
 ## Installation
 
 ### Linux
-- Download via [AUR (Arch Linux)](https://aur.archlinux.org/packages/tape-bin)
-- Download the `.deb`, `.rpm`, or `.apk` package from [releases](https://github.com/results-may-vary-org/tape/releases)
-- Install manually:
-  ```bash
-  # For Debian/Ubuntu
-  sudo dpkg -i tape_*.deb
-
-  # For Red Hat/Fedora
-  sudo rpm -i tape_*.rpm
-
-  # For Alpine Linux
-  sudo apk add --allow-untrusted tape_*.apk
-  ```
+- Download via [AUR](https://aur.archlinux.org/packages/tape-bin)
+- Download the installer from [releases](https://github.com/results-may-vary-org/tape/releases)
 
 ### Windows
 - Download the installer from [releases](https://github.com/results-may-vary-org/tape/releases)
-- Run the `tape-windows-amd64-*.exe` installer
 
 ### macOS
 - Download the `.app` bundle from [releases](https://github.com/results-may-vary-org/tape/releases)
@@ -60,75 +64,20 @@ cd tape
 wails build
 ```
 
-## Configuration
+## Configuration `tape.json`
 
-| Feature | Description | Usage |
-|---------|-------------|--------|
-| Workspace | Root folder for your markdown notes | Select via "Open Folder" dialog |
-| View Mode | Switch between editor and reader modes | Toggle button in header |
-| Theme | Light/dark theme support | Auto-detected from system |
-| Auto-save | Automatic saving with visual indicators | Ctrl+S or auto-save on changes |
-| File Search | Full-text search across all files | Search bar with fuzzy matching |
-| MCP Server | AI assistant integration | Runs automatically when configured |
+The config is mostly there to remember your last opened folder, selection and view mode.
 
-![Tape Screenshot](assets/tape-screenshot.png)
+It must be placed at the root of your notes folder.
 
-## AI Integration (MCP Server)
-
-Tape includes a built-in MCP server that allows AI assistants to interact with your markdown notes:
-
-### Available Tools
-- **File Operations**: Read, write, create, delete markdown files
-- **Directory Operations**: Create folders, list files
-- **Content Search**: Full-text search across all markdown files
-- **Workspace Navigation**: Explore and understand file structure
-
-### Setup for Claude Desktop
-Add to your Claude Desktop config:
 ```json
 {
-  "mcpServers": {
-    "tape-markdown": {
-      "command": "/path/to/tape-mcp",
-      "args": [],
-      "env": {}
-    }
-  }
+  "lastOpenedFolder": "path of the last selected root folder",
+  "lastOpenedFile": "path of the last selected note",
+  "expandedFolders": ["array of each expanded folder"],
+  "viewMode": "editor",
+  "theme": "light"
 }
-```
-
-## Development
-
-### Tech Stack
-- **Backend**: Go with Wails framework
-- **Frontend**: React + TypeScript with Vite
-- **UI Components**: Radix UI with custom styling
-- **Markdown**: Marked.js with syntax highlighting
-
-### Building
-```bash
-# Install dependencies
-npm install
-
-# Build frontend
-npm run build
-
-# Build application
-wails build
-
-# Build MCP server
-cd cmd/mcp && go build -o ../../build/bin/tape-mcp .
-```
-
-### Project Structure
-```
-tape/
-├── main.go              # Main application entry
-├── app.go               # Core application logic
-├── cmd/mcp/            # MCP server implementation
-├── frontend/           # React frontend
-├── build/              # Build outputs
-└── assets/             # Icons and resources
 ```
 
 ## Code of conduct, license, authors, changelog, contributing
@@ -142,12 +91,6 @@ See the following files:
 ## Want to participate? Have a bug or a request feature?
 
 Do not hesitate to open a PR or an issue. I reply when I can.
-
-### Related Projects
-
-- [Wails](https://wails.io/) - Build desktop applications using Go and web technologies
-- [MCP Protocol](https://modelcontextprotocol.io/) - Model Context Protocol for AI assistant integration
-- [Radix UI](https://www.radix-ui.com/) - Low-level UI primitives for React
 
 ## Want to support my work?
 
