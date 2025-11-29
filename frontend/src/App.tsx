@@ -61,7 +61,7 @@ interface SearchResult {
 }
 
 type ViewMode = 'editor' | 'reader';
-type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode = 'system' | 'light' | 'dark';
 
 function App() {
   const [version] = useState<string>(__TAPE_VERSION__);
@@ -99,6 +99,7 @@ function App() {
   // Listen for system theme changes when using 'system' mode
   useEffect(() => {
     if (themeMode === 'system') {
+      document.documentElement.removeAttribute('data-color-mode');
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = () => {
         // Force re-render to update resolvedTheme
@@ -107,6 +108,10 @@ function App() {
 
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
+    } else if (themeMode === "light") {
+      document.documentElement.setAttribute('data-color-mode', 'light');
+    } else if (themeMode === "dark") {
+      document.documentElement.setAttribute('data-color-mode', 'dark');
     }
   }, [themeMode]);
 

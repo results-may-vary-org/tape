@@ -1,4 +1,6 @@
 import React, {useState, useRef, useLayoutEffect} from 'react';
+import CodeEditor from '@uiw/react-textarea-code-editor';
+import { ThemeMode } from '../App';
 
 interface MarkdownEditorProps {
   content: string;
@@ -34,12 +36,16 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, fileP
 
   return (
     <div className="markdown-editor">
-      <textarea
-        ref={textareaRef}
+      <CodeEditor
         value={localContent}
+        language="md"
+        placeholder="Please enter JS code."
         onChange={(e) => handleChange(e.target.value)}
-        className="editor-textarea"
-        placeholder="Start writing your markdown..."
+        padding={15}
+        style={{
+          overflowY: "auto",
+          height: "calc(100vh - (40px + 111px))",
+        }}
       />
     </div>
   );
