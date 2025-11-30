@@ -435,7 +435,13 @@ function App() {
   }
 
   return (
-    <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
+    <RadixTheme
+      appearance={resolvedTheme}
+      accentColor="gold"
+      grayColor="auto"
+      radius="medium"
+      scaling="100%"
+    >
       <div className="app-container">
         <div className="header">
           <div className="header-left">
@@ -445,14 +451,6 @@ function App() {
               <div id="info" className="info vt32">
                 {hasUnsavedChanges && "unsaved file_"}
               </div>
-            </div>
-            <div className="file-info">
-              <span className="current-path">{fileTree && fileTree.path}</span >
-              {selectedFilePath && selectedFilePath.split('/').pop() ? (
-                <span className="current-file">
-                  {selectedFilePath?.split('/').pop()?.slice(0, 30)}
-                </span>
-              ) : <span className="current-file">no tape selected</span>}
             </div>
           </div>
           <div className="header-right">
@@ -566,7 +564,7 @@ function App() {
           </div>
 
           <div className="content-area">
-            <Stats original={originalContent} edited={fileContent}/>
+            <Stats original={originalContent} edited={fileContent} selectedFilePath={selectedFilePath}/>
             {isLoading ? (
               <div className="loading">Loading...</div>
             ) : viewMode === 'editor' ? (

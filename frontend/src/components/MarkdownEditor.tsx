@@ -1,6 +1,5 @@
+import { TextArea } from '@radix-ui/themes';
 import React, {useState, useRef, useLayoutEffect} from 'react';
-import CodeEditor from '@uiw/react-textarea-code-editor';
-import { ThemeMode } from '../App';
 
 interface MarkdownEditorProps {
   content: string;
@@ -36,16 +35,16 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, fileP
 
   return (
     <div className="markdown-editor">
-      <CodeEditor
+      <TextArea
+        ref={textareaRef}
         value={localContent}
-        language="md"
-        placeholder="Please enter JS code."
+        placeholder="Write something."
         onChange={(e) => handleChange(e.target.value)}
-        padding={15}
         style={{
           overflowY: "auto",
-          height: "calc(100vh - (40px + 111px))",
+          height: "calc(100vh - (40px + 69px))"
         }}
+        radius="none"
       />
     </div>
   );
