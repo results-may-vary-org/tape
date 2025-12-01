@@ -37,12 +37,6 @@ The design is inspired by old cassette color, the logo represents the wheel of a
 - **Shortcut help**: just hit `ctrl+h` to get the full list of shortcuts
 - **Sync yourself**: because the app handle plain `.md` files and the config file is place at the root of your notes folder, you can sync your notes with any other app you want
 
-### What's coming next?
-
-- ctrl+z working
-- auto save
-- mcp server
-
 ## Installation
 
 ### Linux
