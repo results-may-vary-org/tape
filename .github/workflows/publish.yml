@@ -23,7 +23,7 @@ jobs:
       - name: Get latest tag
         id: get_tag
         run: |
-          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v999.999.999")
           echo "tag=$tag" >> $GITHUB_OUTPUT
 
   build:
@@ -122,15 +122,6 @@ jobs:
         with:
           name: linux-packages-${{ needs.get-tag.outputs.tag }}
           path: |
-            build/*.deb
-            build/*.rpm
-            build/*.apk
-
-      - name: Upload Linux packages to release (Linux only)
-        if: matrix.build.os == 'ubuntu-latest'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
             build/*.deb
             build/*.rpm
             build/*.apk
