@@ -1,10 +1,20 @@
 import React, {useState, useRef, useLayoutEffect} from "react";
 import { Compartment, EditorState } from "@codemirror/state";
-import { EditorView, basicSetup } from "codemirror";
-import {catppuccinLatte, catppuccinMocha} from "@catppuccin/codemirror";
+import { EditorView } from "codemirror";
+import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropCursor,
+  rectangularSelection, crosshairCursor,
+  lineNumbers, highlightActiveLineGutter} from "@codemirror/view";
+import {defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching,
+  foldGutter, foldKeymap} from "@codemirror/language";
+import {defaultKeymap, history, historyKeymap} from "@codemirror/commands";
+import {searchKeymap, highlightSelectionMatches} from "@codemirror/search";
+import {autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap} from "@codemirror/autocomplete";
+import {lintKeymap} from "@codemirror/lint";
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import {useTheme} from "next-themes";
+import {tapeLight} from "../codeThemes/ligh";
+import {tapeDark} from "../codeThemes/dark";
 
 interface MarkdownEditorProps {
   content: string;
@@ -21,13 +31,37 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
   const wrapConfig = new Compartment();
 
   const { resolvedTheme } = useTheme();
-  const theme = resolvedTheme === "light" ? catppuccinLatte : catppuccinMocha;
+  const theme = resolvedTheme === "light" ? tapeLight : tapeDark;
 
   useLayoutEffect(() => {
     const editorState = EditorState.create({
       doc: props.content,
       extensions: [
-        basicSetup,
+        // lineNumbers(),
+        highlightActiveLineGutter(),
+        highlightSpecialChars(),
+        history(),
+        // foldGutter(),
+        drawSelection(),
+        dropCursor(),
+        EditorState.allowMultipleSelections.of(true),
+        indentOnInput(),
+        syntaxHighlighting(defaultHighlightStyle, {fallback: true}),
+        bracketMatching(),
+        closeBrackets(),
+        autocompletion(),
+        crosshairCursor(),
+        highlightActiveLine(),
+        highlightSelectionMatches(),
+        keymap.of([
+          ...closeBracketsKeymap,
+          ...defaultKeymap,
+          ...searchKeymap,
+          ...historyKeymap,
+          ...foldKeymap,
+          ...completionKeymap,
+          ...lintKeymap
+        ]),
         wrapConfig.of(EditorView.lineWrapping),
         langConfig.of(markdown({ base: markdownLanguage, codeLanguages: languages })),
         themeConfig.of([theme]),
