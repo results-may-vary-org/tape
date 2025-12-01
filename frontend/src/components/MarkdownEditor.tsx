@@ -14,12 +14,14 @@ interface MarkdownEditorProps {
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
   const editorRef = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState<EditorView | null>(null);
-  const { resolvedTheme } = useTheme();
+  const [editorView, setEditorView] = useState<EditorView | null>(null);
 
   const themeConfig = new Compartment();
   const langConfig = new Compartment();
   const wrapConfig = new Compartment();
+
+  const { resolvedTheme } = useTheme();
+  const theme = resolvedTheme === "light" ? catppuccinLatte : catppuccinMocha;
 
   useLayoutEffect(() => {
     const editorState = EditorState.create({
@@ -28,7 +30,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
         basicSetup,
         wrapConfig.of(EditorView.lineWrapping),
         langConfig.of(markdown({ base: markdownLanguage, codeLanguages: languages })),
-        themeConfig.of([catppuccinMocha]),
+        themeConfig.of([theme]),
         // handle the value change
         EditorView.updateListener.of((viewUpdate) => {
           if (viewUpdate.docChanged) {
@@ -40,21 +42,21 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
     });
 
     const editorView = new EditorView({ state: editorState, parent: editorRef.current as Element });
-    setView(editorView);
+    setEditorView(editorView);
 
     return () => {
       editorView.destroy();
-      setView(null);
+      setEditorView(null);
     }
   }, [props.filePath]);
 
   useLayoutEffect(() => {
-    if (view) {
-      view.dispatch({
-        effects: themeConfig.reconfigure([resolvedTheme === "light" ? catppuccinLatte : catppuccinMocha]),
+    if (editorView) {
+      editorView.dispatch({
+        effects: themeConfig.reconfigure([theme]),
       });
     }
-  }, [resolvedTheme]);
+  }, [resolvedTheme, editorView]);
 
   if (!props.filePath) {
     return (
