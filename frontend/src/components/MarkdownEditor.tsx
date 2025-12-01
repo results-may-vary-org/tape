@@ -1,9 +1,10 @@
 import React, {useState, useRef, useLayoutEffect} from "react";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView, basicSetup } from "codemirror";
-import {catppuccinMocha} from "@catppuccin/codemirror";
+import {catppuccinLatte, catppuccinMocha} from "@catppuccin/codemirror";
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
+import {useTheme} from "next-themes";
 
 interface MarkdownEditorProps {
   content: string;
@@ -11,17 +12,18 @@ interface MarkdownEditorProps {
   filePath: string | null;
 }
 
-const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, filePath}) => {
+const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<EditorView | null>(null);
+  const { resolvedTheme } = useTheme();
+
+  const themeConfig = new Compartment();
+  const langConfig = new Compartment();
+  const wrapConfig = new Compartment();
 
   useLayoutEffect(() => {
-    // compartment allows extension to be dynamically added and removed
-    const themeConfig = new Compartment();
-    const langConfig = new Compartment();
-    const wrapConfig = new Compartment();
-
     const editorState = EditorState.create({
-      doc: content,
+      doc: props.content,
       extensions: [
         basicSetup,
         wrapConfig.of(EditorView.lineWrapping),
@@ -31,20 +33,30 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, fileP
         EditorView.updateListener.of((viewUpdate) => {
           if (viewUpdate.docChanged) {
             const value = viewUpdate.state.doc.toString();
-            onChange(value);
+            props.onChange(value);
           }
         }),
       ],
     });
 
-    const view = new EditorView({ state: editorState, parent: editorRef.current as Element });
+    const editorView = new EditorView({ state: editorState, parent: editorRef.current as Element });
+    setView(editorView);
 
     return () => {
-      view.destroy()
+      editorView.destroy();
+      setView(null);
     }
-  }, [editorRef]);
+  }, [props.filePath]);
 
-  if (!filePath) {
+  useLayoutEffect(() => {
+    if (view) {
+      view.dispatch({
+        effects: themeConfig.reconfigure([resolvedTheme === "light" ? catppuccinLatte : catppuccinMocha]),
+      });
+    }
+  }, [resolvedTheme]);
+
+  if (!props.filePath) {
     return (
       <div className="empty-editor">
         <p>Select a markdown file to start editing</p>
@@ -54,6 +66,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, fileP
 
   return (
     <div className="markdown-editor">
+      {/* maybe one day we can calculate the height automatically,
+      but for now this is the fatest since none of the elements change height */}
       <div
         ref={editorRef}
         style={{ height: "calc(100vh - (41px + 69px))", overflowY: "auto", maxWidth: "100%" }}

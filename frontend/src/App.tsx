@@ -653,8 +653,8 @@ function App() {
           // Refocus editor in editor mode after modal closes
           if (viewMode === 'editor') {
             setTimeout(() => {
-              const textarea = document.querySelector('.editor-textarea') as HTMLTextAreaElement;
-              textarea?.focus();
+              const editor = document.getElementById('editor') as HTMLDivElement;
+              editor?.focus();
             }, 100);
           }
         }}
@@ -670,8 +670,8 @@ function App() {
           // Refocus editor in editor mode after modal closes
           if (viewMode === 'editor') {
             setTimeout(() => {
-              const textarea = document.querySelector('.editor-textarea') as HTMLTextAreaElement;
-              textarea?.focus();
+              const editor = document.getElementById('editor') as HTMLDivElement;
+              editor?.focus();
             }, 100);
           }
         }}
