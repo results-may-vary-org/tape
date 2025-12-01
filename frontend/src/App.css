@@ -253,7 +253,7 @@ button:hover {
 
 .cm-editor {
   height: calc(100vh - (41px + 69px));
-  padding: 0.5rem;
+  padding: 0.5rem 0 0.5rem 0.5rem;
 }
 
 .markdown-reader {
@@ -266,6 +266,7 @@ button:hover {
 .reader-content {
   padding: 0.5rem;
   overflow: auto;
+  background: transparent;
 }
 
 .reader-empty, .empty-editor {
