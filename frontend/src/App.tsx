@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import '@radix-ui/themes/styles.css';
 import {Theme as RadixTheme } from '@radix-ui/themes';
+import {useTheme} from "next-themes";
 import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
@@ -64,6 +65,7 @@ type ViewMode = 'editor' | 'reader';
 export type ThemeMode = 'system' | 'light' | 'dark';
 
 function App() {
+  const { theme, setTheme } = useTheme();
   const [version] = useState<string>(__TAPE_VERSION__);
   const [fileTree, setFileTree] = useState<FileItem | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -71,7 +73,6 @@ function App() {
   const [originalContent, setOriginalContent] = useState<string>('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
-  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
@@ -96,27 +97,8 @@ function App() {
     setIsLoading(false);
   }, []);
 
-  // Listen for system theme changes when using 'system' mode
-  useEffect(() => {
-    if (themeMode === 'system') {
-      document.documentElement.removeAttribute('data-color-mode');
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => {
-        // Force re-render to update resolvedTheme
-        setThemeMode('system');
-      };
-
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } else if (themeMode === "light") {
-      document.documentElement.setAttribute('data-color-mode', 'light');
-    } else if (themeMode === "dark") {
-      document.documentElement.setAttribute('data-color-mode', 'dark');
-    }
-  }, [themeMode]);
-
   const handleThemeChange = async (newTheme: ThemeMode) => {
-    setThemeMode(newTheme);
+    setTheme(newTheme);
 
     // Save to config if we have a selected folder
     if (fileTree?.path) {
@@ -159,7 +141,7 @@ function App() {
             setViewMode(folderConfig.viewMode as ViewMode);
           }
           if (folderConfig.theme) {
-            setThemeMode(folderConfig.theme as ThemeMode);
+            setTheme(folderConfig.theme as ThemeMode);
           }
           if (folderConfig.expandedFolders) {
             setExpandedFolders(folderConfig.expandedFolders);
@@ -407,13 +389,9 @@ function App() {
     }
   };
 
-  const resolvedTheme = themeMode === 'system'
-    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : themeMode;
-
   if (!fileTree) {
     return (
-      <RadixTheme appearance={resolvedTheme} accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
+      <RadixTheme accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
         <div className="app-container">
           <div className="welcome-screen">
             <div>
@@ -436,7 +414,6 @@ function App() {
 
   return (
     <RadixTheme
-      appearance={resolvedTheme}
       accentColor="gold"
       grayColor="auto"
       radius="medium"
@@ -454,18 +431,18 @@ function App() {
             </div>
           </div>
           <div className="header-right">
-              <Select.Root value={themeMode} onValueChange={(value: ThemeMode) => handleThemeChange(value)}>
+              <Select.Root value={theme} onValueChange={(value: ThemeMode) => handleThemeChange(value)}>
                 <Select.Trigger className="theme-select-trigger">
                   <Flex as="span" align="center" gap="2">
-                    {themeMode === 'system'
+                    {theme === 'system'
                       ? <Monitor size={16}/>
-                      : themeMode === 'dark'
+                      : theme === 'dark'
                         ? <Moon size={16}/>
                         : <Sun size={16}/>
                     }
-                    {themeMode === 'system'
+                    {theme === 'system'
                       ? "System"
-                      : themeMode === 'dark'
+                      : theme === 'dark'
                         ? "Dark"
                         : "Light"
                     }
