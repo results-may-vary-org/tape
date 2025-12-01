@@ -392,6 +392,7 @@ button:hover {
   background: var(--color-panel);
   font-size: 0.875rem;
   display: flex;
+  height: 2rem;
 }
 
 /* align the text with the icon */
