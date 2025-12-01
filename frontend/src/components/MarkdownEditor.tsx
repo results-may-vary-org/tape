@@ -12,28 +12,28 @@ interface MarkdownEditorProps {
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, filePath}) => {
-  const [localContent, setLocalContent] = useState(content);
   const editorRef = useRef<HTMLDivElement>(null);
-  const editorParentRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-
-    if (editorRef && editorParentRef && editorRef.current && editorParentRef.current) {
-      editorRef.current.style.width = editorParentRef.current?.offsetWidth + "px";
-    }
-
     // compartment allows extension to be dynamically added and removed
     const themeConfig = new Compartment();
     const langConfig = new Compartment();
     const wrapConfig = new Compartment();
 
     const editorState = EditorState.create({
-      doc: localContent,
+      doc: content,
       extensions: [
         basicSetup,
         wrapConfig.of(EditorView.lineWrapping),
         langConfig.of(markdown({ base: markdownLanguage, codeLanguages: languages })),
         themeConfig.of([catppuccinMocha]),
+        // handle the value change
+        EditorView.updateListener.of((viewUpdate) => {
+          if (viewUpdate.docChanged) {
+            const value = viewUpdate.state.doc.toString();
+            onChange(value);
+          }
+        }),
       ],
     });
 
@@ -42,12 +42,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, fileP
     return () => {
       view.destroy()
     }
-  }, [localContent, editorRef, editorParentRef]);
-
-  function handleChange(data: string) {
-    setLocalContent(data);
-    onChange(data);
-  }
+  }, [editorRef]);
 
   if (!filePath) {
     return (
@@ -58,10 +53,10 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({content, onChange, fileP
   }
 
   return (
-    <div className="markdown-editor" ref={editorParentRef}>
+    <div className="markdown-editor">
       <div
         ref={editorRef}
-        style={{ height: "calc(100vh - (2rem + 69px))", overflowY: "auto", maxWidth: "100%" }}
+        style={{ height: "calc(100vh - (41px + 69px))", overflowY: "auto", maxWidth: "100%" }}
       ></div>
     </div>
   );
