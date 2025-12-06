@@ -82,7 +82,7 @@ jobs:
           go-version: '1.23'
           wails-version: 'v2.9.0'
 
-      - name: Setup nFPM (Linux only)
+      - name: Setup nFPM
         if: matrix.build.os == 'ubuntu-latest'
         run: |
           wget https://github.com/goreleaser/nfpm/releases/download/v2.40.0/nfpm_2.40.0_Linux_x86_64.tar.gz
@@ -90,7 +90,7 @@ jobs:
           sudo mv nfpm /usr/local/bin/
           nfpm --version
 
-      - name: Create Linux packages (Linux only)
+      - name: Create Linux packages
         if: matrix.build.os == 'ubuntu-latest'
         run: |
           # Verify binary exists and rename it
@@ -115,8 +115,15 @@ jobs:
 
           # List generated packages
           ls -la build/*.{deb,rpm,apk} || echo "Some packages may not have been generated"
+ 
+      - name: Build nsis
+        if: matrix.build.os == 'ubuntu-latest'
+        run: |
+          sudo apt install nsis
+          wails build -nsis
+          cp build/tape.exe build/tape-windows-${{ needs.get-tag.outputs.tag }}.exe
 
-      - name: Upload Linux packages (Linux only)
+      - name: Upload Linux packages
         if: matrix.build.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
@@ -125,3 +132,12 @@ jobs:
             build/*.deb
             build/*.rpm
             build/*.apk
+
+      - name: Upload NSIS packages
+        if: matrix.build.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nsis-packages-${{ needs.get-tag.outputs.tag }}
+          path: |
+            build/*.exe
+
