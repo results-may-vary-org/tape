@@ -139,5 +139,5 @@ jobs:
         with:
           name: nsis-packages-${{ needs.get-tag.outputs.tag }}
           path: |
-            build/*.exe
+            build/bin/*.exe
 
