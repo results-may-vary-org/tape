@@ -255,11 +255,11 @@ function App() {
         event,
         setIsSearchModalOpen,
         setIsShortcutsModalOpen,
-        setViewMode,
         viewMode,
         selectedFilePath,
         hasUnsavedChanges,
-        handleSave
+        handleSave,
+        handleViewModeChange
       );
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -419,7 +419,7 @@ function App() {
       radius="medium"
       scaling="100%"
     >
-      <div className="app-container">
+      <div className="app-container">w
         <div className="header">
           <div className="header-left">
             <div className="logo">

@@ -2,11 +2,11 @@ function handleKeys(
   event: KeyboardEvent,
   setIsSearchModalOpen: (isOpen: boolean) => void,
   setIsShortcutsModalOpen: (isOpen: boolean) => void,
-  setViewMode: (mode: "editor" | "reader") => void,
   actualViewMode: "editor" | "reader",
   selectedFilePath: string | null,
   hasUnsavedChanges: boolean,
-  handleSave: () => void
+  handleSave: () => void,
+  handleViewModeChange: (view: "editor" | "reader") => void,
 ) {
 
   console.log("key event >>", event.key)
@@ -41,7 +41,7 @@ function handleKeys(
   // Ctrl+Tab: Switch view mode
   if (event.ctrlKey && event.key === 'Tab') {
     event.preventDefault();
-    setViewMode(actualViewMode === "reader" ? "editor" : "reader");
+    handleViewModeChange(actualViewMode === "reader" ? "editor" : "reader");
     return;
   }
 }
