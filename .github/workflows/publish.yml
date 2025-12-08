@@ -119,7 +119,7 @@ jobs:
       - name: Build nsis
         if: matrix.build.os == 'ubuntu-latest'
         run: |
-          sudo apt install nsis libwebkit2gtk-4.0-dev
+          sudo apt install nsis libwebkit2gtk-4.1-dev
           wails build -nsis
           cp build/tape.exe build/tape-windows-${{ needs.get-tag.outputs.tag }}.exe
 
