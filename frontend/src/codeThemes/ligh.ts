@@ -28,7 +28,7 @@ import {
 // Base colors
 const base00 = 'var(--color-panel)', // Background - pure white for clean look
   base01 = 'var(--gray-6)', // Lighter background (popups, statuslines)
-  base02 = 'var(--gray-7)', // Selection background
+  base02 = 'var(--gray-12)', // Selection background
   base03 = 'var(--gray-8)', // Comments, invisibles, line highlighting
   base04 = '#9e9e9e', // Cursor and line numbers - gray 500
   base05 = '#424242', // Default foreground - gray 800

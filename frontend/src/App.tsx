@@ -419,7 +419,7 @@ function App() {
       radius="medium"
       scaling="100%"
     >
-      <div className="app-container">w
+      <div className="app-container">
         <div className="header">
           <div className="header-left">
             <div className="logo">

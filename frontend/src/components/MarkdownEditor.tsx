@@ -86,6 +86,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
 
   useLayoutEffect(() => {
     if (editorView) {
+      console.log(theme);
+      console.log(themeConfig)
       editorView.dispatch({
         effects: themeConfig.reconfigure([theme]),
       });
