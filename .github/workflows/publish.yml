@@ -32,22 +32,18 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: 'tape-linux-amd64'
+          - name: 'tape'
             platform: 'linux/amd64'
             platform_hyphen: 'linux-amd64'
             os: 'ubuntu-22.04' # for libwebkit2gtk 4.0
-          - name: 'tape-windows-amd64'
+          - name: 'tape'
             platform: 'windows/amd64'
             platform_hyphen: 'windows-amd64'
             os: 'windows-latest'
-          - name: 'tape-macos15-intel'
+          - name: 'tape'
             platform: 'darwin/universal'
             platform_hyphen: 'darwin-universal'
-            os: 'macos-15-intel'
-          - name: 'tape-macos-15-arm64'
-            platform: 'darwin/universal'
-            platform_hyphen: 'darwin-universal'
-            os: 'macos-15' # arm64
+            os: 'macos'
 
     runs-on: ${{ matrix.build.os }}
     env:
