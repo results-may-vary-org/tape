@@ -124,7 +124,7 @@ jobs:
         if: matrix.build.os == 'ubuntu-22.04'
         run: |
           sudo apt install nsis libwebkit2gtk-4.0-dev
-          wails build -nsis
+          wails build -nsis -platform "windows"
           cp build/tape.exe build/tape-windows-${{ needs.get-tag.outputs.tag }}.exe
 
       - name: Upload Linux packages
