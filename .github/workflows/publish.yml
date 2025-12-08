@@ -80,7 +80,7 @@ jobs:
           package: true
           nsis: ${{ matrix.build.platform == 'windows/amd64' }}
           go-version: '1.23'
-          wails-version: 'v2.9.0'
+          wails-version: 'v2.10.2'
 
       - name: Setup nFPM
         if: matrix.build.os == 'ubuntu-22.04'
