@@ -121,6 +121,7 @@ jobs:
         run: |
           sudo apt install nsis libwebkit2gtk-4.0-dev
           wails build -nsis -platform "windows"
+          ls -al
           cp build/tape.exe build/tape-windows-${{ needs.get-tag.outputs.tag }}.exe
 
       - name: Upload Linux packages
