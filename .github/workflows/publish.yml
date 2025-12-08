@@ -35,7 +35,7 @@ jobs:
           - name: 'tape'
             platform: 'linux/amd64'
             platform_hyphen: 'linux-amd64'
-            os: 'ubuntu-latest'
+            os: 'ubuntu-22.04' # for libwebkit2gtk 4.0
           - name: 'tape'
             platform: 'windows/amd64'
             platform_hyphen: 'windows-amd64'
@@ -119,7 +119,7 @@ jobs:
       - name: Build nsis
         if: matrix.build.os == 'ubuntu-latest'
         run: |
-          sudo apt install nsis libwebkit2gtk-4.1-dev
+          sudo apt install nsis libwebkit2gtk-4.0-dev
           wails build -nsis
           cp build/tape.exe build/tape-windows-${{ needs.get-tag.outputs.tag }}.exe
 
