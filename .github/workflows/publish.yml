@@ -43,7 +43,7 @@ jobs:
           - name: 'tape'
             platform: 'darwin/universal'
             platform_hyphen: 'darwin-universal'
-            os: 'macos'
+            os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
     env:
