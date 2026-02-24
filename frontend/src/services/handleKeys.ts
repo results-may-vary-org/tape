@@ -7,13 +7,8 @@ function handleKeys(
   hasUnsavedChanges: boolean,
   handleSave: () => void,
   handleViewModeChange: (view: "editor" | "reader") => void,
+  toggleZenMode : () => void
 ) {
-
-  console.log("key event >>", event.key)
-
-  if (event.ctrlKey && event.key === 'z') {
-    return;
-  }
 
   // Ctrl+S: Save file
   if (event.ctrlKey && event.key === 's') {
@@ -42,6 +37,13 @@ function handleKeys(
   if (event.ctrlKey && event.key === 'Tab') {
     event.preventDefault();
     handleViewModeChange(actualViewMode === "reader" ? "editor" : "reader");
+    return;
+  }
+
+  // Meta + z: Switch zen mode
+  if (event.ctrlKey && event.key === 'm') {
+    event.preventDefault();
+    toggleZenMode();
     return;
   }
 }

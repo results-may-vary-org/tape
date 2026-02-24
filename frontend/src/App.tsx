@@ -69,6 +69,7 @@ function App() {
   const { theme, setTheme } = useTheme();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const mainHeaderRef = useRef<HTMLDivElement>(null);
 
   const [version] = useState<string>(__TAPE_VERSION__);
   const [fileTree, setFileTree] = useState<FileItem | null>(null);
@@ -91,7 +92,10 @@ function App() {
 
   // maybe one day we can calculate the height automatically,
   // but for now this is the fastest since none of the elements change height
-  const containerHeight = "calc(100vh - (41px + 69px))";
+  // 53 = header, 40 = subheader
+  const [containerHeight, setContainerHeight] = useState<string>("calc(100vh - (40px + 53px))");
+
+  const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
 
   // Load last opened folder on app startup
   useEffect(() => {
@@ -135,6 +139,30 @@ function App() {
     if (sidebarRef && sidebarRef.current) {
       sidebarRef.current.classList.toggle("sidebar-extended");
       sidebarRef.current.classList.toggle("sidebar-hidden");
+      if (sidebarRef.current.classList.contains("sidebar-hidden")) {
+        setSidebarRotate("90deg");
+      } else {
+        setSidebarRotate("270deg");
+      }
+    }
+  }
+
+  // todo: to improve
+  const toggleZenMode = () => {
+    if (mainHeaderRef && mainHeaderRef.current && sidebarRef && sidebarRef.current) {
+      mainHeaderRef.current.classList.toggle("header-extended");
+      mainHeaderRef.current.classList.toggle("header-hidden");
+      if (mainHeaderRef.current.classList.contains("header-hidden")) {
+        setContainerHeight("calc(100vh - 40px)");
+        sidebarRef.current.classList.remove("sidebar-extended");
+        sidebarRef.current.classList.add("sidebar-hidden");
+        setSidebarRotate("90deg");
+      } else {
+        setContainerHeight("calc(100vh - (40px + 53px))");
+        sidebarRef.current.classList.add("sidebar-extended");
+        sidebarRef.current.classList.remove("sidebar-hidden");
+        setSidebarRotate("270deg");
+      }
     }
   }
 
@@ -274,7 +302,8 @@ function App() {
         selectedFilePath,
         hasUnsavedChanges,
         handleSave,
-        handleViewModeChange
+        handleViewModeChange,
+        toggleZenMode
       );
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -441,7 +470,7 @@ function App() {
     >
       <div className="app-container">
 
-        <div className="header">
+        <div className="header header-extended" ref={mainHeaderRef}>
           <div className="header-left">
             <div className="logo">
               <img src={appIconBck} alt="Tape app icon"/>
@@ -518,7 +547,7 @@ function App() {
             <div className="file-actions">
               <Tooltip content="Hide tree view">
                 <button onClick={() => toggleSidebar()} className='action-button'>
-                  <PanelTopClose size={16} style={{ rotate: '270deg' }} />
+                  <PanelTopClose size={16} style={{ rotate: sidebarRotate }} />
                 </button>
               </Tooltip>
 

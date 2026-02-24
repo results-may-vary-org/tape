@@ -32,7 +32,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
     { keys: ['Esc'], description: 'Close modal', category: 'navigation' },
 
     // Editor
-    { keys: ['Ctrl', 'Z'], description: 'Dosen\'t work for now, were working on it', category: 'editor' },
+    { keys: ['Ctrl', 'Z'], description: 'Undo change', category: 'editor' },
   ];
 
   // Focus content when modal opens for keyboard navigation
