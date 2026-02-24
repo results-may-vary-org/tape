@@ -20,6 +20,7 @@ interface MarkdownEditorProps {
   content: string;
   onChange: (content: string) => void;
   filePath: string | null;
+  containerHeight: string;
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
@@ -104,11 +105,9 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
 
   return (
     <div className="markdown-editor">
-      {/* maybe one day we can calculate the height automatically,
-      but for now this is the fatest since none of the elements change height */}
       <div
         ref={editorRef}
-        style={{ height: "calc(100vh - (41px + 69px))", overflowY: "auto", maxWidth: "100%" }}
+        style={{ height: props.containerHeight, overflowY: "auto", maxWidth: "100%" }}
       ></div>
     </div>
   );

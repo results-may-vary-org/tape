@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import '@radix-ui/themes/styles.css';
 import {Theme as RadixTheme } from '@radix-ui/themes';
@@ -18,7 +18,8 @@ import {
   Eye,
   Sun,
   Moon,
-  Monitor
+  Monitor,
+  PanelTopClose
 } from 'lucide-react';
 import { DropdownMenu, Select, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 import {
@@ -66,6 +67,9 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 
 function App() {
   const { theme, setTheme } = useTheme();
+
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
   const [version] = useState<string>(__TAPE_VERSION__);
   const [fileTree, setFileTree] = useState<FileItem | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -84,6 +88,10 @@ function App() {
   const [newFileName, setNewFileName] = useState('');
   const [newFolderName, setNewFolderName] = useState('');
   const [currentParentPath, setCurrentParentPath] = useState<string>('');
+
+  // maybe one day we can calculate the height automatically,
+  // but for now this is the fastest since none of the elements change height
+  const containerHeight = "calc(100vh - (41px + 69px))";
 
   // Load last opened folder on app startup
   useEffect(() => {
@@ -122,6 +130,13 @@ function App() {
       }
     }
   };
+
+  const toggleSidebar = () => {
+    if (sidebarRef && sidebarRef.current) {
+      sidebarRef.current.classList.toggle("sidebar-extended");
+      sidebarRef.current.classList.toggle("sidebar-hidden");
+    }
+  }
 
   const handleRootOpen = async (rootPath?: string) => {
     try {
@@ -425,6 +440,7 @@ function App() {
       scaling="100%"
     >
       <div className="app-container">
+
         <div className="header">
           <div className="header-left">
             <div className="logo">
@@ -496,74 +512,86 @@ function App() {
           </div>
         </div>
 
-        <div className="main-content">
-          <div className="sidebar">
-            <div className="sidebar-header">
-              <h3>Files</h3>
-              <div className="file-actions">
-                <Tooltip content="Select another root">
-                  <button onClick={() => handleRootOpen()} className="action-button">
-                    <FolderOpen size={16} />
-                  </button>
-                </Tooltip>
+        <div className="content">
 
-                <DropdownMenu.Root>
-                  <DropdownMenu.Trigger>
-                    <button className="action-button">
-                      <Plus size={16} />
-                    </button>
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Content className="dropdown-content" sideOffset={5}>
-                    <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFile()}>
-                      <FileText size={16} />
-                      New File
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFolder()}>
-                      <FolderPlus size={16} />
-                      New Folder
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Root>
+          <div className="content-header">
+            <div className="file-actions">
+              <Tooltip content="Hide tree view">
+                <button onClick={() => toggleSidebar()} className='action-button'>
+                  <PanelTopClose size={16} style={{ rotate: '270deg' }} />
+                </button>
+              </Tooltip>
 
-                <Tooltip content="Refresh file tree">
-                  <button onClick={refreshFileTree} className="action-button">
-                    <RefreshCw size={16} />
+              <Tooltip content="Select another root">
+                <button onClick={() => handleRootOpen()} className="action-button">
+                  <FolderOpen size={16} />
+                </button>
+              </Tooltip>
+
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                  <button className="action-button">
+                    <Plus size={16} />
                   </button>
-                </Tooltip>
-              </div>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content className="dropdown-content" sideOffset={5}>
+                  <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFile()}>
+                    <FileText size={16} />
+                    New File
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFolder()}>
+                    <FolderPlus size={16} />
+                    New Folder
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+
+              <Tooltip content="Refresh file tree">
+                <button onClick={refreshFileTree} className="action-button">
+                  <RefreshCw size={16} />
+                </button>
+              </Tooltip>
             </div>
-            <FileTree
-              fileTree={fileTree}
-              onFileSelect={handleFileSelect}
-              selectedFile={selectedFilePath}
-              onCreateFile={handleCreateFile}
-              onCreateFolder={handleCreateFolder}
-              onRenameItem={handleRenameItem}
-              onDeleteItem={handleDeleteItem}
-              expandedFolders={expandedFolders}
-              onExpandedFoldersChange={handleExpandedFoldersChange}
-            />
+
+            <Stats original={originalContent} edited={fileContent} selectedFilePath={selectedFilePath}/>
           </div>
 
-          <div className="content-area">
-            <Stats original={originalContent} edited={fileContent} selectedFilePath={selectedFilePath}/>
-            {isLoading ? (
-              <div className="loading">Loading...</div>
-            ) : viewMode === 'editor' ? (
-              <MarkdownEditor
-                key={`editor-${viewMode}`}
-                content={fileContent}
-                onChange={handleContentChange}
-                filePath={selectedFilePath}
+          <div className="content-container" style={{ height: containerHeight }}>
+            <div className="sidebar sidebar-extended" ref={sidebarRef}>
+              <FileTree
+                fileTree={fileTree}
+                onFileSelect={handleFileSelect}
+                selectedFile={selectedFilePath}
+                onCreateFile={handleCreateFile}
+                onCreateFolder={handleCreateFolder}
+                onRenameItem={handleRenameItem}
+                onDeleteItem={handleDeleteItem}
+                expandedFolders={expandedFolders}
+                onExpandedFoldersChange={handleExpandedFoldersChange}
               />
-            ) : (
-              <MarkdownReader
-                content={fileContent}
-                filePath={selectedFilePath}
-              />
-            )}
+            </div>
+
+            <div className="content-area">
+              {isLoading ? (
+                <div className="loading">Loading...</div>
+              ) : viewMode === 'editor' ? (
+                  <MarkdownEditor
+                    key={`editor-${viewMode}`}
+                    content={fileContent}
+                    onChange={handleContentChange}
+                    filePath={selectedFilePath}
+                    containerHeight={containerHeight}
+                  />
+                ) : (
+                    <MarkdownReader
+                      content={fileContent}
+                      filePath={selectedFilePath}
+                    />
+                  )}
+            </div>
           </div>
-        </div>
+
+        </div> {/* content */}
       </div>
 
       {/* Create File Dialog */}
