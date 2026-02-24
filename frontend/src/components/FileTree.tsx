@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import {
   ChevronRight,
   ChevronDown,
-  File,
   Folder,
-  FolderOpen,
   Plus,
   Edit3,
   Trash2,
-  Box, CassetteTape, PackageOpen, Package
+  CassetteTape, PackageOpen, Package
 } from 'lucide-react';
 import { ContextMenu, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 
@@ -25,7 +23,7 @@ interface FileTreeProps {
   selectedFile: string | null;
   onCreateFile: (parentPath: string) => void;
   onCreateFolder: (parentPath: string) => void;
-  onRenameItem: (itemPath: string, newName: string) => void;
+  onRenameItem: (itemPath: string, newName: string, isFile: boolean) => void;
   onDeleteItem: (itemPath: string, isDir: boolean) => void;
   expandedFolders: string[];
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
@@ -38,7 +36,7 @@ interface FileTreeNodeProps {
   level: number;
   onCreateFile: (parentPath: string) => void;
   onCreateFolder: (parentPath: string) => void;
-  onRenameItem: (itemPath: string, newName: string) => void;
+  onRenameItem: (itemPath: string, newName: string, isFile: boolean) => void;
   onDeleteItem: (itemPath: string, isDir: boolean) => void;
   isRootFolder?: boolean;
   expandedFolders: string[];
@@ -57,11 +55,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   isRootFolder = false,
   expandedFolders,
   onExpandedFoldersChange
-}) => {
+}: FileTreeNodeProps) => {
   const isExpanded = expandedFolders.includes(item.path);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
-  const [newName, setNewName] = useState(item.name);
+  const [newName, setNewName] = useState<string>(item.name);
   const itemRef = React.useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
@@ -80,9 +78,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
     setShowRenameDialog(true);
   };
 
-  const confirmRename = () => {
+  const confirmRename = (isDir: boolean) => {
     if (newName.trim() && newName !== item.name) {
-      onRenameItem(item.path, newName.trim());
+      onRenameItem(item.path, newName.trim(), !isDir);
     }
     setShowRenameDialog(false);
   };
@@ -248,12 +246,12 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
                 {item.isDir ? 'Folder' : 'File'} name
               </Text>
               <TextField.Root
-                value={newName}
+                value={item.isDir ? newName : newName.replace(".md", "") }
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    confirmRename();
+                    confirmRename(item.isDir);
                   }
                 }}
               >
@@ -272,7 +270,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
                 Cancel
               </Button>
             </Dialog.Close>
-            <Button onClick={confirmRename} disabled={!newName.trim()}>
+            <Button onClick={() => confirmRename(item.isDir)} disabled={!newName.trim()}>
               Rename
             </Button>
           </Flex>

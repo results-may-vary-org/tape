@@ -341,12 +341,17 @@ function App() {
     }
   };
 
-  const handleRenameItem = async (itemPath: string, newName: string) => {
+  const handleRenameItem = async (itemPath: string, newName: string, isFile: boolean) => {
     try {
       const parentPath = itemPath.substring(0, itemPath.lastIndexOf('/'));
-      const newPath = `${parentPath}/${newName}`;
+      let newPath = `${parentPath}/${newName}`;
 
-      // Check if new name already exists
+      // suffix .md for already exists test
+      if (isFile && !newPath.endsWith(".md")) {
+        newPath += ".md";
+      }
+
+      // check if new name already exists
       if (itemPath !== newPath) {
         const exists = await FileExists(newPath);
         if (exists) {
@@ -355,7 +360,7 @@ function App() {
         }
       }
 
-      await RenameFile(itemPath, newPath);
+      await RenameFile(itemPath, newPath, isFile);
       await refreshFileTree();
 
       // Update selected file path if it was renamed

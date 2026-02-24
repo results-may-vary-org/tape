@@ -223,7 +223,11 @@ func (a *App) DeleteDirectory(dirPath string) error {
 }
 
 // RenameFile renames a file or directory
-func (a *App) RenameFile(oldPath, newPath string) error {
+// auto suffix with .md if file and not already present
+func (a *App) RenameFile(oldPath, newPath string, isFile bool) error {
+	if isFile && !strings.HasSuffix(strings.ToLower(newPath), ".md") {
+		newPath += ".md"
+	}
 	return os.Rename(oldPath, newPath)
 }
 

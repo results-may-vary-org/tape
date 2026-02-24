@@ -50,8 +50,8 @@ export function ReadFile(arg1) {
   return window['go']['main']['App']['ReadFile'](arg1);
 }
 
-export function RenameFile(arg1, arg2) {
-  return window['go']['main']['App']['RenameFile'](arg1, arg2);
+export function RenameFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['RenameFile'](arg1, arg2, arg3);
 }
 
 export function SaveConfig(arg1, arg2) {
