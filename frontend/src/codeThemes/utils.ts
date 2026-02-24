@@ -1,7 +1,7 @@
 // Helper module for styling options
 export const generalContent = {
   fontSize: '1rem',
-  fontFamily: 'workbench, monospace',
+  fontFamily: '"jetbrains-mono", monospace',
   lineHeight: '1.4',
 };
 
@@ -13,7 +13,7 @@ export const generalDiff = {
   insertedTextDecoration: 'none',
   deletedTextDecoration: 'line-through',
   insertedLinePadding: '1px 3px',
-  borderRadious: '3px',
+  borderRadius: '3px',
   ins_del_linePadding: '1px 3px',
 };
 

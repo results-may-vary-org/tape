@@ -1,9 +1,25 @@
 @font-face {
+  font-family: "jetbrains-mono";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("assets/fonts/JetBrainsMono-VariableFont_wght.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "ubuntu-regular";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("assets/fonts/Ubuntu-Regular.ttf") format("truetype");
+}
+
+@font-face {
     font-family: "Nunito";
     font-style: normal;
     font-weight: 400;
     src: local(""),
-    url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
+      url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
 }
 
 @font-face {
@@ -11,7 +27,7 @@
     font-style: normal;
     font-weight: 400;
     src: local(""),
-    url("assets/fonts/Workbench-Regular.ttf") format("truetype");
+      url("assets/fonts/Workbench-Regular.ttf") format("truetype");
     font-display: swap;
 }
 
@@ -20,8 +36,21 @@
   font-style: normal;
   font-weight: 400;
   src: local(""),
-  url("assets/fonts/VT323-Regular.ttf") format("truetype");
+    url("assets/fonts/VT323-Regular.ttf") format("truetype");
   font-display: swap;
+}
+
+.jetbrains-mono {
+  font-family: "jetbrains-mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.ubuntu-regular {
+  font-family: "ubuntu-regular", sans-serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 .workbench {
