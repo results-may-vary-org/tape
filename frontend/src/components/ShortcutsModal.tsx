@@ -22,9 +22,9 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
     { keys: ['Ctrl', 'S'], description: 'Save current file', category: 'file' },
 
     // Navigation
+    { keys: ['Ctrl', 'H'], description: 'Show this shortcuts modal', category: 'navigation' },
     { keys: ['Ctrl', 'K'], description: 'Open search modal', category: 'navigation' },
     { keys: ['Ctrl', 'Tab'], description: 'Switch between Editor/Reader', category: 'navigation' },
-    { keys: ['Ctrl', 'H'], description: 'Show this shortcuts modal', category: 'navigation' },
     { keys: ['Tab'], description: 'Navigate between UI elements', category: 'navigation' },
     { keys: ['Shift', 'Tab'], description: 'Navigate between UI elements', category: 'navigation' },
     { keys: ['←↑↓→'], description: 'Navigate between search result', category: 'navigation' },
@@ -32,6 +32,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
     { keys: ['Esc'], description: 'Close modal', category: 'navigation' },
 
     // Editor
+    { keys: ['Ctrl', 'm'], description: 'Zen mode', category: 'editor' },
     { keys: ['Ctrl', 'Z'], description: 'Undo change', category: 'editor' },
   ];
 
