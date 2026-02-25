@@ -74,6 +74,12 @@ It must be placed at the root of your notes folder.
 }
 ```
 
+## Markdown flavor example
+
+The supported flavor is the GFM one with some addons.
+
+A example exist here: [example](./example.md).
+
 ## Code of conduct, license, authors, changelog, contributing
 
 See the following files:
