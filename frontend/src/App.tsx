@@ -78,6 +78,7 @@ function App() {
   const [originalContent, setOriginalContent] = useState<string>('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
+  const scrollRatioRef = useRef<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
@@ -225,6 +226,7 @@ function App() {
   const handleFileSelect = async (filePath: string) => {
     try {
       setIsLoading(true);
+      scrollRatioRef.current = 0;
       const content = await ReadFile(filePath);
       setSelectedFilePath(filePath);
       setFileContent(content);
@@ -611,12 +613,16 @@ function App() {
                     onChange={handleContentChange}
                     filePath={selectedFilePath}
                     containerHeight={containerHeight}
+                    scrollRatio={scrollRatioRef.current}
+                    onScrollChange={(r) => { scrollRatioRef.current = r; }}
                   />
                 ) : (
                     <MarkdownReader
                       content={fileContent}
                       filePath={selectedFilePath}
                       onContentChange={handleContentChange}
+                      scrollRatio={scrollRatioRef.current}
+                      onScrollChange={(r) => { scrollRatioRef.current = r; }}
                     />
                   )}
             </div>

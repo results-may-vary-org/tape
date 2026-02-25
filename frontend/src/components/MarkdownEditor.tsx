@@ -1,4 +1,5 @@
 import React, {useState, useRef, useLayoutEffect} from "react";
+import { useScrollSync } from "../services/useScrollSync";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "codemirror";
 import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropCursor,
@@ -21,11 +22,15 @@ interface MarkdownEditorProps {
   onChange: (content: string) => void;
   filePath: string | null;
   containerHeight: string;
+  scrollRatio?: number;
+  onScrollChange?: (ratio: number) => void;
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const scrollDomRef = useRef<HTMLElement | null>(null);
   const [editorView, setEditorView] = useState<EditorView | null>(null);
+  useScrollSync(scrollDomRef, props.scrollRatio, props.onScrollChange);
 
   const themeConfig = new Compartment();
   const langConfig = new Compartment();
@@ -77,9 +82,11 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
     });
 
     const editorView = new EditorView({ state: editorState, parent: editorRef.current as Element });
+    scrollDomRef.current = editorView.scrollDOM;
     setEditorView(editorView);
 
     return () => {
+      scrollDomRef.current = null;
       editorView.destroy();
       setEditorView(null);
     }

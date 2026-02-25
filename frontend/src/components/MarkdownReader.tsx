@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useScrollSync } from "../services/useScrollSync";
 import { Checkbox, Flex, Text } from "@radix-ui/themes";
 
 import Markdown from "react-markdown";
@@ -14,9 +15,13 @@ interface MarkdownReaderProps {
   content: string;
   filePath: string | null;
   onContentChange?: (content: string) => void;
+  scrollRatio?: number;
+  onScrollChange?: (ratio: number) => void;
 }
 
-const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, onContentChange }: MarkdownReaderProps) => {
+const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, onContentChange, scrollRatio, onScrollChange }: MarkdownReaderProps) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  useScrollSync(contentRef, scrollRatio, onScrollChange);
 
   const getTheme = (): "dark" | "light" => {
     return document.documentElement.classList.contains("dark") ? "dark" : "light";
@@ -74,7 +79,7 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, onCo
 
   return (
     <div className="markdown-reader markdown-body" data-theme={theme}>
-      <div className="reader-content">
+      <div className="reader-content" ref={contentRef}>
         <Markdown
           remarkPlugins={[remarkGfm, codeTitle]}
           rehypePlugins={[
