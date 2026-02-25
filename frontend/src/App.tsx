@@ -303,7 +303,8 @@ function App() {
         hasUnsavedChanges,
         handleSave,
         handleViewModeChange,
-        toggleZenMode
+        toggleZenMode,
+        toggleSidebar
       );
     };
     document.addEventListener('keydown', handleKeyDown);

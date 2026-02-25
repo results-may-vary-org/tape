@@ -7,7 +7,8 @@ function handleKeys(
   hasUnsavedChanges: boolean,
   handleSave: () => void,
   handleViewModeChange: (view: "editor" | "reader") => void,
-  toggleZenMode : () => void
+  toggleZenMode : () => void,
+  toggleSidebar: () => void
 ) {
 
   // Ctrl+S: Save file
@@ -40,10 +41,17 @@ function handleKeys(
     return;
   }
 
-  // Meta + z: Switch zen mode
+  // Ctrl + m: Toogle zen mode
   if (event.ctrlKey && event.key === 'm') {
     event.preventDefault();
     toggleZenMode();
+    return;
+  }
+
+  // Ctrl + n: Toogle sidebar
+  if (event.ctrlKey && event.key === 'n') {
+    event.preventDefault();
+    toggleSidebar();
     return;
   }
 }

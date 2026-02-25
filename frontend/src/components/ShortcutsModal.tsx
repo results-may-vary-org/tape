@@ -33,6 +33,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
 
     // Editor
     { keys: ['Ctrl', 'm'], description: 'Zen mode', category: 'editor' },
+    { keys: ['Ctrl', 'n'], description: 'Fold sidebar', category: 'editor' },
     { keys: ['Ctrl', 'Z'], description: 'Undo change', category: 'editor' },
   ];
 
