@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import "highlight.js/styles/github.min.css";
-import "highlight.js/styles/github-dark.css";
 
 import Markdown from "react-markdown";
 import remarkRehype from "remark-rehype"; // for rehype-highlight
@@ -10,6 +8,8 @@ import rehypeHighlight from "rehype-highlight"; // code colorization
 import rehypeCallouts from "rehype-callouts"; // to html
 import rehypeStringify from "rehype-stringify"; // render blockquote-based callouts (admonitions/alerts)
 import rehypeHighlightLines from "rehype-highlight-code-lines";
+
+// import "rehype-callouts/theme/obsidian";
 
 interface MarkdownReaderProps {
   content: string;
@@ -27,6 +27,27 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
     observer.observe(document.documentElement, { attributeFilter: ["class"] });
     return () => observer.disconnect();
   }, []);
+
+  // dynamically import css for code block
+  useEffect(() => {
+    const id = "hljs-theme";
+    let el = document.getElementById(id) as HTMLStyleElement | null;
+    if (!el) {
+      el = document.createElement("style");
+      el.id = id;
+      document.head.appendChild(el);
+    }
+    const styleEl = el;
+    if (theme === "dark") {
+      import("highlight.js/styles/github-dark.css?inline").then((css) => {
+        styleEl.textContent = css.default;
+      });
+    } else {
+      import("highlight.js/styles/github.min.css?inline").then((css) => {
+        styleEl.textContent = css.default;
+      });
+    }
+  }, [theme]);
 
   if (!filePath) {
     return (
@@ -53,7 +74,7 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
           rehypePlugins={[
             remarkRehype,
             rehypeHighlight,
-            rehypeCallouts,
+            [rehypeCallouts, { theme: 'github' }],
             [rehypeHighlightLines, { showLineNumbers: true }],
             rehypeStringify,
           ]}

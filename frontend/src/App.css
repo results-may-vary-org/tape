@@ -1,3 +1,5 @@
+@import 'rehype-callouts/theme/github';
+
 :root {
   --main-font: "ubuntu-regular";
   --jetbrains-mono: "jetbrains-mono";
@@ -308,6 +310,7 @@ button:hover {
   padding: 0.5rem;
   overflow: auto;
   background: transparent;
+  overflow-x: hidden; /* due to github css for hljs */
 }
 
 .reader-empty, .empty-editor {
@@ -346,6 +349,10 @@ div[data-remark-code-title="true"] {
 
 div[data-remark-code-title="true"] + pre {
   margin-block-start: 0 !important;
+}
+
+.reader-content pre code {
+  padding: 0 !important; /* override default */
 }
 
 .reader-content pre code, .reader-content p code {
@@ -713,6 +720,28 @@ div[data-remark-code-title="true"] + pre {
 }
 /* end line number */
 
+/* callout */
+.callout {
+  border-radius: 0.2rem;
+}
+
+.callout-content > :first-child {
+  margin-top: 0.5rem;
+}
+
+/* fix browser default <details> marker showing on collapsible callouts */
+.callout summary { list-style: none; }
+.callout summary::-webkit-details-marker { display: none; }
+
+/* add obsidian-style tinted background to github callouts */
+.callout {
+  background-color: rgb(from var(--rc-color-light, #888) r g b / 0.1);
+}
+.dark .callout {
+  background-color: rgb(from var(--rc-color-dark, #888) r g b / 0.1);
+}
+/* end callout */
+
 /* allow to render the md like github does */
 /* this is a very good way to get a nice and consistent style quickly */
 /* github markdown css */
@@ -729,20 +758,32 @@ div[data-remark-code-title="true"] + pre {
   --fontStack-sansSerif: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --fgColor-accent: Highlight;
 }
+/* structural vars use radix tokens — auto-adapt to dark/light */
+.markdown-body {
+  --bgColor-default: var(--color-background);
+  --bgColor-muted: var(--gray-3);
+  --bgColor-neutral-muted: var(--gray-a3);
+  --bgColor-attention-muted: var(--amber-3);
+  --borderColor-default: var(--gray-6);
+  --borderColor-muted: var(--gray-a6);
+  --borderColor-neutral-muted: var(--gray-a6);
+  --borderColor-accent-emphasis: var(--accent-9);
+  --borderColor-attention-emphasis: var(--amber-9);
+  --borderColor-danger-emphasis: var(--red-9);
+  --borderColor-done-emphasis: var(--purple-9);
+  --borderColor-success-emphasis: var(--green-9);
+  --fgColor-default: var(--gray-12);
+  --fgColor-muted: var(--gray-11);
+  --fgColor-accent: var(--accent-11);
+  --fgColor-attention: var(--amber-11);
+  --fgColor-danger: var(--red-11);
+  --fgColor-done: var(--purple-11);
+  --fgColor-success: var(--green-11);
+  --focus-outlineColor: var(--accent-9);
+}
+
 html.dark .markdown-body {
-  /*dark */
   color-scheme: dark;
-  --fgColor-accent: #4493f8;
-  --bgColor-attention-muted: #bb800926;
-  --bgColor-default: #0d1117;
-  --bgColor-muted: #151b23;
-  --bgColor-neutral-muted: #656c7633;
-  --borderColor-accent-emphasis: #1f6feb;
-  --borderColor-attention-emphasis: #9e6a03;
-  --borderColor-danger-emphasis: #da3633;
-  --borderColor-default: #3d444d;
-  --borderColor-done-emphasis: #8957e5;
-  --borderColor-success-emphasis: #238636;
   --color-prettylights-syntax-brackethighlighter-angle: #9198a1;
   --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
   --color-prettylights-syntax-carriage-return-bg: #b62324;
@@ -769,33 +810,14 @@ html.dark .markdown-body {
   --color-prettylights-syntax-storage-modifier-import: #f0f6fc;
   --color-prettylights-syntax-string: #a5d6ff;
   --color-prettylights-syntax-string-regexp: #7ee787;
-  --color-prettylights-syntax-sublimelinter-gutter-mark: #3d444d;
+  --color-prettylights-syntax-sublimelighter-gutter-mark: #3d444d;
   --color-prettylights-syntax-variable: #ffa657;
-  --fgColor-attention: #d29922;
-  --fgColor-danger: #f85149;
-  --fgColor-default: #f0f6fc;
-  --fgColor-done: #ab7df8;
-  --fgColor-muted: #9198a1;
-  --fgColor-success: #3fb950;
-  --borderColor-muted: #3d444db3;
-  --color-prettylights-syntax-invalid-illegal-bg: var(--bgColor-danger-muted);
+  --color-prettylights-syntax-invalid-illegal-bg: var(--red-3);
   --color-prettylights-syntax-invalid-illegal-text: var(--fgColor-danger);
-  --focus-outlineColor: var(--borderColor-accent-emphasis);
-  --borderColor-neutral-muted: var(--borderColor-muted);
 }
-hmlt.light .markdown-body {
-  /*light */
+
+html.light .markdown-body {
   color-scheme: light;
-  --fgColor-danger: #d1242f;
-  --bgColor-attention-muted: #fff8c5;
-  --bgColor-muted: #f6f8fa;
-  --bgColor-neutral-muted: #818b981f;
-  --borderColor-accent-emphasis: #0969da;
-  --borderColor-attention-emphasis: #9a6700;
-  --borderColor-danger-emphasis: #cf222e;
-  --borderColor-default: #d1d9e0;
-  --borderColor-done-emphasis: #8250df;
-  --borderColor-success-emphasis: #1a7f37;
   --color-prettylights-syntax-brackethighlighter-angle: #59636e;
   --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
   --color-prettylights-syntax-carriage-return-bg: #cf222e;
@@ -805,8 +827,8 @@ hmlt.light .markdown-body {
   --color-prettylights-syntax-constant-other-reference-link: #0a3069;
   --color-prettylights-syntax-entity: #6639ba;
   --color-prettylights-syntax-entity-tag: #0550ae;
-  --color-prettylights-syntax-invalid-illegal-text: var(--fgColor-danger);
   --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-markup-bold: #1f2328;
   --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
   --color-prettylights-syntax-markup-changed-text: #953800;
   --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
@@ -816,26 +838,16 @@ hmlt.light .markdown-body {
   --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
   --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
   --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-italic: #1f2328;
   --color-prettylights-syntax-markup-list: #3b2300;
   --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-storage-modifier-import: #1f2328;
   --color-prettylights-syntax-string: #0a3069;
   --color-prettylights-syntax-string-regexp: #116329;
-  --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
+  --color-prettylights-syntax-sublimelighter-gutter-mark: #818b98;
   --color-prettylights-syntax-variable: #953800;
-  --fgColor-accent: #0969da;
-  --fgColor-attention: #9a6700;
-  --fgColor-done: #8250df;
-  --fgColor-muted: #59636e;
-  --fgColor-success: #1a7f37;
-  --bgColor-default: #ffffff;
-  --borderColor-muted: #d1d9e0b3;
-  --color-prettylights-syntax-invalid-illegal-bg: var(--bgColor-danger-muted);
-  --color-prettylights-syntax-markup-bold: #1f2328;
-  --color-prettylights-syntax-markup-italic: #1f2328;
-  --color-prettylights-syntax-storage-modifier-import: #1f2328;
-  --fgColor-default: #1f2328;
-  --focus-outlineColor: var(--borderColor-accent-emphasis);
-  --borderColor-neutral-muted: var(--borderColor-muted);
+  --color-prettylights-syntax-invalid-illegal-bg: var(--red-3);
+  --color-prettylights-syntax-invalid-illegal-text: var(--fgColor-danger);
 }
 
 .markdown-body {
@@ -1960,3 +1972,4 @@ hmlt.light .markdown-body {
   min-height: 52px;
 }
 /* end github markdown css */
+
