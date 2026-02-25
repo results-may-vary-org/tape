@@ -351,7 +351,7 @@ div[data-remark-code-title="true"] + pre {
   margin-block-start: 0 !important;
 }
 
-.reader-content pre code {
+.reader-content pre {
   padding: 0 !important; /* override default */
 }
 
@@ -747,6 +747,14 @@ div[data-remark-code-title="true"] + pre {
   background-color: rgb(from var(--rc-color-dark, #888) r g b / 0.1);
 }
 /* end callout */
+
+/* task list: remove ul indent, restore it only for regular items in mixed lists */
+.markdown-body ul.contains-task-list {
+  padding-left: 0;
+}
+.markdown-body ul.contains-task-list li:not(.task-list-item) {
+  margin-left: 2em;
+}
 
 /* allow to render the md like github does */
 /* this is a very good way to get a nice and consistent style quickly */
