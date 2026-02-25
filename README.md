@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/results-may-vary-org/tape">
-    <img alt="Tape" src=".github/assets/Screenshot_20251001_094844.png"/>
+    <img alt="Tape" src=".github/assets/screenshot.png"/>
   </a>
 </p>
 <h1 align="center">Tape - a <i>simple</i> markdown editor</h1>
