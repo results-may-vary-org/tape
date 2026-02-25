@@ -36,7 +36,10 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^10.1.0",
+    "rehype-callouts": "^2.1.2",
     "rehype-highlight": "^7.0.2",
+    "rehype-highlight-code-lines": "^1.2.2",
+    "rehype-stringify": "^10.0.1",
     "remark-code-title": "^0.2.5",
     "remark-gfm": "^4.0.1",
     "remark-rehype": "^11.1.2"

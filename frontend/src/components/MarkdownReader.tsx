@@ -7,6 +7,9 @@ import remarkRehype from "remark-rehype"; // for rehype-highlight
 import remarkGfm from "remark-gfm"; // github flavor md
 import codeTitle from "remark-code-title"; // add the possibility to add title to code block
 import rehypeHighlight from "rehype-highlight"; // code colorization
+import rehypeCallouts from "rehype-callouts"; // to html
+import rehypeStringify from "rehype-stringify"; // render blockquote-based callouts (admonitions/alerts)
+import rehypeHighlightLines from "rehype-highlight-code-lines";
 
 interface MarkdownReaderProps {
   content: string;
@@ -36,7 +39,13 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
       <div className="reader-content">
         <Markdown
           remarkPlugins={[remarkGfm, codeTitle]}
-          rehypePlugins={[remarkRehype, rehypeHighlight]}
+          rehypePlugins={[
+            remarkRehype,
+            rehypeHighlight,
+            rehypeCallouts,
+            [rehypeHighlightLines, { showLineNumbers: true }],
+            rehypeStringify,
+          ]}
         >{content}</Markdown>
       </div>
     </div>

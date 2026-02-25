@@ -1,5 +1,6 @@
 :root {
   --main-font: "ubuntu-regular";
+  --jetbrains-mono: "jetbrains-mono";
   --header-height: 36px;
 }
 
@@ -348,7 +349,7 @@ div[data-remark-code-title="true"] + pre {
 }
 
 .reader-content pre code, .reader-content p code {
-  font-family: var(--main-font), monospace;
+  font-family: var(--jetbrains-mono), monospace;
   border-radius: 0.2rem;
 }
 
@@ -676,3 +677,37 @@ div[data-remark-code-title="true"] + pre {
     max-height: 80vh;
   }
 }
+
+/* markdown reader extensions specific css */
+/* line number */
+.code-line {
+  padding-left: 12px;
+  padding-right: 12px;
+  margin-left: -12px;
+  margin-right: -12px;
+  border-left: 4px solid transparent; /* prepare for highlighted code-lines */
+  display: inline-block;
+}
+
+.code-line.inserted {
+  background-color: var(--green-12);
+}
+
+.code-line.deleted {
+  background-color: var(--red-12);
+}
+
+.highlighted-code-line {
+  background-color: var(--orange-12);
+  border-left: 4px solid var(--orange-9);
+}
+
+.numbered-code-line::before {
+  content: attr(data-line-number);
+  margin-left: -8px;
+  margin-right: 16px;
+  width: 1rem;
+  text-align: right;
+  display: inline-block;
+}
+/* end line number */
