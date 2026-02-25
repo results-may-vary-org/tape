@@ -174,11 +174,14 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
   };
 
   const getResultLength = (): resultLength => {
-    return {
-      d: results.filter((value) => value.isDir).length.toString(),
-      f: results.filter((value) => value.matchType === "filename").length.toString(),
-      s: results.filter((value) => value.matchType === "content").length.toString()
-    };
+    if (results) {
+      return {
+        d: results.filter((value) => value.isDir).length.toString(),
+        f: results.filter((value) => value.matchType === "filename").length.toString(),
+        s: results.filter((value) => value.matchType === "content").length.toString()
+      };
+    }
+    return { d: "0", f: "0", s: "0" };
   }
 
   return (
