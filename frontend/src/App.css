@@ -340,8 +340,6 @@ button:hover {
   background: var(--color-panel);
 }
 
-/* check list */
-
 /* code block */
 div[data-remark-code-title="true"] {
   text-decoration: underline;
@@ -686,11 +684,6 @@ div[data-remark-code-title="true"] + pre {
 }
 
 /* special css for individual rendered element */
-/* checkbox */
-.contains-task-list li.task-list-item {
-  /* .contains-task-list has no padding-left*/
-}
-
 /* markdown reader extensions specific css */
 /* line number */
 .code-line {
@@ -748,12 +741,16 @@ div[data-remark-code-title="true"] + pre {
 }
 /* end callout */
 
-/* task list: remove ul indent, restore it only for regular items in mixed lists */
+/* checkbox / task list: remove ul indent, restore it only for regular items in mixed lists */
 .markdown-body ul.contains-task-list {
   padding-left: 0;
 }
 .markdown-body ul.contains-task-list li:not(.task-list-item) {
   margin-left: 2em;
+}
+
+.markdown-body ul.contains-task-list li:not(.task-list-item) ul li {
+  margin-left: 0;
 }
 
 /* allow to render the md like github does */
