@@ -616,6 +616,7 @@ function App() {
                     <MarkdownReader
                       content={fileContent}
                       filePath={selectedFilePath}
+                      onContentChange={handleContentChange}
                     />
                   )}
             </div>

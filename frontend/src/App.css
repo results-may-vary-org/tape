@@ -685,6 +685,12 @@ div[data-remark-code-title="true"] + pre {
   }
 }
 
+/* special css for individual rendered element */
+/* checkbox */
+.contains-task-list li.task-list-item {
+  /* .contains-task-list has no padding-left*/
+}
+
 /* markdown reader extensions specific css */
 /* line number */
 .code-line {
