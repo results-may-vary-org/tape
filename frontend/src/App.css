@@ -290,7 +290,8 @@ button:hover {
 }
 
 .cm-content {
-  font-family: var(--main-font), monospace;
+  /* font-family: var(--main-font), monospace; */
+  font-family: var(--jetbrains-mono), monospace;
   font-size: 1rem;
   font-weight: 400;
 }
@@ -354,7 +355,6 @@ div[data-remark-code-title="true"] + pre {
 }
 
 .reader-content pre code, .reader-content p code {
-  /* font-family: var(--jetbrains-mono), monospace; */
   border-radius: 0.2rem;
 }
 
