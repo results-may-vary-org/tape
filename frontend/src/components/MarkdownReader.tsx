@@ -10,8 +10,6 @@ import rehypeCallouts from "rehype-callouts"; // to html
 import rehypeStringify from "rehype-stringify"; // render blockquote-based callouts (admonitions/alerts)
 import rehypeHighlightLines from "rehype-highlight-code-lines";
 
-// import "rehype-callouts/theme/obsidian";
-
 interface MarkdownReaderProps {
   content: string;
   filePath: string | null;
@@ -19,8 +17,10 @@ interface MarkdownReaderProps {
 }
 
 const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, onContentChange }: MarkdownReaderProps) => {
-  const getTheme = () => document.documentElement.classList.contains("dark") ? "dark" : "light";
 
+  const getTheme = (): "dark" | "light" => {
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  }
   const [theme, setTheme] = useState<"light" | "dark">(getTheme);
 
   useEffect(() => {
@@ -32,22 +32,27 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, onCo
   // dynamically import css for code block
   useEffect(() => {
     const id = "hljs-theme";
-    let el = document.getElementById(id) as HTMLStyleElement | null;
-    if (!el) {
-      el = document.createElement("style");
-      el.id = id;
-      document.head.appendChild(el);
+    let styleElem = document.getElementById(id) as HTMLStyleElement | null;
+
+    if (!styleElem) {
+      styleElem = document.createElement("style");
+      styleElem.id = id;
+      document.head.appendChild(styleElem);
     }
-    const styleEl = el;
-    if (theme === "dark") {
-      import("highlight.js/styles/github-dark.css?inline").then((css) => {
-        styleEl.textContent = css.default;
-      });
-    } else {
-      import("highlight.js/styles/github.min.css?inline").then((css) => {
-        styleEl.textContent = css.default;
-      });
+
+    if (styleElem) {
+      const e = styleElem; // because of the async operation
+      if (theme === "dark") {
+        import("highlight.js/styles/github-dark.css?inline").then((css) => {
+          e.textContent = css.default;
+        });
+      } else {
+        import("highlight.js/styles/github.min.css?inline").then((css) => {
+          e.textContent = css.default;
+        });
+      }
     }
+
   }, [theme]);
 
   if (!filePath) {
@@ -67,23 +72,6 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, onCo
     );
   }
 
-  const toggleCheckbox = (index: number) => {
-    if (!onContentChange) return;
-    let count = 0;
-    const updated = content.replace(
-      /^(\s*[-*+]|\s*\d+\.) \[([ xX])\]/gm,
-      (match, prefix, state) => {
-        if (count++ === index) {
-          return `${prefix} [${state.trim() === "" ? "x" : " "}]`;
-        }
-        return match;
-      }
-    );
-    onContentChange(updated);
-  };
-
-  let checkboxIndex = 0;
-
   return (
     <div className="markdown-reader markdown-body" data-theme={theme}>
       <div className="reader-content">
@@ -97,23 +85,23 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, onCo
             rehypeStringify,
           ]}
           components={{
-            input: ({ type, checked }) => {
+            input: ({ type, checked, ...props }) => {
               if (type !== "checkbox") return null;
-              const idx = checkboxIndex++;
               return (
-                <Checkbox
-                  checked={checked}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleCheckbox(idx);
-                  }}
-                />
+                <Checkbox checked={checked}/>
               );
             },
             li: ({ children, className, node, ...props }) => {
               if (className?.includes("task-list-item")) {
-                return <Text as="label" size="3"><Flex gap="2" className={className}>{children}</Flex></Text>;
+                return (
+                  <span {...props}>
+                    <Text as="label" size="3">
+                      <Flex gap="2" className={className}>
+                        {children}
+                      </Flex>
+                    </Text>
+                  </span>
+                );
               }
               return <li className={className} {...props}>{children}</li>;
             },
