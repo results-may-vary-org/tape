@@ -336,9 +336,12 @@ button:hover {
   background: var(--color-panel);
 }
 
+/* check list */
+
 /* code block */
 .reader-content pre code, .reader-content p code {
   font-family: var(--main-font), monospace;
+  border-radius: 0.2rem;
 }
 
 .editor-empty {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useRef } from "react";
 import { marked } from "marked";
 import hljs from "highlight.js";
 import "highlight.js/styles/github.min.css";
@@ -17,12 +17,12 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
     marked.setOptions({
       breaks: true,
       gfm: true,
+      silent: false,
+      async: true,
     });
 
     // Configure highlight.js
-    hljs.configure({
-      languages: ["javascript", "typescript", "python", "java", "c", "cpp", "go", "rust", "html", "css", "json", "yaml", "bash", "sql"]
-    });
+    hljs.configure({}); // seems that language is not mandatory
   }, []);
 
   useEffect(() => {
