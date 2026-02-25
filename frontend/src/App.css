@@ -6,7 +6,7 @@
 body {
   margin: 0;
   padding: 0;
-  overflow: unset;
+  overflow: hidden;
 }
 
 button:hover {
@@ -283,6 +283,7 @@ button:hover {
 /* Editor & reader */
 .cm-editor {
   padding: 0.5rem 0 0.5rem 0.5rem;
+  height: 100%;
 }
 
 .cm-content {
