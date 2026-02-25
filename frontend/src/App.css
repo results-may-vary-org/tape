@@ -339,6 +339,14 @@ button:hover {
 /* check list */
 
 /* code block */
+div[data-remark-code-title="true"] {
+  text-decoration: underline;
+}
+
+div[data-remark-code-title="true"] + pre {
+  margin-block-start: 0 !important;
+}
+
 .reader-content pre code, .reader-content p code {
   font-family: var(--main-font), monospace;
   border-radius: 0.2rem;

@@ -34,7 +34,12 @@
     "marked": "^16.3.0",
     "next-themes": "^0.4.6",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-code-title": "^0.2.5",
+    "remark-gfm": "^4.0.1",
+    "remark-rehype": "^11.1.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.17",

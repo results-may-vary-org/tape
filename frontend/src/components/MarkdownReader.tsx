@@ -1,8 +1,12 @@
-import React, { useEffect, useRef } from "react";
-import { marked } from "marked";
-import hljs from "highlight.js";
+import React from "react";
 import "highlight.js/styles/github.min.css";
 import "highlight.js/styles/github-dark.css";
+
+import Markdown from "react-markdown";
+import remarkRehype from "remark-rehype"; // for rehype-highlight
+import remarkGfm from "remark-gfm"; // github flavor md
+import codeTitle from "remark-code-title"; // add the possibility to add title to code block
+import rehypeHighlight from "rehype-highlight"; // code colorization
 
 interface MarkdownReaderProps {
   content: string;
@@ -10,38 +14,6 @@ interface MarkdownReaderProps {
 }
 
 const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Configure marked for GitHub Flavored Markdown
-    marked.setOptions({
-      breaks: true,
-      gfm: true,
-      silent: false,
-      async: true,
-    });
-
-    // Configure highlight.js
-    hljs.configure({}); // seems that language is not mandatory
-  }, []);
-
-  useEffect(() => {
-    if (contentRef.current && content) {
-      // Parse markdown to HTML
-      const processMarkdown = async () => {
-        const htmlContent = await marked(content);
-        if (contentRef.current) {
-          contentRef.current.innerHTML = htmlContent;
-          // Apply syntax highlighting to code blocks
-          contentRef.current.querySelectorAll("code").forEach((block) => {
-            hljs.highlightElement(block as HTMLElement);
-          });
-        }
-      };
-      processMarkdown();
-    }
-  }, [content]);
-
   if (!filePath) {
     return (
       <div className="reader-empty">
@@ -61,7 +33,11 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
 
   return (
     <div className="markdown-reader">
-      <div className="reader-content" ref={contentRef}>
+      <div className="reader-content">
+        <Markdown
+          remarkPlugins={[remarkGfm, codeTitle]}
+          rehypePlugins={[remarkRehype, rehypeHighlight]}
+        >{content}</Markdown>
       </div>
     </div>
   );
