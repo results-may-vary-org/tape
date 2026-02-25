@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "highlight.js/styles/github.min.css";
 import "highlight.js/styles/github-dark.css";
 
@@ -17,6 +17,17 @@ interface MarkdownReaderProps {
 }
 
 const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) => {
+  const getTheme = () =>
+    document.documentElement.classList.contains("dark") ? "dark" : "light";
+
+  const [theme, setTheme] = useState<"light" | "dark">(getTheme);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => setTheme(getTheme()));
+    observer.observe(document.documentElement, { attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   if (!filePath) {
     return (
       <div className="reader-empty">
@@ -35,7 +46,7 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath }) =>
   }
 
   return (
-    <div className="markdown-reader">
+    <div className="markdown-reader markdown-body" data-theme={theme}>
       <div className="reader-content">
         <Markdown
           remarkPlugins={[remarkGfm, codeTitle]}
