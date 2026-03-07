@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
-
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/zalando/go-keyring"
 )
 
 type Diff struct {
@@ -34,6 +35,7 @@ type Config struct {
 	ExpandedFolders  []string `json:"expandedFolders"`
 	ViewMode         string   `json:"viewMode"`
 	Theme            string   `json:"theme"`
+	PrivacyMode      bool     `json:"privacyMode"`
 }
 
 type SearchResult struct {
@@ -45,9 +47,16 @@ type SearchResult struct {
 	ContextText string `json:"contextText"` // Surrounding context for content matches
 }
 
+type keyringEntry struct {
+	Password    string
+	ExpiresAt   time.Time
+}
+
 // App struct
 type App struct {
 	ctx context.Context
+	rootPath string
+	secretStaleHours int
 }
 
 // NewApp creates a new App application struct
@@ -59,6 +68,60 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.secretStaleHours = 8
+}
+
+func (a *App) shutdown(ctx context.Context) {
+	if a.rootPath != "" {
+		a.KDeletePassword()
+	}
+}
+
+/**
+ * --- Keyring
+ */
+// NOTE : rootPath is used has user name like so each root can get
+// a different password while also allowing multiple instance of tape
+// to be opened at the same time with different root selected
+
+// KDeletePassword delete the password from the os keyring
+func (a *App) KDeletePassword() error {
+	service := "tape"
+	err := keyring.Delete(service, a.rootPath)
+	return err // err or nil
+}
+
+// KSetPassword set the password to the os keyring
+func (a *App) KSetPassword(password string) error {
+	service := "tape"
+	entry := keyringEntry{
+		Password:  password,
+		ExpiresAt: time.Now().Add(time.Duration(a.secretStaleHours) * time.Hour),
+	}
+	data, _ := json.Marshal(entry)
+	err := keyring.Set(service, a.rootPath, string(data))
+	return err // err or nil
+}
+
+// KGetPassword return the password from the os keyring
+func (a *App) KGetPassword() *string {
+	// get the raw value
+	service := "tape"
+	secretRaw, err := keyring.Get(service, a.rootPath)
+	if err != nil {
+		return nil
+	}
+	// unmarshal it
+	var secret keyringEntry
+	if err := json.Unmarshal([]byte(secretRaw), &secret); err != nil {
+		return nil
+	}
+	// delete if stale
+	if time.Now().After(secret.ExpiresAt) {
+		a.KDeletePassword()
+		return nil
+	}
+	return &secret.Password
 }
 
 /**
@@ -159,7 +222,7 @@ func (a *App) buildFileTree(parent *FileItem) error {
 		if entry.IsDir() {
 			a.buildFileTree(child)
 			children = append(children, child)
-		} else if strings.HasSuffix(strings.ToLower(entry.Name()), ".md") {
+		} else if strings.HasSuffix(strings.ToLower(entry.Name()), ".md") { // todo: later add the suffix check for md5
 			children = append(children, child)
 		}
 	}
@@ -288,12 +351,14 @@ func (a *App) SaveConfig(config *Config, folderPath string) error {
 
 // SaveLastOpenedFolder saves the last opened folder to config
 func (a *App) SaveLastOpenedFolder(folderPath string) error {
+	a.rootPath = folderPath // save to runtime
+
 	config, err := a.LoadConfig(folderPath)
 	if err != nil {
 		config = &Config{}
 	}
 
-	config.LastOpenedFolder = folderPath
+	config.LastOpenedFolder = folderPath // save to config
 	return a.SaveConfig(config, folderPath)
 }
 
@@ -343,6 +408,26 @@ func (a *App) SaveExpandedFolders(folderPath string, expandedFolders []string) e
 	config.ExpandedFolders = expandedFolders
 	config.LastOpenedFolder = folderPath
 	return a.SaveConfig(config, folderPath)
+}
+
+// SaveUseEncrypt saves the useEncrypt state to config
+func (a *App) SavePrivacyMode(folderPath string, privacyMode bool) error {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		config = &Config{}
+	}
+
+	config.PrivacyMode = privacyMode
+	return a.SaveConfig(config, folderPath)
+}
+
+// getPrivacyMode return the privacy config or false
+func (a *App) getPrivacyMode(folderPath string) bool {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		return false
+	}
+	return config.PrivacyMode
 }
 
 // LoadInitialConfig loads initial configuration - returns empty config if no previous folder
