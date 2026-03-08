@@ -157,6 +157,26 @@ func encryptData(masterKey []byte, data []byte) (nonce, ciphertext []byte, err e
 	return nonce, ciphertext, nil
 }
 
+// decryptData take a cipher and return the original content
+func decryptData(masterkey []byte, nonce []byte, ciphertext []byte) ([]byte, error) {
+	block, err := aes.NewCipher(masterkey)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
+}
+
 // SetupPassword generate needed data and store it to setup encrypted tape box
 func (a *App) SetupPassword(password string, rootPath string) string {
 	masterkey, passwordSalt, err := deriveKey(password)
@@ -179,6 +199,41 @@ func (a *App) SetupPassword(password string, rootPath string) string {
 	a.masterkey = masterkey
 	
 	return "ok"
+}
+
+// check if the user has the right setup to encrypt notes
+func (a *App) hasSecurity() bool {
+	hasPrivacyOn := a.getPrivacyMode(a.rootPath)
+	hasMasterKey := a.masterkey
+	_, check, nonceCheck, salt := a.getCryptoOptions(a.rootPath)
+	return hasPrivacyOn && len(hasMasterKey) > 0 && len(check) > 0 && len(nonceCheck) > 0 && len(salt) > 0
+}
+
+// PasswordIsCorrect check if the given password is correct comparing with the check data in the config
+func (a *App) PasswordIsCorrect(password string) bool {
+	if a.hasSecurity() {
+		_, check, nonceCheck, salt := a.getCryptoOptions(a.rootPath)
+		
+		candidateKey := deriveKeyWithSalt(password, salt)
+
+		block, err := aes.NewCipher(candidateKey)
+		if err != nil {
+			return false
+		}
+		
+		gcm, err := cipher.NewGCM(block)
+		if err != nil {
+			return false
+		}
+		
+		if _, err = gcm.Open(nil, nonceCheck, check, nil); err != nil {
+			return false
+		}
+		
+		a.masterkey = candidateKey
+		return true
+	}
+	return false
 }
 
 /**
@@ -503,6 +558,16 @@ func (a *App) getPrivacyMode(folderPath string) bool {
 		return false
 	}
 	return config.PrivacyMode
+}
+
+// getCryptoOptions return all related config for crypto
+// privacyMode, Check, NonceCheck, Salt
+func (a *App) getCryptoOptions(folderPath string) (bool, []byte, []byte, []byte) {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		return false, nil, nil, nil
+	}
+	return config.PrivacyMode, config.Check, config.NonceCheck, config.Salt
 }
 
 // LoadInitialConfig loads initial configuration - returns empty config if no previous folder

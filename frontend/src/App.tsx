@@ -84,7 +84,7 @@ function App() {
   const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
 
   // handle password creation if needed then call config loading
-  const openTape = async () => {
+  const askMainPassword = async () => {
     setIsUseEncModalOpen(false);
     if (password) {
       const resp = await SetupPassword(password, dirPath);
@@ -152,7 +152,7 @@ function App() {
   // password is triggered when the user open a new or a different root
   useEffect(() => {
     if (!dirPath) return; // fail safe for first load
-    openTape()
+    askMainPassword()
   }, [password])
 
   // Load last opened folder on app startup
