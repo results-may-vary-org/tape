@@ -4,7 +4,7 @@ import {main} from '../models';
 
 export function CreateDirectory(arg1:string):Promise<void>;
 
-export function CreateFile(arg1:string):Promise<void>;
+export function CreateFile(arg1:string):Promise<string>;
 
 export function DeleteDirectory(arg1:string):Promise<void>;
 
@@ -30,7 +30,7 @@ export function PasswordIsCorrect(arg1:string,arg2:string):Promise<boolean>;
 
 export function ReadFile(arg1:string):Promise<string>;
 
-export function RenameFile(arg1:string,arg2:string,arg3:boolean):Promise<void>;
+export function RenameFile(arg1:string,arg2:string,arg3:boolean):Promise<string>;
 
 export function SaveConfig(arg1:main.Config,arg2:string):Promise<void>;
 

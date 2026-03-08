@@ -4,13 +4,12 @@ import {EyeClosedIcon, EyeIcon} from 'lucide-react';
 
 interface UseEncVaultModalProps {
   isOpen: boolean;
+  onSubmit: (password: string) => void;
   onClose: () => void;
-  setPassword: (password: string) => void;
-  password: string;
   error: string;
 }
 
-const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen,  onClose, password, setPassword, error}) => {
+const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, onClose, error}) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [see, setSee] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
@@ -28,9 +27,9 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen,  onClose, pa
     }, 0);
   };
 
-  // reset on open
+  // reset value on open
   useEffect(() => {
-    if (isOpen) setPassword('');
+    if (isOpen) setValue('');
   }, [isOpen]);
 
   // handle key shortcut
@@ -41,20 +40,20 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen,  onClose, pa
       switch (e.key) {
         case 'Escape':
           e.preventDefault();
-          onClose();
+          onSubmit("");
           break;
         case 'Enter':
           e.preventDefault();
-          setPassword(value);
+          onSubmit(value);
           break;
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, value]);
+  }, [isOpen, onSubmit, value]);
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={onClose}>
+    <Dialog.Root open={isOpen} onOpenChange={() => onSubmit("")}>
       <Dialog.Content className="search-modal" maxWidth="600px">
 
         <Dialog.Title style={{fontFamily: "vt32"}}>Do you want to create an encrypted tape box?</Dialog.Title>
@@ -97,7 +96,8 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen,  onClose, pa
                 </IconButton>
               </TextField.Slot>
             </TextField.Root>
-            <Button onClick={() => setPassword(value)}>Create</Button>
+            <Button onClick={() => onSubmit(value)}>Create</Button>
+            <Button onClick={() => onSubmit("")}>Skip</Button>
           </Flex>
           <Separator style={{width: "100%"}}/>
         </Flex>

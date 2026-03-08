@@ -9,6 +9,7 @@ import {
   CassetteTape, PackageOpen, Package
 } from 'lucide-react';
 import { ContextMenu, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
+import { RenameFile } from '../../wailsjs/go/main/App';
 
 interface FileItem {
   name: string;
@@ -54,12 +55,13 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   onDeleteItem,
   isRootFolder = false,
   expandedFolders,
-  onExpandedFoldersChange
+  onExpandedFoldersChange,
 }: FileTreeNodeProps) => {
   const isExpanded = expandedFolders.includes(item.path);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newName, setNewName] = useState<string>(item.name);
+  const [renameError, setRenameError] = useState<string>("");
   const itemRef = React.useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
@@ -74,15 +76,33 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   };
 
   const handleRename = () => {
-    setNewName(item.name);
+    const stem = item.isDir ? item.name : item.name.replace(/\.(mde|md)$/i, "");
+    setNewName(stem);
+    setRenameError("");
     setShowRenameDialog(true);
   };
 
-  const confirmRename = (isDir: boolean) => {
-    if (newName.trim() && newName !== item.name) {
-      onRenameItem(item.path, newName.trim(), !isDir);
+  const confirmRename = async (isDir: boolean) => {
+    if (!newName.trim()) return;
+    const ext = !isDir ? (item.name.match(/\.(mde|md)$/i)?.[0] ?? "") : "";
+    const fullName = newName.trim() + ext;
+    if (fullName === item.name) {
+      setShowRenameDialog(false);
+      return;
     }
-    setShowRenameDialog(false);
+    try {
+      // linter say no but await is very important here
+      await onRenameItem(item.path, fullName, !isDir);
+      setShowRenameDialog(false);
+      setRenameError("");
+    } catch (error) {
+      if (typeof error === "string" && error === "file_already_exist") {
+        setRenameError(`${isDir ? "Folder" : "File"} "${fullName}" already exists in this directory.`);
+      } else {
+        setRenameError(`Error renaming ${isDir ? "folder" : "file"}. Please try again.`);
+        console.warn("Rename error:", error);
+      }
+    }
   };
 
   const handleDelete = () => {
@@ -237,7 +257,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>Rename {item.isDir ? 'Folder' : 'File'}</Dialog.Title>
           <Dialog.Description size="2" mb="4">
-            Enter a new name for this {item.isDir ? 'folder' : 'file'}.
+            {renameError
+              ? <span className="important">{renameError}</span>
+              : <>Enter a new name for this {item.isDir ? 'folder' : 'file'}.</>
+            }
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
@@ -246,21 +269,15 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
                 {item.isDir ? 'Folder' : 'File'} name
               </Text>
               <TextField.Root
-                value={item.isDir ? newName : newName.replace(/\.(mde|md)$/i, "") }
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
+                value={item.isDir ? newName : newName.replace(/\.(mde|md)$/i, "")}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setNewName(e.target.value); setRenameError(""); }}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     confirmRename(item.isDir);
                   }
                 }}
-              >
-                {!item.isDir && (
-                  <TextField.Slot side="right">
-                    <Text size="2" color="gray">.md</Text>
-                  </TextField.Slot>
-                )}
-              </TextField.Root>
+              />
             </label>
           </Flex>
 
@@ -289,7 +306,7 @@ const FileTree: React.FC<FileTreeProps> = ({
   onRenameItem,
   onDeleteItem,
   expandedFolders,
-  onExpandedFoldersChange
+  onExpandedFoldersChange,
 }) => {
   if (!fileTree) {
     return (

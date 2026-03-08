@@ -6,11 +6,11 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -53,16 +53,10 @@ type SearchResult struct {
 	ContextText string `json:"contextText"` // Surrounding context for content matches
 }
 
-type keyringEntry struct {
-	Password    string
-	ExpiresAt   time.Time
-}
-
 // App struct
 type App struct {
 	ctx context.Context
 	rootPath string
-	secretStaleHours int
 	masterkey []byte
 }
 
@@ -75,7 +69,6 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	a.secretStaleHours = 8
 }
 
 func (a *App) shutdown(ctx context.Context) {
@@ -188,8 +181,12 @@ func (a *App) SetupPassword(password string, rootPath string) string {
 	if err != nil {
 		return err.Error()
 	}
+
 	nonceCheck, checkCipher, err := encryptData(masterkey, checkdata)
-	
+	if err != nil {
+		return err.Error()
+	}
+
 	// save data
 	err = a.SaveCryptoData(rootPath, checkCipher, nonceCheck, passwordSalt)
 	if err != nil {
@@ -356,11 +353,16 @@ func (a *App) ReadFile(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if a.HasSecurity(a.rootPath) {
 		if len(rawContent) == 0 {
 			return "", nil
 		}
+
 		payload := rawContent
+		// MDE1 is the first version of our file
+		// if later we change the way we encrypt/decrypt
+		// we should increment it
 		if len(payload) >= 4 && string(payload[:4]) == "MDE1" {
 			payload = payload[4:]
 		}
@@ -375,6 +377,7 @@ func (a *App) ReadFile(filePath string) (string, error) {
 		}
 		return string(text), nil
 	}
+
 	return string(rawContent), nil
 }
 
@@ -404,22 +407,26 @@ func stripFileExt(filePath string) string {
 	return filePath
 }
 
-// CreateFile creates a new markdown file
-func (a *App) CreateFile(filePath string) error {
+// CreateFile creates a new markdown file and returns the actual path created
+func (a *App) CreateFile(filePath string) (string, error) {
 	ext := ".md"
 	if a.HasSecurity(a.rootPath) {
 		ext = ".mde"
 	}
 
 	filePath = stripFileExt(filePath) + ext
+	isFileExist := a.IsFileExists(filePath)
+	if isFileExist {
+		return "", fmt.Errorf("File already exist")
+	}
 
 	file, err := os.Create(filePath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer file.Close()
 
-	return nil
+	return filePath, nil
 }
 
 // CreateDirectory creates a new directory
@@ -437,9 +444,8 @@ func (a *App) DeleteDirectory(dirPath string) error {
 	return os.RemoveAll(dirPath)
 }
 
-// RenameFile renames a file or directory
-// auto suffix with .md if file and not already present
-func (a *App) RenameFile(oldPath, newPath string, isFile bool) error {
+// RenameFile renames a file or directory and returns the actual new path
+func (a *App) RenameFile(oldPath, newPath string, isFile bool) (string, error) {
 	ext := ".md"
 	if a.HasSecurity(a.rootPath) {
 		ext = ".mde"
@@ -448,7 +454,13 @@ func (a *App) RenameFile(oldPath, newPath string, isFile bool) error {
 	if isFile {
 		newPath = stripFileExt(newPath) + ext
 	}
-	return os.Rename(oldPath, newPath)
+
+	isFileExist := a.IsFileExists(newPath)
+	if isFileExist {
+		return "", fmt.Errorf("file_already_exist")
+	}
+
+	return newPath, os.Rename(oldPath, newPath)
 }
 
 // IsFileExists checks if a file exists

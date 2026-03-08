@@ -74,12 +74,13 @@ function App() {
   const [isUnlockVaultModalError, setUnlockVaultModalError] = useState<string>("");
 
   // Modal states
-  const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
-  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
-  const [newFileName, setNewFileName] = useState('');
-  const [newFolderName, setNewFolderName] = useState('');
+  const [showCreateFileDialog, setShowCreateFileDialog] = useState<boolean>(false);
+  const [createFileDialogError, setCreateFileDialogError] = useState<string>("");
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState<boolean>(false);
+  const [createFolderDialogError, setCreateFolderDialogError] = useState<string>("");
+  const [newFileName, setNewFileName] = useState<string>('');
+  const [newFolderName, setNewFolderName] = useState<string>('');
   const [currentParentPath, setCurrentParentPath] = useState<string>('');
-  const [password, setPassword] = useState<string>("");
 
   // maybe one day we can calculate the height automatically,
   // but for now this is the fastest since none of the elements change height
@@ -88,43 +89,27 @@ function App() {
 
   const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
 
-  // handle password creation or validation if needed then call config loading
-  const askMainPassword = async () => {
-    const isUseOpen = isUseEncModalOpen;
-    const isUnlockOpen = isUnlockVaultModalOpen;
-
-    setIsUseEncModalOpen(false);
-    setUnlockVaultModalOpen(false);
-
-    // user doesn't want encrypted tape box
-    if (!password && isUseOpen) {
-      loadConfig();
-    }
-
-    // user want encrypted tape box
-    if (password && isUseOpen) {
+  const handleVaultSetup = async (password: string) => {
+    if (password) {
       const resp = await SetupPassword(password, dirPath);
       if (resp !== "ok") {
-        setIsUseEncModalOpen(true);
-        setIsUseEncModalError(`We encounter an error while trying to set up the tape box: ${resp.substring(0, 30)}`);
-        console.warn("Error on setting up password:", resp);
+        setIsUseEncModalError(`Error setting up vault: ${resp.substring(0, 30)}`);
         return;
       }
     }
-
-    // user has an encrypted tape box
-    if (isUnlockOpen) {
-      const isValid = await PasswordIsCorrect(password, dirPath);
-      if (!isValid) {
-        setUnlockVaultModalOpen(true);
-        setUnlockVaultModalError("It seem you enter a wrong password. Please try again.");
-        console.warn("Error on unlocking password");
-        return;
-      }
-    }
-
+    setIsUseEncModalOpen(false);
     loadConfig();
-  }
+  };
+
+  const handleVaultUnlock = async (password: string) => {
+    const isValid = await PasswordIsCorrect(password, dirPath);
+    if (!isValid) {
+      setUnlockVaultModalError("Wrong password. Please try again.");
+      return;
+    }
+    setUnlockVaultModalOpen(false);
+    loadConfig();
+  };
 
   // load the config and set up the app
   const loadConfig = async (dPath?: string) => {
@@ -177,13 +162,6 @@ function App() {
     }
 
   }
-
-  // password is triggered when the user open a new or a different root
-  useEffect(() => {
-    console.log("merde")
-    if (!dirPath) return; // fail safe for first load
-    askMainPassword()
-  }, [password])
 
   // Load last opened folder on app startup
   useEffect(() => {
@@ -255,11 +233,11 @@ function App() {
         const needAuth = await HasSecurity(dPath)
         if (needAuth) { // first because the config file is actually filtered from children list
           setUnlockVaultModalOpen(true);
-          return null; // next step are handled in the password useEffect
+          return null; // next step handled via onSubmit callback
         }
         if (noChildren && !needAuth) {
           setIsUseEncModalOpen(true);
-          return null; // next step are handled in the password useEffect
+          return null; // next step handled via onSubmit callback
         }
         loadConfig(dPath);
       }
@@ -380,26 +358,20 @@ function App() {
     if (!newFileName.trim()) return;
 
     try {
-      const filePath = `${currentParentPath}/${newFileName}.md`;
-
-      // Check if file already exists
-      const exists = await IsFileExists(filePath);
-      if (exists) {
-        alert(`File "${newFileName}.md" already exists in this directory.`);
+      const actualPath = await CreateFile(`${currentParentPath}/${newFileName}`);
+      await refreshFileTree();
+      await handleFileSelect(actualPath);
+      setShowCreateFileDialog(false);
+      setNewFileName("");
+      setCreateFileDialogError("");
+    } catch (error) {
+      console.log(error)
+      if (typeof error === "string" && error === "file_already_exist") {
+        setCreateFileDialogError(`File "${newFileName}" already exists in this directory.`);
         return;
       }
-
-      await CreateFile(filePath);
-      await refreshFileTree();
-
-      // Auto-open the newly created file
-      await handleFileSelect(filePath);
-
-      setShowCreateFileDialog(false);
-      setNewFileName('');
-    } catch (error) {
       console.error('Error creating file:', error);
-      alert('Error creating file. Please try again.');
+      setCreateFileDialogError('Error creating file. Please try again.');
     }
   };
 
@@ -419,49 +391,28 @@ function App() {
       // Check if folder already exists
       const exists = await IsFileExists(folderPath);
       if (exists) {
-        alert(`Folder "${newFolderName}" already exists in this directory.`);
+        setCreateFolderDialogError(`Folder "${newFolderName}" already exists in this directory.`);
         return;
       }
 
       await CreateDirectory(folderPath);
       await refreshFileTree();
       setShowCreateFolderDialog(false);
-      setNewFolderName('');
+      setNewFolderName("");
+      setCreateFolderDialogError("");
     } catch (error) {
       console.error('Error creating folder:', error);
-      alert('Error creating folder. Please try again.');
+      setCreateFolderDialogError('Error creating folder. Please try again.');
     }
   };
 
   const handleRenameItem = async (itemPath: string, newName: string, isFile: boolean) => {
-    try {
-      const parentPath = itemPath.substring(0, itemPath.lastIndexOf('/'));
-      let newPath = `${parentPath}/${newName}`;
-
-      // suffix .md for already exists test
-      if (isFile && !newPath.endsWith(".md")) {
-        newPath += ".md";
-      }
-
-      // check if new name already exists
-      if (itemPath !== newPath) {
-        const exists = await IsFileExists(newPath);
-        if (exists) {
-          alert(`"${newName}" already exists in this directory.`);
-          return;
-        }
-      }
-
-      await RenameFile(itemPath, newPath, isFile);
-      await refreshFileTree();
-
-      // Update selected file path if it was renamed
-      if (selectedFilePath === itemPath) {
-        setSelectedFilePath(newPath);
-      }
-    } catch (error) {
-      console.error('Error renaming item:', error);
-      alert('Error renaming item. Please try again.');
+    const parentPath = itemPath.substring(0, itemPath.lastIndexOf('/'));
+    const newPath = `${parentPath}/${newName}`;
+    const actualPath = await RenameFile(itemPath, newPath, isFile);
+    await refreshFileTree();
+    if (selectedFilePath === itemPath) {
+      setSelectedFilePath(actualPath);
     }
   };
 
@@ -509,21 +460,15 @@ function App() {
         {/* UseEnc Modal */}
         <UseEncVaultModal
           isOpen={isUseEncModalOpen}
-          onClose={() => {
-            setIsUseEncModalOpen(false);
-            setPassword("");
-          }}
-          password={password}
-          setPassword={setPassword}
+          onSubmit={handleVaultSetup}
+          onClose={() => setIsUseEncModalOpen(false)}
           error={isUseEncModalError}
         />
 
         {/* Unlock vault modal */}
         <UnlockVaultModal
           isOpen={isUnlockVaultModalOpen}
-          onClose={() => null /* can't close */}
-          password={password}
-          setPassword={setPassword}
+          onSubmit={handleVaultUnlock}
           error={isUnlockVaultModalError}
         />
 
@@ -667,7 +612,10 @@ function App() {
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>Create New File</Dialog.Title>
           <Dialog.Description size="2" mb="4">
-            Enter a name for the new markdown file.
+            {createFileDialogError
+              ? <span className="important">{createFileDialogError}</span>
+              : <>Enter a name for the new markdown file.</>
+            }
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
@@ -686,9 +634,6 @@ function App() {
                   }
                 }}
               >
-                <TextField.Slot side="right">
-                  <Text size="2" color="gray">.md</Text>
-                </TextField.Slot>
               </TextField.Root>
             </label>
           </Flex>
@@ -711,7 +656,10 @@ function App() {
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>Create New Folder</Dialog.Title>
           <Dialog.Description size="2" mb="4">
-            Enter a name for the new folder.
+            {createFolderDialogError
+              ? <span className="important">{createFolderDialogError}</span>
+              : <>Enter a name for the new folder.</>
+            }
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
@@ -782,21 +730,15 @@ function App() {
       {/* UseEnc Modal */}
       <UseEncVaultModal
         isOpen={isUseEncModalOpen}
-        onClose={() => {
-          setIsUseEncModalOpen(false);
-          setPassword("");
-        }}
-        password={password}
-        setPassword={setPassword}
+        onSubmit={handleVaultSetup}
+        onClose={() => setIsUseEncModalOpen(false)}
         error={isUseEncModalError}
       />
 
       {/* Unlock vault modal */}
       <UnlockVaultModal
         isOpen={isUnlockVaultModalOpen}
-        onClose={() => null /* can't close */}
-        password={password}
-        setPassword={setPassword}
+        onSubmit={handleVaultUnlock}
         error={isUnlockVaultModalError}
       />
 

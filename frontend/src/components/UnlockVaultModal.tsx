@@ -4,13 +4,11 @@ import {EyeClosedIcon, EyeIcon} from 'lucide-react';
 
 interface UnlockVaultModalProps {
   isOpen: boolean;
-  onClose: () => void;
-  setPassword: (password: string) => void;
-  password: string;
+  onSubmit: (password: string) => void;
   error: string;
 }
 
-const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen,  onClose, password, setPassword, error}) => {
+const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen, onSubmit, error}) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [see, setSee] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
@@ -28,9 +26,9 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen,  onClose, pa
     }, 0);
   };
 
-  // reset on open
+  // reset value on open
   useEffect(() => {
-    if (isOpen) setPassword('');
+    if (isOpen) setValue('');
   }, [isOpen]);
 
   // handle key shortcut
@@ -39,22 +37,18 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen,  onClose, pa
       if (!isOpen) return;
 
       switch (e.key) {
-        case 'Escape':
-          e.preventDefault();
-          onClose();
-          break;
         case 'Enter':
           e.preventDefault();
-          setPassword(value);
+          onSubmit(value);
           break;
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, value]);
+  }, [isOpen, onSubmit, value]);
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={onClose}>
+    <Dialog.Root open={isOpen} onOpenChange={() => null}>
       <Dialog.Content className="search-modal" maxWidth="600px">
 
         <Dialog.Title style={{fontFamily: "vt32"}}>Unlock your tape box.</Dialog.Title>
@@ -90,7 +84,7 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen,  onClose, pa
                 </IconButton>
               </TextField.Slot>
             </TextField.Root>
-            <Button onClick={() => setPassword(value)}>Unlock</Button>
+            <Button onClick={() => onSubmit(value)}>Unlock</Button>
           </Flex>
           <Separator style={{width: "100%"}}/>
         </Flex>
