@@ -25,6 +25,10 @@ export namespace main {
 	    expandedFolders: string[];
 	    viewMode: string;
 	    theme: string;
+	    privacyMode: boolean;
+	    check: number[];
+	    nonceCheck: number[];
+	    salt: number[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Config(source);
@@ -37,6 +41,10 @@ export namespace main {
 	        this.expandedFolders = source["expandedFolders"];
 	        this.viewMode = source["viewMode"];
 	        this.theme = source["theme"];
+	        this.privacyMode = source["privacyMode"];
+	        this.check = source["check"];
+	        this.nonceCheck = source["nonceCheck"];
+	        this.salt = source["salt"];
 	    }
 	}
 	export class Diff {

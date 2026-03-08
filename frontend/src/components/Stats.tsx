@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { GetContentDiff } from "../../wailsjs/go/main/App";
 import {main} from "../../wailsjs/go/models";
+import {Bug, CircleCheck, Loader, CassetteTape, CircleAlert} from "lucide-react";
 import Diff = main.Diff;
-import {Bug, CircleCheck, Loader, CassetteTape} from "lucide-react";
 
 type props = {
   original: string
   edited: string
   selectedFilePath: string | null
+  hasUnsavedChanges: boolean
 }
 
 const Stats = (props: props) => {
@@ -33,12 +34,12 @@ const Stats = (props: props) => {
     let join = "/";
 
     let partArray = props.selectedFilePath.split('/');
-    // it's likely a windows path, todo: check with go wich os we use?
+    // it's likely a windows path, todo: check with go which os we use?
     if (partArray.length === 1) {
       join = "\\";
       partArray = props.selectedFilePath.split('\\');
     }
-    
+
     return partArray.slice(-3).join(join);
   }
 
@@ -48,7 +49,7 @@ const Stats = (props: props) => {
       <div className="stat-icon">
         {isLoading ? <Loader className="spin-fast" size="14"/> : isError ? <Bug size="14"/> : <CircleCheck size="14"/>}
       </div>
-      
+
       <div className="stat-text">
         <span className="stat-delta-modified">E: {contentDiff ? contentDiff.edit : 0} </span>
         <span className="stat-delta-positive">A: {contentDiff ? contentDiff.add : 0} </span>
@@ -67,6 +68,16 @@ const Stats = (props: props) => {
         ) : <span className="current-file">no tape selected</span>}
       </div>
 
+      {props.hasUnsavedChanges && (
+      <Fragment>
+        <div className="stat-icon stat-save">
+          <CircleAlert size="14"/>
+        </div>
+        <div className="stat-text stat-save">
+          Unsaved file
+        </div>
+      </Fragment>
+      )}
     </div>
   );
 };

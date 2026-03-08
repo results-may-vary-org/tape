@@ -58,6 +58,10 @@ export function SaveConfig(arg1, arg2) {
   return window['go']['main']['App']['SaveConfig'](arg1, arg2);
 }
 
+export function SaveCryptoData(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['SaveCryptoData'](arg1, arg2, arg3, arg4);
+}
+
 export function SaveExpandedFolders(arg1, arg2) {
   return window['go']['main']['App']['SaveExpandedFolders'](arg1, arg2);
 }
@@ -70,6 +74,10 @@ export function SaveLastOpenedFolder(arg1) {
   return window['go']['main']['App']['SaveLastOpenedFolder'](arg1);
 }
 
+export function SavePrivacyMode(arg1, arg2) {
+  return window['go']['main']['App']['SavePrivacyMode'](arg1, arg2);
+}
+
 export function SaveTheme(arg1, arg2) {
   return window['go']['main']['App']['SaveTheme'](arg1, arg2);
 }
@@ -80,6 +88,10 @@ export function SaveViewMode(arg1, arg2) {
 
 export function SearchFiles(arg1, arg2) {
   return window['go']['main']['App']['SearchFiles'](arg1, arg2);
+}
+
+export function SetupPassword(arg1, arg2) {
+  return window['go']['main']['App']['SetupPassword'](arg1, arg2);
 }
 
 export function WriteFile(arg1, arg2) {

@@ -30,16 +30,22 @@ export function RenameFile(arg1:string,arg2:string,arg3:boolean):Promise<void>;
 
 export function SaveConfig(arg1:main.Config,arg2:string):Promise<void>;
 
+export function SaveCryptoData(arg1:string,arg2:Array<number>,arg3:Array<number>,arg4:Array<number>):Promise<void>;
+
 export function SaveExpandedFolders(arg1:string,arg2:Array<string>):Promise<void>;
 
 export function SaveLastOpenedFile(arg1:string,arg2:string):Promise<void>;
 
 export function SaveLastOpenedFolder(arg1:string):Promise<void>;
 
+export function SavePrivacyMode(arg1:string,arg2:boolean):Promise<void>;
+
 export function SaveTheme(arg1:string,arg2:string):Promise<void>;
 
 export function SaveViewMode(arg1:string,arg2:string):Promise<void>;
 
 export function SearchFiles(arg1:string,arg2:string):Promise<Array<main.SearchResult>>;
+
+export function SetupPassword(arg1:string,arg2:string):Promise<string>;
 
 export function WriteFile(arg1:string,arg2:string):Promise<void>;

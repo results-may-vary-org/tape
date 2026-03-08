@@ -16,12 +16,9 @@ import {
   RefreshCw,
   Edit,
   Eye,
-  Sun,
-  Moon,
-  Monitor,
   PanelTopClose
 } from 'lucide-react';
-import { DropdownMenu, Select, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
+import { DropdownMenu, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 import {
   OpenDirectoryDialog,
   GetDirectoryTree,
@@ -38,40 +35,25 @@ import {
   SaveLastOpenedFile,
   SaveExpandedFolders,
   SaveViewMode,
-  SaveTheme,
-  SearchFiles
+  SearchFiles,
+  SetupPassword,
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/logo.png';
 import appIconBck from './assets/images/logo-background.png';
 import Stats from "./components/Stats";
 import handleKeys from "./services/handleKeys";
-
-interface FileItem {
-  name: string;
-  path: string;
-  isDir: boolean;
-  children?: FileItem[];
-}
-
-interface SearchResult {
-  path: string;
-  name: string;
-  isDir: boolean;
-  matchType: 'filename' | 'foldername' | 'content';
-  matchText: string;
-  contextText: string;
-}
-
-type ViewMode = 'editor' | 'reader';
-export type ThemeMode = 'system' | 'light' | 'dark';
+import SettingsPopover from './components/SettingsPopover';
+import type { FileItem, ViewMode, ThemeMode, SearchResult } from './types/types';
+import UseEncVaultModal from './components/UseEncVaultModal';
 
 function App() {
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
 
   const [version] = useState<string>(__TAPE_VERSION__);
+  const [dirPath, setDirPath] = useState<string>("");
   const [fileTree, setFileTree] = useState<FileItem | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
@@ -83,6 +65,8 @@ function App() {
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
+  const [isUseEncModalOpen, setIsUseEncModalOpen] = useState<boolean>(false);
+  const [isUseEncModalError, setIsUseEncModalError] = useState<string>("");
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
@@ -90,6 +74,7 @@ function App() {
   const [newFileName, setNewFileName] = useState('');
   const [newFolderName, setNewFolderName] = useState('');
   const [currentParentPath, setCurrentParentPath] = useState<string>('');
+  const [password, setPassword] = useState<string>("");
 
   // maybe one day we can calculate the height automatically,
   // but for now this is the fastest since none of the elements change height
@@ -97,6 +82,78 @@ function App() {
   const [containerHeight, setContainerHeight] = useState<string>("calc(100vh - (40px + 53px))");
 
   const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
+
+  // handle password creation if needed then call config loading
+  const openTape = async () => {
+    setIsUseEncModalOpen(false);
+    if (password) {
+      const resp = await SetupPassword(password, dirPath);
+      if (resp !== "ok") {
+        setIsUseEncModalOpen(true);
+        setIsUseEncModalError(`We encounter an error while trying to set up the tape box: ${resp.substring(0, 30)}`);
+        console.warn("Error on setting up password:", resp);
+        return;
+      }
+    }
+    loadConfig();
+  }
+
+  // load the config and set up the app
+  const loadConfig = async (dPath?: string) => {
+    const path = dPath ?? dirPath;
+    const tree = await GetDirectoryTree(path);
+    setFileTree(tree);
+    setSelectedFilePath(null);
+    setFileContent('');
+    setOriginalContent('');
+    setHasUnsavedChanges(false);
+
+    // Load folder-specific config including view mode, theme, expanded folders, and last file
+    try {
+      const folderConfig = await LoadConfig(path);
+      if (folderConfig.viewMode) {
+        setViewMode(folderConfig.viewMode as ViewMode);
+      }
+      if (folderConfig.theme) {
+        setTheme(folderConfig.theme as ThemeMode);
+      }
+      if (folderConfig.expandedFolders) {
+        setExpandedFolders(folderConfig.expandedFolders);
+      } else {
+        setExpandedFolders([]);
+      }
+
+      // Restore last opened file if it exists
+      if (folderConfig.lastOpenedFile) {
+        try {
+          const fileExists = await FileExists(folderConfig.lastOpenedFile);
+          if (fileExists) {
+            const content = await ReadFile(folderConfig.lastOpenedFile);
+            setSelectedFilePath(folderConfig.lastOpenedFile);
+            setFileContent(content);
+            setOriginalContent(content);
+            setHasUnsavedChanges(false);
+          }
+        } catch (error) {
+          console.log('Last opened file no longer exists or cannot be read:', error);
+        }
+      }
+    } catch (error) {
+      // If no config exists, use defaults
+      console.log('No config found for this folder, using defaults');
+      setExpandedFolders([]);
+    }
+
+    // Save to config for future sessions
+    localStorage.setItem('lastOpenedFolder', path);
+    await SaveLastOpenedFolder(path);
+  }
+
+  // password is triggered when the user open a new or a different root
+  useEffect(() => {
+    if (!dirPath) return; // fail safe for first load
+    openTape()
+  }, [password])
 
   // Load last opened folder on app startup
   useEffect(() => {
@@ -109,19 +166,6 @@ function App() {
     }
     setIsLoading(false);
   }, []);
-
-  const handleThemeChange = async (newTheme: ThemeMode) => {
-    setTheme(newTheme);
-
-    // Save to config if we have a selected folder
-    if (fileTree?.path) {
-      try {
-        await SaveTheme(fileTree.path, newTheme);
-      } catch (error) {
-        console.error('Error saving theme:', error);
-      }
-    }
-  };
 
   const handleViewModeChange = async (newViewMode: ViewMode) => {
     setViewMode(newViewMode);
@@ -167,56 +211,22 @@ function App() {
     }
   }
 
+  // handle the opening of any root (new or old)
   const handleRootOpen = async (rootPath?: string) => {
     try {
-      const dirPath = rootPath ?? await OpenDirectoryDialog();
-      if (dirPath) {
-        const tree = await GetDirectoryTree(dirPath);
-        setFileTree(tree);
-        setSelectedFilePath(null);
-        setFileContent('');
-        setOriginalContent('');
-        setHasUnsavedChanges(false);
+      const dPath = rootPath ?? await OpenDirectoryDialog();
+      if (dPath) {
+        setDirPath(dPath);
+        const tree = await GetDirectoryTree(dPath);
 
-        // Load folder-specific config including view mode, theme, expanded folders, and last file
-        try {
-          const folderConfig = await LoadConfig(dirPath);
-          if (folderConfig.viewMode) {
-            setViewMode(folderConfig.viewMode as ViewMode);
-          }
-          if (folderConfig.theme) {
-            setTheme(folderConfig.theme as ThemeMode);
-          }
-          if (folderConfig.expandedFolders) {
-            setExpandedFolders(folderConfig.expandedFolders);
-          } else {
-            setExpandedFolders([]);
-          }
-
-          // Restore last opened file if it exists
-          if (folderConfig.lastOpenedFile) {
-            try {
-              const fileExists = await FileExists(folderConfig.lastOpenedFile);
-              if (fileExists) {
-                const content = await ReadFile(folderConfig.lastOpenedFile);
-                setSelectedFilePath(folderConfig.lastOpenedFile);
-                setFileContent(content);
-                setOriginalContent(content);
-                setHasUnsavedChanges(false);
-              }
-            } catch (error) {
-              console.log('Last opened file no longer exists or cannot be read:', error);
-            }
-          }
-        } catch (error) {
-          // If no config exists, use defaults
-          console.log('No config found for this folder, using defaults');
-          setExpandedFolders([]);
+        // ask if the user want an encrypted vault or not
+        if (!tree.children || (tree.children && tree.children.length === 0)) {
+          setIsUseEncModalOpen(true);
+          // next step are handled in the password useEffect
+          return null;
         }
 
-        // Save to config for future sessions
-        localStorage.setItem('lastOpenedFolder', dirPath);
-        await SaveLastOpenedFolder(dirPath);
+        loadConfig(dPath);
       }
     } catch (error) {
       console.error('Error opening directory:', error);
@@ -478,69 +488,28 @@ function App() {
             <div className="logo">
               <img src={appIconBck} alt="Tape app icon"/>
               <h1 className="workbench">Tape <small style={{fontSize: 'xx-small'}}>{version}</small></h1>
-              <div id="info" className="info vt32">
-                {hasUnsavedChanges && "unsaved file_"}
-              </div>
             </div>
           </div>
           <div className="header-right">
-              <Select.Root value={theme} onValueChange={(value: ThemeMode) => handleThemeChange(value)}>
-                <Select.Trigger className="theme-select-trigger">
-                  <Flex as="span" align="center" gap="2">
-                    {theme === 'system'
-                      ? <Monitor size={16}/>
-                      : theme === 'dark'
-                        ? <Moon size={16}/>
-                        : <Sun size={16}/>
-                    }
-                    {theme === 'system'
-                      ? "System"
-                      : theme === 'dark'
-                        ? "Dark"
-                        : "Light"
-                    }
-                  </Flex>
-                </Select.Trigger>
-                <Select.Content className="select-content" position="popper">
-                  <Select.Item value="system" className="select-item">
-                    <Flex as="span" align="center" gap="2">
-                      <Monitor size={16} />
-                      System
-                    </Flex>
-                  </Select.Item>
-                  <Select.Item value="light" className="select-item">
-                    <Flex as="span" align="center" gap="2">
-                      <Sun size={16} />
-                      Light
-                    </Flex>
-                  </Select.Item>
-                  <Select.Item value="dark" className="select-item">
-                    <Flex as="span" align="center" gap="2">
-                      <Moon size={16} />
-                      Dark
-                    </Flex>
-                  </Select.Item>
-                </Select.Content>
-              </Select.Root>
-
-              <div className="view-toggle">
-                <Button
-                  size="2"
-                  variant={viewMode === "editor" ? "solid" : "soft"}
-                  onClick={() => handleViewModeChange('editor')}
-                  style={{borderBottomRightRadius: 0, borderTopRightRadius: 0}}
-                >
-                  <Edit size="16"/> Editor
-                </Button>
-                <Button
-                  size="2"
-                  variant={viewMode === "reader" ? "solid" : "soft"}
-                  onClick={() => handleViewModeChange('reader')}
-                  style={{borderBottomLeftRadius: 0, borderTopLeftRadius: 0}}
-                >
-                  <Eye size="16"/> Reader
-                </Button>
-              </div>
+            <SettingsPopover fileTree={fileTree}/>
+            <div className="view-toggle">
+              <Button
+                size="2"
+                variant={viewMode === "editor" ? "solid" : "soft"}
+                onClick={() => handleViewModeChange('editor')}
+                style={{borderBottomRightRadius: 0, borderTopRightRadius: 0}}
+              >
+                <Edit size="16"/> Editor
+              </Button>
+              <Button
+                size="2"
+                variant={viewMode === "reader" ? "solid" : "soft"}
+                onClick={() => handleViewModeChange('reader')}
+                style={{borderBottomLeftRadius: 0, borderTopLeftRadius: 0}}
+              >
+                <Eye size="16"/> Reader
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -585,7 +554,12 @@ function App() {
               </Tooltip>
             </div>
 
-            <Stats original={originalContent} edited={fileContent} selectedFilePath={selectedFilePath}/>
+            <Stats
+              original={originalContent}
+              edited={fileContent}
+              selectedFilePath={selectedFilePath}
+              hasUnsavedChanges={hasUnsavedChanges}
+            />
           </div>
 
           <div className="content-container" style={{ height: containerHeight }}>
@@ -747,6 +721,16 @@ function App() {
         }}
         version={version}
       />
+
+      {/* UseEnc Modal */}
+      <UseEncVaultModal
+        isOpen={isUseEncModalOpen}
+        onClose={() => setIsUseEncModalOpen(false)}
+        password={password}
+        setPassword={setPassword}
+        error={isUseEncModalError}
+      />
+
     </RadixTheme>
   );
 }
