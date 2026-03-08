@@ -37,6 +37,8 @@ import {
   SaveViewMode,
   SearchFiles,
   SetupPassword,
+  HasSecurity,
+  PasswordIsCorrect,
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/logo.png';
 import appIconBck from './assets/images/logo-background.png';
@@ -45,6 +47,7 @@ import handleKeys from "./services/handleKeys";
 import SettingsPopover from './components/SettingsPopover';
 import type { FileItem, ViewMode, ThemeMode, SearchResult } from './types/types';
 import UseEncVaultModal from './components/UseEncVaultModal';
+import UnlockVaultModal from './components/UnlockVaultModal';
 
 function App() {
   const { setTheme } = useTheme();
@@ -67,6 +70,8 @@ function App() {
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
   const [isUseEncModalOpen, setIsUseEncModalOpen] = useState<boolean>(false);
   const [isUseEncModalError, setIsUseEncModalError] = useState<string>("");
+  const [isUnlockVaultModalOpen, setUnlockVaultModalOpen] = useState<boolean>(false);
+  const [isUnlockVaultModalError, setUnlockVaultModalError] = useState<string>("");
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
@@ -83,10 +88,22 @@ function App() {
 
   const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
 
-  // handle password creation if needed then call config loading
+  // handle password creation or validation if needed then call config loading
   const askMainPassword = async () => {
+    console.log("handle password")
+    const isUseOpen = isUseEncModalOpen;
+    const isUnlockOpen = isUnlockVaultModalOpen;
+
     setIsUseEncModalOpen(false);
-    if (password) {
+    setUnlockVaultModalOpen(false);
+
+    // user doesn't want encrypted tape box
+    if (!password && isUseOpen) {
+      loadConfig();
+    }
+
+    // user want encrypted tape box
+    if (password && isUseOpen) {
       const resp = await SetupPassword(password, dirPath);
       if (resp !== "ok") {
         setIsUseEncModalOpen(true);
@@ -95,6 +112,18 @@ function App() {
         return;
       }
     }
+
+    // user has an encrypted tape box
+    if (isUnlockOpen) {
+      const isValid = await PasswordIsCorrect(password, dirPath);
+      if (!isValid) {
+        setUnlockVaultModalOpen(true);
+        setUnlockVaultModalError("It seem you enter a wrong password. Please try again.");
+        console.warn("Error on unlocking password");
+        return;
+      }
+    }
+
     loadConfig();
   }
 
@@ -151,6 +180,7 @@ function App() {
 
   // password is triggered when the user open a new or a different root
   useEffect(() => {
+    console.log("merde")
     if (!dirPath) return; // fail safe for first load
     askMainPassword()
   }, [password])
@@ -220,12 +250,17 @@ function App() {
         const tree = await GetDirectoryTree(dPath);
 
         // ask if the user want an encrypted vault or not
-        if (!tree.children || (tree.children && tree.children.length === 0)) {
-          setIsUseEncModalOpen(true);
-          // next step are handled in the password useEffect
-          return null;
+        // or ask for the password to unlock vault
+        const noChildren = !tree.children || (tree.children && tree.children.length === 0);
+        const needAuth = await HasSecurity(dPath)
+        if (needAuth) { // first because the config file is actually filtered from children list
+          setUnlockVaultModalOpen(true);
+          return null; // next step are handled in the password useEffect
         }
-
+        if (noChildren && !needAuth) {
+          setIsUseEncModalOpen(true);
+          return null; // next step are handled in the password useEffect
+        }
         loadConfig(dPath);
       }
     } catch (error) {
@@ -725,10 +760,23 @@ function App() {
       {/* UseEnc Modal */}
       <UseEncVaultModal
         isOpen={isUseEncModalOpen}
-        onClose={() => setIsUseEncModalOpen(false)}
+        onClose={() => {
+          console.log("connard")
+          setIsUseEncModalOpen(false);
+          setPassword("");
+        }}
         password={password}
         setPassword={setPassword}
         error={isUseEncModalError}
+      />
+
+      {/* Unlock vault modal */}
+      <UnlockVaultModal
+        isOpen={isUnlockVaultModalOpen}
+        onClose={() => null /* can't close */}
+        password={password}
+        setPassword={setPassword}
+        error={isUnlockVaultModalError}
       />
 
     </RadixTheme>

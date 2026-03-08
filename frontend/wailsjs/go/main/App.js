@@ -34,6 +34,10 @@ export function GetVersion() {
   return window['go']['main']['App']['GetVersion']();
 }
 
+export function HasSecurity(arg1) {
+  return window['go']['main']['App']['HasSecurity'](arg1);
+}
+
 export function LoadConfig(arg1) {
   return window['go']['main']['App']['LoadConfig'](arg1);
 }
@@ -44,6 +48,10 @@ export function LoadInitialConfig() {
 
 export function OpenDirectoryDialog() {
   return window['go']['main']['App']['OpenDirectoryDialog']();
+}
+
+export function PasswordIsCorrect(arg1, arg2) {
+  return window['go']['main']['App']['PasswordIsCorrect'](arg1, arg2);
 }
 
 export function ReadFile(arg1) {

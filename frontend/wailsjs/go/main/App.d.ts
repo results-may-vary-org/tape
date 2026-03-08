@@ -18,11 +18,15 @@ export function GetDirectoryTree(arg1:string):Promise<main.FileItem>;
 
 export function GetVersion():Promise<string>;
 
+export function HasSecurity(arg1:string):Promise<boolean>;
+
 export function LoadConfig(arg1:string):Promise<main.Config>;
 
 export function LoadInitialConfig():Promise<main.Config>;
 
 export function OpenDirectoryDialog():Promise<string>;
+
+export function PasswordIsCorrect(arg1:string,arg2:string):Promise<boolean>;
 
 export function ReadFile(arg1:string):Promise<string>;
 

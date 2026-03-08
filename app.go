@@ -202,17 +202,16 @@ func (a *App) SetupPassword(password string, rootPath string) string {
 }
 
 // check if the user has the right setup to encrypt notes
-func (a *App) hasSecurity() bool {
-	hasPrivacyOn := a.getPrivacyMode(a.rootPath)
-	hasMasterKey := a.masterkey
-	_, check, nonceCheck, salt := a.getCryptoOptions(a.rootPath)
-	return hasPrivacyOn && len(hasMasterKey) > 0 && len(check) > 0 && len(nonceCheck) > 0 && len(salt) > 0
+func (a *App) HasSecurity(rootPath string) bool {
+	hasPrivacyOn := a.getPrivacyMode(rootPath)
+	_, check, nonceCheck, salt := a.getCryptoOptions(rootPath)
+	return hasPrivacyOn && len(check) > 0 && len(nonceCheck) > 0 && len(salt) > 0
 }
 
 // PasswordIsCorrect check if the given password is correct comparing with the check data in the config
-func (a *App) PasswordIsCorrect(password string) bool {
-	if a.hasSecurity() {
-		_, check, nonceCheck, salt := a.getCryptoOptions(a.rootPath)
+func (a *App) PasswordIsCorrect(password string, rootPath string) bool {
+	if a.HasSecurity(rootPath) {
+		_, check, nonceCheck, salt := a.getCryptoOptions(rootPath)
 		
 		candidateKey := deriveKeyWithSalt(password, salt)
 
