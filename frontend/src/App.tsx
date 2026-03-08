@@ -23,13 +23,11 @@ import {
   OpenDirectoryDialog,
   GetDirectoryTree,
   ReadFile,
-  WriteFile,
   CreateFile,
   CreateDirectory,
   DeleteFile,
   DeleteDirectory,
   RenameFile,
-  FileExists,
   LoadConfig,
   SaveLastOpenedFolder,
   SaveLastOpenedFile,
@@ -39,6 +37,8 @@ import {
   SetupPassword,
   HasSecurity,
   PasswordIsCorrect,
+  IsFileExists,
+  WriteContentInFile,
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/logo.png';
 import appIconBck from './assets/images/logo-background.png';
@@ -155,7 +155,7 @@ function App() {
       // Restore last opened file if it exists
       if (folderConfig.lastOpenedFile) {
         try {
-          const fileExists = await FileExists(folderConfig.lastOpenedFile);
+          const fileExists = await IsFileExists(folderConfig.lastOpenedFile);
           if (fileExists) {
             const content = await ReadFile(folderConfig.lastOpenedFile);
             setSelectedFilePath(folderConfig.lastOpenedFile);
@@ -329,7 +329,7 @@ function App() {
     if (!selectedFilePath) return;
 
     try {
-      await WriteFile(selectedFilePath, fileContent);
+      await WriteContentInFile(selectedFilePath, fileContent);
       setOriginalContent(fileContent);
       setHasUnsavedChanges(false);
       console.log('File saved successfully');
@@ -383,7 +383,7 @@ function App() {
       const filePath = `${currentParentPath}/${newFileName}.md`;
 
       // Check if file already exists
-      const exists = await FileExists(filePath);
+      const exists = await IsFileExists(filePath);
       if (exists) {
         alert(`File "${newFileName}.md" already exists in this directory.`);
         return;
@@ -417,7 +417,7 @@ function App() {
       const folderPath = `${currentParentPath}/${newFolderName}`;
 
       // Check if folder already exists
-      const exists = await FileExists(folderPath);
+      const exists = await IsFileExists(folderPath);
       if (exists) {
         alert(`Folder "${newFolderName}" already exists in this directory.`);
         return;
@@ -445,7 +445,7 @@ function App() {
 
       // check if new name already exists
       if (itemPath !== newPath) {
-        const exists = await FileExists(newPath);
+        const exists = await IsFileExists(newPath);
         if (exists) {
           alert(`"${newName}" already exists in this directory.`);
           return;

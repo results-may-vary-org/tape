@@ -10,15 +10,15 @@ export function DeleteDirectory(arg1:string):Promise<void>;
 
 export function DeleteFile(arg1:string):Promise<void>;
 
-export function FileExists(arg1:string):Promise<boolean>;
-
 export function GetContentDiff(arg1:string,arg2:string):Promise<main.Diff>;
 
 export function GetDirectoryTree(arg1:string):Promise<main.FileItem>;
 
-export function GetVersion():Promise<string>;
+export function GetTapeVersion():Promise<string>;
 
 export function HasSecurity(arg1:string):Promise<boolean>;
+
+export function IsFileExists(arg1:string):Promise<boolean>;
 
 export function LoadConfig(arg1:string):Promise<main.Config>;
 
@@ -52,4 +52,4 @@ export function SearchFiles(arg1:string,arg2:string):Promise<Array<main.SearchRe
 
 export function SetupPassword(arg1:string,arg2:string):Promise<string>;
 
-export function WriteFile(arg1:string,arg2:string):Promise<void>;
+export function WriteContentInFile(arg1:string,arg2:string):Promise<void>;

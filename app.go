@@ -353,22 +353,45 @@ func (a *App) buildFileTree(parent *FileItem) error {
 
 // ReadFile reads the content of a file
 func (a *App) ReadFile(filePath string) (string, error) {
-	content, err := os.ReadFile(filePath)
+	rawContent, err := os.ReadFile(filePath)
+	content := rawContent
+	if a.HasSecurity(a.rootPath) {
+		nonce := rawContent[:12]
+		cipher := rawContent[12:]
+		text, err := decryptData(a.masterkey, nonce, cipher)
+		if err != nil {
+			return "", err
+		}
+		content = text
+	}
 	if err != nil {
 		return "", err
 	}
 	return string(content), nil
 }
 
-// WriteFile writes content to a file
-func (a *App) WriteFile(filePath, content string) error {
-	return os.WriteFile(filePath, []byte(content), 0644)
+// WriteContentInFile writes content to a file
+func (a *App) WriteContentInFile(filePath, content string) error {
+	if a.HasSecurity(a.rootPath) {
+		nonce, cipher, err := encryptData(a.masterkey, []byte(content))
+		if err != nil {
+			return err
+		}
+		data := append(nonce, cipher...)
+		return os.WriteFile(filePath, data, 0600)
+	}
+	return os.WriteFile(filePath, []byte(content), 0600)
 }
 
 // CreateFile creates a new markdown file
 func (a *App) CreateFile(filePath string) error {
-	if !strings.HasSuffix(strings.ToLower(filePath), ".md") {
-		filePath += ".md"
+	ext := ".md"
+	if a.HasSecurity(a.rootPath) {
+		ext = ".mde"
+	}
+
+	if !strings.HasSuffix(strings.ToLower(filePath), ext) {
+		filePath += ext
 	}
 
 	file, err := os.Create(filePath)
@@ -382,7 +405,7 @@ func (a *App) CreateFile(filePath string) error {
 
 // CreateDirectory creates a new directory
 func (a *App) CreateDirectory(dirPath string) error {
-	return os.MkdirAll(dirPath, 0755)
+	return os.MkdirAll(dirPath, 0700)
 }
 
 // DeleteFile deletes a file
@@ -398,20 +421,25 @@ func (a *App) DeleteDirectory(dirPath string) error {
 // RenameFile renames a file or directory
 // auto suffix with .md if file and not already present
 func (a *App) RenameFile(oldPath, newPath string, isFile bool) error {
-	if isFile && !strings.HasSuffix(strings.ToLower(newPath), ".md") {
-		newPath += ".md"
+	ext := ".md"
+	if a.HasSecurity(a.rootPath) {
+		ext = ".mde"
+	}
+
+	if isFile && !strings.HasSuffix(strings.ToLower(newPath), ext) {
+		newPath += ext
 	}
 	return os.Rename(oldPath, newPath)
 }
 
-// FileExists checks if a file exists
-func (a *App) FileExists(filePath string) bool {
+// IsFileExists checks if a file exists
+func (a *App) IsFileExists(filePath string) bool {
 	_, err := os.Stat(filePath)
 	return !os.IsNotExist(err)
 }
 
-// GetVersion returns the TAPE_VERSION environment variable
-func (a *App) GetVersion() string {
+// GetTapeVersion returns the TAPE_VERSION environment variable
+func (a *App) GetTapeVersion() string {
 	version := os.Getenv("TAPE_VERSION")
 	if version == "" {
 		return "dev"
@@ -429,7 +457,7 @@ func (a *App) LoadConfig(folderPath string) (*Config, error) {
 	configPath := a.getConfigPath(folderPath)
 
 	// If config file doesn't exist, return empty config
-	if !a.FileExists(configPath) {
+	if !a.IsFileExists(configPath) {
 		return &Config{}, nil
 	}
 
@@ -456,7 +484,7 @@ func (a *App) SaveConfig(config *Config, folderPath string) error {
 		return err
 	}
 
-	return os.WriteFile(configPath, data, 0644)
+	return os.WriteFile(configPath, data, 0600)
 }
 
 // SaveLastOpenedFolder saves check and salt to config

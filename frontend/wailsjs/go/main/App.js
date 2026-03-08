@@ -18,10 +18,6 @@ export function DeleteFile(arg1) {
   return window['go']['main']['App']['DeleteFile'](arg1);
 }
 
-export function FileExists(arg1) {
-  return window['go']['main']['App']['FileExists'](arg1);
-}
-
 export function GetContentDiff(arg1, arg2) {
   return window['go']['main']['App']['GetContentDiff'](arg1, arg2);
 }
@@ -30,12 +26,16 @@ export function GetDirectoryTree(arg1) {
   return window['go']['main']['App']['GetDirectoryTree'](arg1);
 }
 
-export function GetVersion() {
-  return window['go']['main']['App']['GetVersion']();
+export function GetTapeVersion() {
+  return window['go']['main']['App']['GetTapeVersion']();
 }
 
 export function HasSecurity(arg1) {
   return window['go']['main']['App']['HasSecurity'](arg1);
+}
+
+export function IsFileExists(arg1) {
+  return window['go']['main']['App']['IsFileExists'](arg1);
 }
 
 export function LoadConfig(arg1) {
@@ -102,6 +102,6 @@ export function SetupPassword(arg1, arg2) {
   return window['go']['main']['App']['SetupPassword'](arg1, arg2);
 }
 
-export function WriteFile(arg1, arg2) {
-  return window['go']['main']['App']['WriteFile'](arg1, arg2);
+export function WriteContentInFile(arg1, arg2) {
+  return window['go']['main']['App']['WriteContentInFile'](arg1, arg2);
 }
