@@ -360,11 +360,15 @@ func (a *App) ReadFile(filePath string) (string, error) {
 		if len(rawContent) == 0 {
 			return "", nil
 		}
-		if len(rawContent) < 12 {
+		payload := rawContent
+		if len(payload) >= 4 && string(payload[:4]) == "MDE1" {
+			payload = payload[4:]
+		}
+		if len(payload) < 12 {
 			return "", nil
 		}
-		nonce := rawContent[:12]
-		ciphertext := rawContent[12:]
+		nonce := payload[:12]
+		ciphertext := payload[12:]
 		text, err := decryptData(a.masterkey, nonce, ciphertext)
 		if err != nil {
 			return "", err
@@ -381,7 +385,8 @@ func (a *App) WriteContentInFile(filePath, content string) error {
 		if err != nil {
 			return err
 		}
-		data := append(nonce, cipher...)
+		data := append([]byte("MDE1"), nonce...)
+		data = append(data, cipher...)
 		return os.WriteFile(filePath, data, 0600)
 	}
 	return os.WriteFile(filePath, []byte(content), 0600)

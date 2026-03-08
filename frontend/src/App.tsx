@@ -136,6 +136,10 @@ function App() {
     setOriginalContent('');
     setHasUnsavedChanges(false);
 
+    // Set rootPath on Go side before any file reads so HasSecurity works correctly
+    localStorage.setItem('lastOpenedFolder', path);
+    await SaveLastOpenedFolder(path);
+
     // Load folder-specific config including view mode, theme, expanded folders, and last file
     try {
       const folderConfig = await LoadConfig(path);
@@ -172,9 +176,6 @@ function App() {
       setExpandedFolders([]);
     }
 
-    // Save to config for future sessions
-    localStorage.setItem('lastOpenedFolder', path);
-    await SaveLastOpenedFolder(path);
   }
 
   // password is triggered when the user open a new or a different root
