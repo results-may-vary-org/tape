@@ -246,7 +246,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
                 {item.isDir ? 'Folder' : 'File'} name
               </Text>
               <TextField.Root
-                value={item.isDir ? newName : newName.replace(".md", "") }
+                value={item.isDir ? newName : newName.replace(/\.(mde|md)$/i, "") }
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                   if (e.key === 'Enter') {

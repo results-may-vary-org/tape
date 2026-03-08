@@ -6,7 +6,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -332,7 +331,7 @@ func (a *App) buildFileTree(parent *FileItem) error {
 		if entry.IsDir() {
 			a.buildFileTree(child)
 			children = append(children, child)
-		} else if strings.HasSuffix(strings.ToLower(entry.Name()), ".md") { // todo: later add the suffix check for md5
+		} else if strings.HasSuffix(strings.ToLower(entry.Name()), ".md") || strings.HasSuffix(strings.ToLower(entry.Name()), ".mde") {
 			children = append(children, child)
 		}
 	}
@@ -354,20 +353,25 @@ func (a *App) buildFileTree(parent *FileItem) error {
 // ReadFile reads the content of a file
 func (a *App) ReadFile(filePath string) (string, error) {
 	rawContent, err := os.ReadFile(filePath)
-	content := rawContent
-	if a.HasSecurity(a.rootPath) {
-		nonce := rawContent[:12]
-		cipher := rawContent[12:]
-		text, err := decryptData(a.masterkey, nonce, cipher)
-		if err != nil {
-			return "", err
-		}
-		content = text
-	}
 	if err != nil {
 		return "", err
 	}
-	return string(content), nil
+	if a.HasSecurity(a.rootPath) {
+		if len(rawContent) == 0 {
+			return "", nil
+		}
+		if len(rawContent) < 12 {
+			return "", nil
+		}
+		nonce := rawContent[:12]
+		ciphertext := rawContent[12:]
+		text, err := decryptData(a.masterkey, nonce, ciphertext)
+		if err != nil {
+			return "", err
+		}
+		return string(text), nil
+	}
+	return string(rawContent), nil
 }
 
 // WriteContentInFile writes content to a file
@@ -383,6 +387,18 @@ func (a *App) WriteContentInFile(filePath, content string) error {
 	return os.WriteFile(filePath, []byte(content), 0600)
 }
 
+// stripFileExt strips .md or .mde extension from a path
+func stripFileExt(filePath string) string {
+	lower := strings.ToLower(filePath)
+	if strings.HasSuffix(lower, ".mde") {
+		return filePath[:len(filePath)-4]
+	}
+	if strings.HasSuffix(lower, ".md") {
+		return filePath[:len(filePath)-3]
+	}
+	return filePath
+}
+
 // CreateFile creates a new markdown file
 func (a *App) CreateFile(filePath string) error {
 	ext := ".md"
@@ -390,9 +406,7 @@ func (a *App) CreateFile(filePath string) error {
 		ext = ".mde"
 	}
 
-	if !strings.HasSuffix(strings.ToLower(filePath), ext) {
-		filePath += ext
-	}
+	filePath = stripFileExt(filePath) + ext
 
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -426,8 +440,8 @@ func (a *App) RenameFile(oldPath, newPath string, isFile bool) error {
 		ext = ".mde"
 	}
 
-	if isFile && !strings.HasSuffix(strings.ToLower(newPath), ext) {
-		newPath += ext
+	if isFile {
+		newPath = stripFileExt(newPath) + ext
 	}
 	return os.Rename(oldPath, newPath)
 }
@@ -493,10 +507,6 @@ func (a *App) SaveCryptoData(folderPath string, check []byte, nonceCheck []byte,
 	if err != nil {
 		config = &Config{}
 	}
-
-	fmt.Printf("check %v", check)
-	fmt.Printf("salt %v", salt)
-	fmt.Printf("nonce %v", nonceCheck)
 
 	config.Check = check
 	config.Salt = salt

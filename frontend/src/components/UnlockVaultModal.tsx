@@ -28,12 +28,9 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen,  onClose, pa
     }, 0);
   };
 
-  // autofocus on open
+  // reset on open
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-      setPassword('');
-    }
+    if (isOpen) setPassword('');
   }, [isOpen]);
 
   // handle key shortcut
@@ -54,7 +51,7 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen,  onClose, pa
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, value]);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
@@ -75,6 +72,7 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen,  onClose, pa
           <Flex direction="row" align="center" gap="3">
             <TextField.Root
               ref={inputRef}
+              autoFocus
               value={value}
               type={see ? "text" : "password"}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}

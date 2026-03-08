@@ -90,7 +90,6 @@ function App() {
 
   // handle password creation or validation if needed then call config loading
   const askMainPassword = async () => {
-    console.log("handle password")
     const isUseOpen = isUseEncModalOpen;
     const isUnlockOpen = isUnlockVaultModalOpen;
 
@@ -505,6 +504,28 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* UseEnc Modal */}
+        <UseEncVaultModal
+          isOpen={isUseEncModalOpen}
+          onClose={() => {
+            setIsUseEncModalOpen(false);
+            setPassword("");
+          }}
+          password={password}
+          setPassword={setPassword}
+          error={isUseEncModalError}
+        />
+
+        {/* Unlock vault modal */}
+        <UnlockVaultModal
+          isOpen={isUnlockVaultModalOpen}
+          onClose={() => null /* can't close */}
+          password={password}
+          setPassword={setPassword}
+          error={isUnlockVaultModalError}
+        />
+
       </RadixTheme>
     );
   }
@@ -761,7 +782,6 @@ function App() {
       <UseEncVaultModal
         isOpen={isUseEncModalOpen}
         onClose={() => {
-          console.log("connard")
           setIsUseEncModalOpen(false);
           setPassword("");
         }}
