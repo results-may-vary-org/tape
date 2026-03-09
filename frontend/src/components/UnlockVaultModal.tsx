@@ -5,10 +5,12 @@ import {EyeClosedIcon, EyeIcon} from 'lucide-react';
 interface UnlockVaultModalProps {
   isOpen: boolean;
   onSubmit: (password: string) => void;
+  onAbort: () => void;
   error: string;
+  dirPath: string;
 }
 
-const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen, onSubmit, error}) => {
+const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen, onSubmit, onAbort, error, dirPath}) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [see, setSee] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
@@ -28,19 +30,20 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen, onSubmit, er
 
   // reset value on open
   useEffect(() => {
-    if (isOpen) setValue('');
+    if (isOpen) {
+      setValue("");
+    }
   }, [isOpen]);
 
   // handle key shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      switch (e.key) {
-        case 'Enter':
-          e.preventDefault();
-          onSubmit(value);
-          break;
+      if (!isOpen) {
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onSubmit(value);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -48,18 +51,14 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen, onSubmit, er
   }, [isOpen, onSubmit, value]);
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={() => null}>
+    <Dialog.Root open={isOpen} onOpenChange={onAbort}>
       <Dialog.Content className="search-modal" maxWidth="600px">
 
         <Dialog.Title style={{fontFamily: "vt32"}}>Unlock your tape box.</Dialog.Title>
 
         <Dialog.Description size="2" mb="4" className="vt32">
-          {!error && (
-            <p>Enter your password to unlock your tape box.</p>
-          )}
-          {error && (
-            <p className="important">{error}</p>
-          )}
+          {!error && `Enter your password to unlock your tape box ${dirPath}`}
+          {error && (<span className="important">{error}</span>)}
         </Dialog.Description>
 
         <Flex direction="column" gap="3">
@@ -92,7 +91,7 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen, onSubmit, er
         <div>
           <div className="search-footer vt32">
             <Text size="1" color="gray">
-              Press Enter to unlock, Esc to close
+              Press Enter to unlock
             </Text>
           </div>
         </div>

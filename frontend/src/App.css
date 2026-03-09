@@ -74,6 +74,15 @@ button:hover {
   margin: 0;
 }
 
+.welcome-button {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-button > button {
+  margin-bottom: 1rem;
+}
+
 /* Header */
 .header {
   display: flex;

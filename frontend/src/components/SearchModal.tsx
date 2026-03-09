@@ -24,7 +24,7 @@ type resultLength = {
   s: string
 }
 
-const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect, onSearch}) => {
+const SearchModal: React.FC<SearchModalProps> = ({isOpen, onClose, onFileSelect, onSearch}) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);

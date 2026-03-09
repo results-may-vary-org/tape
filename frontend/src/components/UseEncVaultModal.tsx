@@ -5,11 +5,10 @@ import {EyeClosedIcon, EyeIcon} from 'lucide-react';
 interface UseEncVaultModalProps {
   isOpen: boolean;
   onSubmit: (password: string) => void;
-  onClose: () => void;
   error: string;
 }
 
-const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, onClose, error}) => {
+const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, error}) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [see, setSee] = useState<boolean>(false);
   const [value, setValue] = useState<string>("");
@@ -35,17 +34,12 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, on
   // handle key shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      switch (e.key) {
-        case 'Escape':
-          e.preventDefault();
-          onSubmit("");
-          break;
-        case 'Enter':
-          e.preventDefault();
-          onSubmit(value);
-          break;
+      if (!isOpen) {
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onSubmit(value);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -61,16 +55,14 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, on
         <Dialog.Description size="2" mb="4" className="vt32">
           {!error && (
             <Fragment>
-              <p>
-                Enter a password if you want to create a secured tape box where all the content of your files are encrypted by default.
-              </p>
-              <p className="important">
+              Enter a password if you want to create a secured tape box where all the content of your files are encrypted by default.
+              <span className="important">
                 If you lost your password any data can't be recovered.
-              </p>
+              </span>
             </Fragment>
           )}
           {error && (
-            <p className="important">{error}</p>
+            <span className="important">{error}</span>
           )}
         </Dialog.Description>
 

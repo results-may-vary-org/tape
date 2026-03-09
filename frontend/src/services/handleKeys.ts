@@ -2,7 +2,13 @@ function handleKeys(
   event: KeyboardEvent,
   setIsSearchModalOpen: (isOpen: boolean) => void,
   setIsShortcutsModalOpen: (isOpen: boolean) => void,
-  actualViewMode: "editor" | "reader",
+  setIsUseEncModalOpen: (isOpen: boolean) => void,
+  setIsUnlockVaultModalOpen: (isOpen: boolean) => void,
+  isSearchModalOpen: boolean,
+  isShortcutsModalOpen: boolean,
+  isUseEncModalOpen: boolean,
+  isUnlockVaultModalOpen: boolean,
+  viewMode: "editor" | "reader",
   selectedFilePath: string | null,
   hasUnsavedChanges: boolean,
   handleSave: () => void,
@@ -10,6 +16,29 @@ function handleKeys(
   toggleZenMode : () => void,
   toggleSidebar: () => void
 ) {
+
+  // Esc for modal
+  if (event.key === 'escape') {
+    event.preventDefault();
+    // close only one modal
+    if (isShortcutsModalOpen) {
+      setIsShortcutsModalOpen(false);
+    } else if (isSearchModalOpen) {
+      setIsSearchModalOpen(false);
+    } else if (isUseEncModalOpen) {
+      setIsUseEncModalOpen(false);
+    } else if (isUnlockVaultModalOpen) {
+      setIsUnlockVaultModalOpen(false);
+    }
+    const noOtherOpen = !(isShortcutsModalOpen && isSearchModalOpen && isUseEncModalOpen && isUnlockVaultModalOpen);
+    if (noOtherOpen && viewMode === 'editor') {
+      // todo: refactor that
+      setTimeout(() => {
+        const editor = document.getElementById('editor') as HTMLDivElement;
+        editor?.focus();
+      }, 100);
+    }
+  }
 
   // Ctrl+S: Save file
   if (event.ctrlKey && event.key === 's') {
@@ -37,7 +66,7 @@ function handleKeys(
   // Ctrl+Tab: Switch view mode
   if (event.ctrlKey && event.key === 'Tab') {
     event.preventDefault();
-    handleViewModeChange(actualViewMode === "reader" ? "editor" : "reader");
+    handleViewModeChange(viewMode === "reader" ? "editor" : "reader");
     return;
   }
 

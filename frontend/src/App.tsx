@@ -16,7 +16,8 @@ import {
   RefreshCw,
   Edit,
   Eye,
-  PanelTopClose
+  PanelTopClose,
+  LockIcon
 } from 'lucide-react';
 import { DropdownMenu, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 import {
@@ -54,6 +55,7 @@ function App() {
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
+  const scrollRatioRef = useRef<number>(0);
 
   const [version] = useState<string>(__TAPE_VERSION__);
   const [dirPath, setDirPath] = useState<string>("");
@@ -63,15 +65,15 @@ function App() {
   const [originalContent, setOriginalContent] = useState<string>('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
-  const scrollRatioRef = useRef<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
   const [isUseEncModalOpen, setIsUseEncModalOpen] = useState<boolean>(false);
-  const [isUseEncModalError, setIsUseEncModalError] = useState<string>("");
-  const [isUnlockVaultModalOpen, setUnlockVaultModalOpen] = useState<boolean>(false);
-  const [isUnlockVaultModalError, setUnlockVaultModalError] = useState<string>("");
+  const [useEncModalError, setUseEncModalError] = useState<string>("");
+  const [isUnlockVaultModalOpen, setIsUnlockVaultModalOpen] = useState<boolean>(false);
+  const [unlockVaultModalError, setUnlockVaultModalError] = useState<string>("");
+  const [isVaultSecured, setIsVaultSecured] = useState<boolean>(false);
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState<boolean>(false);
@@ -86,17 +88,17 @@ function App() {
   // but for now this is the fastest since none of the elements change height
   // 53 = header, 40 = subheader
   const [containerHeight, setContainerHeight] = useState<string>("calc(100vh - (40px + 53px))");
-
   const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
 
   const handleVaultSetup = async (password: string) => {
     if (password) {
       const resp = await SetupPassword(password, dirPath);
       if (resp !== "ok") {
-        setIsUseEncModalError(`Error setting up vault: ${resp.substring(0, 30)}`);
+        setUseEncModalError(`Error setting up vault: ${resp.substring(0, 30)}`);
         return;
       }
     }
+    setUseEncModalError("");
     setIsUseEncModalOpen(false);
     loadConfig();
   };
@@ -107,9 +109,21 @@ function App() {
       setUnlockVaultModalError("Wrong password. Please try again.");
       return;
     }
-    setUnlockVaultModalOpen(false);
+    const isSecured = await HasSecurity(dirPath);
+    setIsVaultSecured(isSecured);
+    setUnlockVaultModalError("");
+    setIsUnlockVaultModalOpen(false);
     loadConfig();
   };
+
+  const lockVault = () => {
+    setDirPath("");
+    setFileTree(null);
+  }
+
+  const getLastOpenedFolder = () => {
+    return window.localStorage.getItem("lastOpenedFolder");
+  }
 
   // load the config and set up the app
   const loadConfig = async (dPath?: string) => {
@@ -200,11 +214,12 @@ function App() {
     }
   }
 
-  // todo: to improve
   const toggleZenMode = () => {
     if (mainHeaderRef && mainHeaderRef.current && sidebarRef && sidebarRef.current) {
       mainHeaderRef.current.classList.toggle("header-extended");
       mainHeaderRef.current.classList.toggle("header-hidden");
+
+      // not toggle on sidebarRef class because we need to force the class not to inverse
       if (mainHeaderRef.current.classList.contains("header-hidden")) {
         setContainerHeight("calc(100vh - 40px)");
         sidebarRef.current.classList.remove("sidebar-extended");
@@ -230,10 +245,12 @@ function App() {
         // ask if the user want an encrypted vault or not
         // or ask for the password to unlock vault
         const noChildren = !tree.children || (tree.children && tree.children.length === 0);
-        const needAuth = await HasSecurity(dPath)
+        const needAuth = await HasSecurity(dPath);
         if (needAuth) { // first because the config file is actually filtered from children list
-          setUnlockVaultModalOpen(true);
+          setIsUnlockVaultModalOpen(true);
           return null; // next step handled via onSubmit callback
+        } else {
+          setIsVaultSecured(false);
         }
         if (noChildren && !needAuth) {
           setIsUseEncModalOpen(true);
@@ -246,6 +263,7 @@ function App() {
     }
   };
 
+  // open a file and save the state in the config
   const handleFileSelect = async (filePath: string) => {
     try {
       setIsLoading(true);
@@ -271,6 +289,7 @@ function App() {
     }
   };
 
+  // expand folder and save the state in the config
   const handleExpandedFoldersChange = async (newExpandedFolders: string[]) => {
     setExpandedFolders(newExpandedFolders);
 
@@ -284,6 +303,7 @@ function App() {
     }
   };
 
+  // get the search result from the go backend
   const handleSearch = async (query: string): Promise<SearchResult[]> => {
     if (!fileTree?.path || !query.trim()) {
       return [];
@@ -298,11 +318,13 @@ function App() {
     }
   };
 
+  // write new content and tell that the file need saving
   const handleContentChange = useCallback((content: string) => {
     setFileContent(content);
     setHasUnsavedChanges(content !== originalContent);
   }, [originalContent]);
 
+  // write content into a file
   const handleSave = async () => {
     if (!selectedFilePath) return;
 
@@ -316,13 +338,19 @@ function App() {
     }
   };
 
-  // Global keyboard handler - app shortcuts work everywhere
+  // global keyboard handler - app shortcuts work everywhere
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       handleKeys(
         event,
         setIsSearchModalOpen,
         setIsShortcutsModalOpen,
+        setIsUseEncModalOpen,
+        setIsUnlockVaultModalOpen,
+        isSearchModalOpen,
+        isShortcutsModalOpen,
+        isUseEncModalOpen,
+        isUnlockVaultModalOpen,
         viewMode,
         selectedFilePath,
         hasUnsavedChanges,
@@ -437,7 +465,7 @@ function App() {
     }
   };
 
-  if (!fileTree) {
+  if (!fileTree || isUnlockVaultModalOpen || isUseEncModalOpen) {
     return (
       <RadixTheme accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
         <div className="app-container">
@@ -446,32 +474,42 @@ function App() {
               <img src={appIcon} alt="Tape app icon"/>
               <h1 className="workbench">Tape</h1>
             </div>
-            <div className="welcome-buttons">
+            <div className="welcome-button">
               <Tooltip content="Select a directory to browse markdown files">
                 <Button disabled={isLoading} onClick={() => handleRootOpen()} className="primary-button">
                   <FolderOpen size={20}/>
                   Open your tape box
                 </Button>
               </Tooltip>
+              {getLastOpenedFolder() && isVaultSecured && (
+                <Tooltip content="Unlock your tape box">
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => handleRootOpen(getLastOpenedFolder() ?? undefined)}
+                    className="primary-button"
+                  >
+                    <FolderOpen size={20}/>
+                    Unlock your tape box {getLastOpenedFolder()}
+                  </Button>
+                </Tooltip>
+              )}
             </div>
           </div>
         </div>
 
-        {/* UseEnc Modal */}
         <UseEncVaultModal
           isOpen={isUseEncModalOpen}
           onSubmit={handleVaultSetup}
-          onClose={() => setIsUseEncModalOpen(false)}
-          error={isUseEncModalError}
+          error={useEncModalError}
         />
 
-        {/* Unlock vault modal */}
         <UnlockVaultModal
           isOpen={isUnlockVaultModalOpen}
           onSubmit={handleVaultUnlock}
-          error={isUnlockVaultModalError}
+          onAbort={() => setIsUnlockVaultModalOpen(false)}
+          error={unlockVaultModalError}
+          dirPath={dirPath}
         />
-
       </RadixTheme>
     );
   }
@@ -530,6 +568,14 @@ function App() {
                   <FolderOpen size={16} />
                 </button>
               </Tooltip>
+
+              {isVaultSecured &&
+                <Tooltip content="Lock your tape box">
+                  <button onClick={() => lockVault()} className="action-button">
+                    <LockIcon size={16} />
+                  </button>
+                </Tooltip>
+              }
 
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger>
@@ -694,54 +740,18 @@ function App() {
         </Dialog.Content>
       </Dialog.Root>
 
-      {/* Search Modal */}
       <SearchModal
         isOpen={isSearchModalOpen}
-        onClose={() => {
-          setIsSearchModalOpen(false);
-          // Refocus editor in editor mode after modal closes
-          if (viewMode === 'editor') {
-            setTimeout(() => {
-              const editor = document.getElementById('editor') as HTMLDivElement;
-              editor?.focus();
-            }, 100);
-          }
-        }}
+        onClose={() => setIsSearchModalOpen(false)}
         onFileSelect={handleFileSelect}
         onSearch={handleSearch}
       />
 
-      {/* Shortcuts Modal */}
       <ShortcutsModal
         isOpen={isShortcutsModalOpen}
-        onClose={() => {
-          setIsShortcutsModalOpen(false);
-          // Refocus editor in editor mode after modal closes
-          if (viewMode === 'editor') {
-            setTimeout(() => {
-              const editor = document.getElementById('editor') as HTMLDivElement;
-              editor?.focus();
-            }, 100);
-          }
-        }}
+        onClose={() => setIsShortcutsModalOpen(false)}
         version={version}
       />
-
-      {/* UseEnc Modal */}
-      <UseEncVaultModal
-        isOpen={isUseEncModalOpen}
-        onSubmit={handleVaultSetup}
-        onClose={() => setIsUseEncModalOpen(false)}
-        error={isUseEncModalError}
-      />
-
-      {/* Unlock vault modal */}
-      <UnlockVaultModal
-        isOpen={isUnlockVaultModalOpen}
-        onSubmit={handleVaultUnlock}
-        error={isUnlockVaultModalError}
-      />
-
     </RadixTheme>
   );
 }
