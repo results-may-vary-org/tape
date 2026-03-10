@@ -8,11 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	goruntime "runtime"
 	"path/filepath"
+	"regexp"
+	goruntime "runtime"
 	"sort"
 	"strings"
-	"regexp"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -60,6 +60,8 @@ type App struct {
 	ctx context.Context
 	rootPath string
 	masterkey []byte
+	cryptVersion string
+	os string
 }
 
 // NewApp creates a new App application struct
@@ -71,6 +73,8 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.cryptVersion = "MDE1"
+	a.os = a.GetOs()
 }
 
 func (a *App) shutdown(ctx context.Context) {
@@ -86,8 +90,6 @@ func (a *App) GetOs() string {
 	switch os {
 	case "windows":
 		return "windows"
-	case "darwin":
-		return "darwin"
 	default:
 		return "linux"
 	}
@@ -200,6 +202,24 @@ func decryptData(masterkey []byte, nonce []byte, ciphertext []byte) ([]byte, err
 	return plaintext, nil
 }
 
+// decryptMDE1 decrypt MDE1 (internal to tape) content and return the content otherwise the error
+func (a *App) decryptMDE1(rawcontent []byte) ([]byte, error) {
+	payload := rawcontent
+	if len(payload) >= 4 && string(payload[:4]) == a.cryptVersion {
+		payload = payload[4:]
+	}
+	if len(payload) < 12 {
+		return []byte{}, fmt.Errorf("No payload")
+	}
+	nonce := payload[:12]
+	ciphertext := payload[12:]
+	text, err := decryptData(a.masterkey, nonce, ciphertext)
+	if err != nil {
+		return []byte{}, err
+	}
+	return text, nil
+}
+
 // SetupPassword generate needed data and store it to setup encrypted tape box
 func (a *App) SetupPassword(password string, rootPath string) string {
 	masterkey, passwordSalt, err := deriveKey(password)
@@ -304,7 +324,6 @@ func (a *App) GetContentDiff(originalContent, currentContent string) Diff {
 /**
  * --- File system
  */
-
 // OpenDirectoryDialog opens a directory selection dialog
 func (a *App) OpenDirectoryDialog() (string, error) {
 	return runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
@@ -335,6 +354,7 @@ func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
 	return root, nil
 }
 
+// todo: add decrypt for fodlername
 // buildFileTree recursively builds the file tree
 func (a *App) buildFileTree(parent *FileItem) error {
 	entries, err := os.ReadDir(parent.Path)
@@ -378,6 +398,7 @@ func (a *App) buildFileTree(parent *FileItem) error {
 	return nil
 }
 
+// todo: if name is encrypted ?
 // ReadFile reads the content of a file
 func (a *App) ReadFile(filePath string) (string, error) {
 	rawContent, err := os.ReadFile(filePath)
@@ -390,19 +411,7 @@ func (a *App) ReadFile(filePath string) (string, error) {
 			return "", nil
 		}
 
-		payload := rawContent
-		// MDE1 is the first version of our file
-		// if later we change the way we encrypt/decrypt
-		// we should increment it
-		if len(payload) >= 4 && string(payload[:4]) == "MDE1" {
-			payload = payload[4:]
-		}
-		if len(payload) < 12 {
-			return "", nil
-		}
-		nonce := payload[:12]
-		ciphertext := payload[12:]
-		text, err := decryptData(a.masterkey, nonce, ciphertext)
+		text, err := a.decryptMDE1(rawContent)
 		if err != nil {
 			return "", err
 		}
@@ -412,6 +421,7 @@ func (a *App) ReadFile(filePath string) (string, error) {
 	return string(rawContent), nil
 }
 
+// todo: if name is encrypted ?
 // WriteContentInFile writes content to a file
 func (a *App) WriteContentInFile(filePath, content string) error {
 	if a.HasSecurity(a.rootPath) {
@@ -419,7 +429,7 @@ func (a *App) WriteContentInFile(filePath, content string) error {
 		if err != nil {
 			return err
 		}
-		data := append([]byte("MDE1"), nonce...)
+		data := append([]byte(a.cryptVersion), nonce...)
 		data = append(data, cipher...)
 		return os.WriteFile(filePath, data, 0600)
 	}
@@ -439,16 +449,22 @@ func stripFileExt(filePath string) string {
 }
 
 // CreateFile creates a new markdown file and returns the actual path created
-func (a *App) CreateFile(filePath string) (string, error) {
+func (a *App) CreateFile(filePath string, filename string) (string, error) {
 	ext := ".md"
+	filename = stripFileExt(filename)
 	if a.HasSecurity(a.rootPath) {
 		ext = ".mde"
+		nonce, ciphertext, err := encryptData(a.masterkey, []byte(filename))
+		if err != nil {
+			return "", err
+		}
+		filename = a.cryptVersion + string(nonce) + string(ciphertext)
 	}
 
-	filePath = stripFileExt(filePath) + ext
+	filePath = filepath.Join(filePath, filename + ext)
 	isFileExist := a.IsFileExists(filePath)
 	if isFileExist {
-		return "", fmt.Errorf("File already exist")
+		return "", fmt.Errorf("file_already_exist")
 	}
 
 	file, err := os.Create(filePath)
@@ -460,8 +476,18 @@ func (a *App) CreateFile(filePath string) (string, error) {
 	return filePath, nil
 }
 
+// todo: add encrypted CreateDirectory()
 // CreateDirectory creates a new directory
-func (a *App) CreateDirectory(dirPath string) error {
+func (a *App) CreateDirectory(dirPath, foldername string) error {
+	if a.HasSecurity(a.rootPath) {
+		nonce, cipher, err := encryptData(a.masterkey, []byte(foldername))
+		if err != nil {
+			return err
+		}
+		foldername = a.cryptVersion + string(nonce) + string(cipher)
+	}
+	dirPath = filepath.Join(dirPath, foldername)
+	a.IsFileExists(dirPath)
 	return os.MkdirAll(dirPath, 0700)
 }
 
@@ -470,20 +496,32 @@ func (a *App) DeleteFile(filePath string) error {
 	return os.Remove(filePath)
 }
 
+// todo: work by default ?
 // DeleteDirectory deletes a directory and all its contents
 func (a *App) DeleteDirectory(dirPath string) error {
 	return os.RemoveAll(dirPath)
 }
 
+// todo: create one fc for directory and this one for file
 // RenameFile renames a file or directory and returns the actual new path
-func (a *App) RenameFile(oldPath, newPath string, isFile bool) (string, error) {
+func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string, error) {
 	ext := ".md"
+
+	if (isFile) {
+		filename = stripFileExt(filename)
+	}
+	
 	if a.HasSecurity(a.rootPath) {
 		ext = ".mde"
+		rawfilename, err := a.decryptMDE1([]byte(filename))
+		if err != nil {
+			return "", err
+		}
+		filename = string(rawfilename)
 	}
 
-	if isFile {
-		newPath = stripFileExt(newPath) + ext
+	if (isFile) {
+		filename = filename + ext
 	}
 
 	isFileExist := a.IsFileExists(newPath)
@@ -549,7 +587,7 @@ func (a *App) SaveConfig(config *Config, folderPath string) error {
 	return os.WriteFile(configPath, data, 0600)
 }
 
-// SaveLastOpenedFolder saves check and salt to config
+// SaveCryptoData saves check, salt, nonce and mode to config
 func (a *App) SaveCryptoData(folderPath string, check []byte, nonceCheck []byte, salt []byte) error {
 	config, err := a.LoadConfig(folderPath)
 	if err != nil {
@@ -663,7 +701,6 @@ func (a *App) LoadInitialConfig() (*Config, error) {
 /**
  * --- Search
  */
-
 // fuzzyMatch performs a simple fuzzy search
 func fuzzyMatch(pattern, text string) bool {
 	pattern = strings.ToLower(pattern)

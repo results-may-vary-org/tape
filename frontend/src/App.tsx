@@ -40,6 +40,7 @@ import {
   PasswordIsCorrect,
   IsFileExists,
   WriteContentInFile,
+  GetOs,
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/logo.png';
 import appIconBck from './assets/images/logo-background.png';
@@ -386,7 +387,7 @@ function App() {
     if (!newFileName.trim()) return;
 
     try {
-      const actualPath = await CreateFile(`${currentParentPath}/${newFileName}`);
+      const actualPath = await CreateFile(currentParentPath, newFileName);
       await refreshFileTree();
       await handleFileSelect(actualPath);
       setShowCreateFileDialog(false);
@@ -414,16 +415,7 @@ function App() {
     if (!newFolderName.trim()) return;
 
     try {
-      const folderPath = `${currentParentPath}/${newFolderName}`;
-
-      // Check if folder already exists
-      const exists = await IsFileExists(folderPath);
-      if (exists) {
-        setCreateFolderDialogError(`Folder "${newFolderName}" already exists in this directory.`);
-        return;
-      }
-
-      await CreateDirectory(folderPath);
+      await CreateDirectory(currentParentPath, newFolderName); // todo: check for duplicate error
       await refreshFileTree();
       setShowCreateFolderDialog(false);
       setNewFolderName("");
@@ -435,9 +427,11 @@ function App() {
   };
 
   const handleRenameItem = async (itemPath: string, newName: string, isFile: boolean) => {
-    const parentPath = itemPath.substring(0, itemPath.lastIndexOf('/'));
-    const newPath = `${parentPath}/${newName}`;
-    const actualPath = await RenameFile(itemPath, newPath, isFile);
+    const os = await GetOs();
+    let sep = "/";
+    if (os !== "linux") sep = "\\";
+    const parentPath = itemPath.substring(0, itemPath.lastIndexOf(sep));
+    const actualPath = await RenameFile(itemPath, parentPath, newName, isFile);
     await refreshFileTree();
     if (selectedFilePath === itemPath) {
       setSelectedFilePath(actualPath);
