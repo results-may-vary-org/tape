@@ -14,6 +14,8 @@ export function GetContentDiff(arg1:string,arg2:string):Promise<main.Diff>;
 
 export function GetDirectoryTree(arg1:string):Promise<main.FileItem>;
 
+export function GetOs():Promise<string>;
+
 export function GetTapeVersion():Promise<string>;
 
 export function HasSecurity(arg1:string):Promise<boolean>;

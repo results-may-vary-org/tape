@@ -8,9 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	goruntime "runtime"
 	"path/filepath"
 	"sort"
 	"strings"
+	"regexp"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -73,6 +75,35 @@ func (a *App) startup(ctx context.Context) {
 
 func (a *App) shutdown(ctx context.Context) {
 	//
+}
+
+/**
+ * --- utils
+ */
+func (a *App) GetOs() string {
+	os := goruntime.GOOS
+	// this switch is here to handle freebsd and so on that I tag like linux
+	switch os {
+	case "windows":
+		return "windows"
+	case "darwin":
+		return "darwin"
+	default:
+		return "linux"
+	}
+}
+
+func isMD(filename string) bool {
+	return strings.HasSuffix(strings.ToLower(filename), ".md")
+}
+
+func isMDE(filename string) bool {
+	return strings.HasSuffix(strings.ToLower(filename), ".mde")
+}
+
+func isMDorMDE(filename string) bool {
+	match, _ := regexp.MatchString(`(?i)\.md(e)?$`, filename)
+	return match
 }
 
 /**
@@ -328,7 +359,7 @@ func (a *App) buildFileTree(parent *FileItem) error {
 		if entry.IsDir() {
 			a.buildFileTree(child)
 			children = append(children, child)
-		} else if strings.HasSuffix(strings.ToLower(entry.Name()), ".md") || strings.HasSuffix(strings.ToLower(entry.Name()), ".mde") {
+		} else if isMDorMDE(entry.Name()) {
 			children = append(children, child)
 		}
 	}
@@ -398,10 +429,10 @@ func (a *App) WriteContentInFile(filePath, content string) error {
 // stripFileExt strips .md or .mde extension from a path
 func stripFileExt(filePath string) string {
 	lower := strings.ToLower(filePath)
-	if strings.HasSuffix(lower, ".mde") {
+	if isMDE(lower) {
 		return filePath[:len(filePath)-4]
 	}
-	if strings.HasSuffix(lower, ".md") {
+	if isMD(lower) {
 		return filePath[:len(filePath)-3]
 	}
 	return filePath
@@ -656,15 +687,8 @@ func fuzzyMatch(pattern, text string) bool {
 func getContextAroundMatch(content, query string, matchIndex int) (string, string) {
 	const contextLength = 100
 
-	start := matchIndex - contextLength
-	if start < 0 {
-		start = 0
-	}
-
-	end := matchIndex + len(query) + contextLength
-	if end > len(content) {
-		end = len(content)
-	}
+	start := max(matchIndex - contextLength, 0)
+	end := min(matchIndex + len(query) + contextLength, len(content))
 
 	context := content[start:end]
 	matchText := content[matchIndex : matchIndex+len(query)]
@@ -716,7 +740,7 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 			})
 		}
 
-		// Search in file names and content (only .md files)
+		// Search in file names and content (only .md or .mde files)
 		if !info.IsDir() {
 			// Check filename match
 			if fuzzyMatch(query, info.Name()) {
@@ -730,26 +754,27 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 			}
 
 			// Check content match for markdown files
-			if strings.HasSuffix(strings.ToLower(info.Name()), ".md") {
-				content, err := os.ReadFile(path)
-				if err == nil {
-					contentStr := string(content)
-					contentLower := strings.ToLower(contentStr)
+			if isMDorMDE(info.Name()) {
+				content, err := a.ReadFile(path)
+				if err != nil || content == "" {
+					return nil
+				}
 
-					// Look for query in content
-					if strings.Contains(contentLower, query) {
-						matchIndex := strings.Index(contentLower, query)
-						matchText, contextText := getContextAroundMatch(contentStr, query, matchIndex)
+				contentLower := strings.ToLower(content)
 
-						results = append(results, SearchResult{
-							Path:        path,
-							Name:        info.Name(),
-							IsDir:       false,
-							MatchType:   "content",
-							MatchText:   matchText,
-							ContextText: contextText,
-						})
-					}
+				// Look for query in content
+				if strings.Contains(contentLower, query) {
+					matchIndex := strings.Index(contentLower, query)
+					matchText, contextText := getContextAroundMatch(content, query, matchIndex)
+
+					results = append(results, SearchResult{
+						Path:        path,
+						Name:        info.Name(),
+						IsDir:       false,
+						MatchType:   "content",
+						MatchText:   matchText,
+						ContextText: contextText,
+					})
 				}
 			}
 		}
@@ -771,8 +796,8 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 	})
 
 	// todo: atm Limit results to prevent UI overload
-	if len(results) > 50 {
-		results = results[:50]
+	if len(results) > 60 {
+		results = results[:60]
 	}
 
 	return results, nil

@@ -462,6 +462,35 @@ div[data-remark-code-title="true"] + pre {
   display: flex;
 }
 
+.stat-container, .file-container, .save-container {
+  display: flex;
+}
+
+@media (max-width: 476px) {
+  .stat-text-small, .stat-text {
+    display: none;
+  }
+}
+
+@media (min-width: 664px) {
+  .stat-text-small {
+    display: none;
+  }
+}
+
+@media (max-width: 665px) and (min-width: 476px) {
+  .stat-text {
+    display: none;
+  }
+  .stat-text-small {
+    margin-top: 2px;
+    margin-right: 0.5rem;
+  }
+  .stat-text-small > span {
+    margin-right: 2px;
+  }
+}
+
 /* align the text with the icon */
 .stat-text {
   margin-top: 2px;

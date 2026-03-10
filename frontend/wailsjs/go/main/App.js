@@ -26,6 +26,10 @@ export function GetDirectoryTree(arg1) {
   return window['go']['main']['App']['GetDirectoryTree'](arg1);
 }
 
+export function GetOs() {
+  return window['go']['main']['App']['GetOs']();
+}
+
 export function GetTapeVersion() {
   return window['go']['main']['App']['GetTapeVersion']();
 }
