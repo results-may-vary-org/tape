@@ -350,9 +350,6 @@ func (a *App) OpenDirectoryDialog() (string, error) {
 
 // GetDirectoryTree returns the file tree structure for a given directory
 func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
-
-	fmt.Println("GetDirectoryTree")
-
 	info, err := os.Stat(dirPath)
 	if err != nil {
 		return nil, err
@@ -376,9 +373,6 @@ func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
 
 // buildFileTree recursively builds the file tree
 func (a *App) buildFileTree(parent *FileItem, rootPath string) error {
-
-	fmt.Println("buildFileTree")
-
 	entries, err := os.ReadDir(parent.Path)
 	if err != nil {
 		return err
@@ -589,11 +583,8 @@ func (a *App) GetDecryptedFullPath(path string, part int) string {
 	for i, seg := range segments {
 		if strings.HasPrefix(seg, a.cryptVersionMDE1) {
 			if i == len(segments)-1 { // the file
-				fmt.Println("XXX", seg)
 				if isMDE(seg) {
-					fmt.Println("xxxx")
 					segments[i] = a.GetDecryptedFileName(path)
-					fmt.Println("eeeee", segments[i])
 				} else if isMD(seg) {
 					segments[i] = seg
 				}
