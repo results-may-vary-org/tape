@@ -9,7 +9,6 @@ import {
   CassetteTape, PackageOpen, Package
 } from 'lucide-react';
 import { ContextMenu, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
-import { RenameFile } from '../../wailsjs/go/main/App';
 
 interface FileItem {
   name: string;
@@ -20,7 +19,7 @@ interface FileItem {
 
 interface FileTreeProps {
   fileTree: FileItem | null;
-  onFileSelect: (filePath: string) => void;
+  onFileSelect: (item: FileItem) => void;
   selectedFile: string | null;
   onCreateFile: (parentPath: string) => void;
   onCreateFolder: (parentPath: string) => void;
@@ -32,7 +31,7 @@ interface FileTreeProps {
 
 interface FileTreeNodeProps {
   item: FileItem;
-  onFileSelect: (filePath: string) => void;
+  onFileSelect: (item: FileItem) => void;
   selectedFile: string | null;
   level: number;
   onCreateFile: (parentPath: string) => void;
@@ -71,7 +70,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
         : [...expandedFolders, item.path];
       onExpandedFoldersChange(newExpandedFolders);
     } else {
-      onFileSelect(item.path);
+      onFileSelect(item);
     }
   };
 

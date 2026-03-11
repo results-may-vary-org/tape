@@ -1,5 +1,5 @@
-import { useState, useEffect, Fragment } from "react";
-import { GetContentDiff, GetOs } from "../../wailsjs/go/main/App";
+import { useState, useEffect } from "react";
+import { GetContentDiff, GetDecryptedFileName, GetDecryptedFullPath } from "../../wailsjs/go/main/App";
 import {main} from "../../wailsjs/go/models";
 import {Bug, CircleCheck, Loader, CassetteTape, CircleAlert} from "lucide-react";
 import Diff = main.Diff;
@@ -16,7 +16,25 @@ const Stats = (props: props) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [contentDiff, setContentDiff] = useState<Diff | null>(null);
+   // not ideal but the simplest since i need to handle promise to get it
+  const [filename, setFilename] = useState<string>("");
+  const [smallFilename, setSmallFilename] = useState<string>("");
 
+  useEffect(() => {
+    if (!props.selectedFilePath) return;
+
+    const loadFileName = async () => {
+      if (!props.selectedFilePath) return;
+      const name = await getFileName();
+      const smallName = await getFileName(1);
+      setFilename(name);
+      setSmallFilename(smallName);
+    };
+
+    loadFileName();
+  }, [props.selectedFilePath]);
+
+  // get the content diff
   useEffect(() => {
     GetContentDiff(props.original, props.edited)
       .then((diff: Diff) => {
@@ -30,27 +48,13 @@ const Stats = (props: props) => {
       .finally(() => setIsLoading(false))
   }, [props.original, props.edited]);
 
-  const getFileName = (trunc = false): string => {
-
+  const getFileName = async (trunc = 3): Promise<string> => {
     if (!props.selectedFilePath) return "";
-    let join = "/";
-    let partArray = props.selectedFilePath.split("/");
-
-    GetOs().then((os) => {
-      if (os === "windows" && props.selectedFilePath) {
-        join = "\\";
-        partArray = props.selectedFilePath.split('\\');
-      }
-    })
-
-    var text = partArray.slice(-3).join(join);
-    if (trunc) {
-      text = text.substring(text.lastIndexOf(join)+1);
-    }
-    return text;
+    return GetDecryptedFullPath(props.selectedFilePath, trunc);
   }
 
-  const getCD = () => {
+  // get the cd string we want to show
+  const getContentDiffString = () => {
     const e = contentDiff ? contentDiff.edit : 0;
     const a = contentDiff ? contentDiff.add : 0;
     const d = contentDiff ? contentDiff.remove : 0;
@@ -63,26 +67,26 @@ const Stats = (props: props) => {
 
       <div className="stat-container">
         <div className="stat-icon">
-          <Tooltip content={`Edit: ${getCD().e}, Add: ${getCD().a}, Delete: ${getCD().d}`}>
+          <Tooltip content={`Edit: ${getContentDiffString().e}, Add: ${getContentDiffString().a}, Delete: ${getContentDiffString().d}`}>
             {isLoading ? <Loader className="spin-fast" size="14"/> : isError ? <Bug size="14"/> : <CircleCheck size="14"/>}
           </Tooltip>
         </div>
 
         <div className="stat-text">
-          <span className="stat-delta-modified">E: {getCD().e} </span>
-          <span className="stat-delta-positive">A: {getCD().a} </span>
-          <span className="stat-delta-negative">D: {getCD().d} </span>
+          <span className="stat-delta-modified">E: {getContentDiffString().e} </span>
+          <span className="stat-delta-positive">A: {getContentDiffString().a} </span>
+          <span className="stat-delta-negative">D: {getContentDiffString().d} </span>
         </div>
 
         <div className="stat-text-small">
           <Tooltip content="Edited">
-            <span className="stat-delta-modified">{getCD().e}</span>
+            <span className="stat-delta-modified">{getContentDiffString().e}</span>
           </Tooltip>
           <Tooltip content="Added">
-            <span className="stat-delta-positive">{getCD().a}</span>
+            <span className="stat-delta-positive">{getContentDiffString().a}</span>
           </Tooltip>
           <Tooltip content="Removed">
-            <span className="stat-delta-negative">{getCD().d}</span>
+            <span className="stat-delta-negative">{getContentDiffString().d}</span>
           </Tooltip>
         </div>
 
@@ -90,23 +94,23 @@ const Stats = (props: props) => {
 
       <div className="file-container">
         <div className="stat-icon">
-          <Tooltip content={getFileName()}>
+          <Tooltip content={filename}>
             <CassetteTape size="14"/>
           </Tooltip>
         </div>
 
         <div className="file-info stat-text">
-          {props.selectedFilePath && props.selectedFilePath.split('/').pop() ? (
+          {props.selectedFilePath ? (
             <span className="current-file">
-              {getFileName()}
+              {filename}
             </span>
           ) : <span className="current-file">no tape selected</span>}
         </div>
 
         <div className="file-info stat-text-small">
-          {props.selectedFilePath && props.selectedFilePath.split('/').pop() ? (
+          {props.selectedFilePath ? (
             <span className="current-file">
-              {getFileName(true)}
+              {smallFilename}
             </span>
           ) : <Tooltip content="No tape selected"><span className="current-file">nts</span></Tooltip>}
         </div>
@@ -114,7 +118,7 @@ const Stats = (props: props) => {
 
       {/* fixme: should find  a better diff since we need to use getCD for certain case */}
       {/* use case: 123456789 > save > 123456788 > save > 123456787 is marked has not edited */}
-      {(props.hasUnsavedChanges || getCD().has) && (
+      {(props.hasUnsavedChanges || getContentDiffString().has) && (
         <div className="save-container">
           <div className="stat-icon stat-save">
             <Tooltip content="Unsaved file">

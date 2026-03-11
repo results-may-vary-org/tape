@@ -12,6 +12,10 @@ export function DeleteFile(arg1:string):Promise<void>;
 
 export function GetContentDiff(arg1:string,arg2:string):Promise<main.Diff>;
 
+export function GetDecryptedFileName(arg1:string):Promise<string>;
+
+export function GetDecryptedFullPath(arg1:string,arg2:number):Promise<string>;
+
 export function GetDirectoryTree(arg1:string):Promise<main.FileItem>;
 
 export function GetOs():Promise<string>;

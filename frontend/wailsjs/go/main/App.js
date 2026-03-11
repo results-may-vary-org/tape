@@ -22,6 +22,14 @@ export function GetContentDiff(arg1, arg2) {
   return window['go']['main']['App']['GetContentDiff'](arg1, arg2);
 }
 
+export function GetDecryptedFileName(arg1) {
+  return window['go']['main']['App']['GetDecryptedFileName'](arg1);
+}
+
+export function GetDecryptedFullPath(arg1, arg2) {
+  return window['go']['main']['App']['GetDecryptedFullPath'](arg1, arg2);
+}
+
 export function GetDirectoryTree(arg1) {
   return window['go']['main']['App']['GetDirectoryTree'](arg1);
 }

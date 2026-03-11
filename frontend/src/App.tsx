@@ -129,16 +129,17 @@ function App() {
   // load the config and set up the app
   const loadConfig = async (dPath?: string) => {
     const path = dPath ?? dirPath;
+
+    // set rootPath on Go side before any file reads so HasSecurity works correctly
+    localStorage.setItem('lastOpenedFolder', path);
+    await SaveLastOpenedFolder(path);
+
     const tree = await GetDirectoryTree(path);
     setFileTree(tree);
     setSelectedFilePath(null);
     setFileContent('');
     setOriginalContent('');
     setHasUnsavedChanges(false);
-
-    // Set rootPath on Go side before any file reads so HasSecurity works correctly
-    localStorage.setItem('lastOpenedFolder', path);
-    await SaveLastOpenedFolder(path);
 
     // Load folder-specific config including view mode, theme, expanded folders, and last file
     try {
@@ -265,12 +266,12 @@ function App() {
   };
 
   // open a file and save the state in the config
-  const handleFileSelect = async (filePath: string) => {
+  const handleFileSelect = async (item: FileItem) => {
     try {
       setIsLoading(true);
       scrollRatioRef.current = 0;
-      const content = await ReadFile(filePath);
-      setSelectedFilePath(filePath);
+      const content = await ReadFile(item.path);
+      setSelectedFilePath(item.path);
       setFileContent(content);
       setOriginalContent(content);
       setHasUnsavedChanges(false);
@@ -278,7 +279,7 @@ function App() {
       // Save last opened file to config
       if (fileTree?.path) {
         try {
-          await SaveLastOpenedFile(fileTree.path, filePath);
+          await SaveLastOpenedFile(fileTree.path, item.path);
         } catch (error) {
           console.error('Error saving last opened file:', error);
         }
@@ -389,12 +390,11 @@ function App() {
     try {
       const actualPath = await CreateFile(currentParentPath, newFileName);
       await refreshFileTree();
-      await handleFileSelect(actualPath);
+      await handleFileSelect({ name: newFileName, path: actualPath, isDir: false });
       setShowCreateFileDialog(false);
       setNewFileName("");
       setCreateFileDialogError("");
     } catch (error) {
-      console.log(error)
       if (typeof error === "string" && error === "file_already_exist") {
         setCreateFileDialogError(`File "${newFileName}" already exists in this directory.`);
         return;

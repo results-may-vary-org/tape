@@ -5,8 +5,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/json"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -206,7 +206,10 @@ func (a *App) decryptData(masterkey []byte, nonce []byte, ciphertext []byte) ([]
 // decryptMDE1 decrypt MDE1 (internal to tape) content and return the content otherwise the error
 func (a *App) decryptMDE1(rawcontent []byte, isBase64 bool) ([]byte, error) {
 	aead := a.getAEAD(a.masterkey)
-  nonceSize := aead.NonceSize()
+	if aead == nil {
+		return nil, fmt.Errorf("AEAD generation error")
+	}
+	nonceSize := aead.NonceSize()
 	payload := string(rawcontent)
 
 	// remove the version
@@ -347,6 +350,9 @@ func (a *App) OpenDirectoryDialog() (string, error) {
 
 // GetDirectoryTree returns the file tree structure for a given directory
 func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
+
+	fmt.Println("GetDirectoryTree")
+
 	info, err := os.Stat(dirPath)
 	if err != nil {
 		return nil, err
@@ -359,7 +365,7 @@ func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
 	}
 
 	if info.IsDir() {
-		err = a.buildFileTree(root)
+		err = a.buildFileTree(root, dirPath)
 		if err != nil {
 			return nil, err
 		}
@@ -369,7 +375,10 @@ func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
 }
 
 // buildFileTree recursively builds the file tree
-func (a *App) buildFileTree(parent *FileItem) error {
+func (a *App) buildFileTree(parent *FileItem, rootPath string) error {
+
+	fmt.Println("buildFileTree")
+
 	entries, err := os.ReadDir(parent.Path)
 	if err != nil {
 		return err
@@ -388,7 +397,7 @@ func (a *App) buildFileTree(parent *FileItem) error {
 		}
 
 		realName := entry.Name()
-		if a.HasSecurity(a.rootPath) {
+		if a.HasSecurity(rootPath) {
 			name := entry.Name()
 			if !entry.IsDir() {
 				name = stripFileExt(name)
@@ -412,7 +421,7 @@ func (a *App) buildFileTree(parent *FileItem) error {
 		}
 
 		if entry.IsDir() {
-			a.buildFileTree(child)
+			a.buildFileTree(child, rootPath)
 			children = append(children, child)
 		} else if isMDorMDE(realName) {
 			children = append(children, child)
@@ -535,7 +544,7 @@ func (a *App) DeleteDirectory(dirPath string) error {
 	return os.RemoveAll(dirPath)
 }
 
-// fixme: create one fc for directory and this one for file
+// todo: create one fc for directory and this one for file
 // RenameFile renames a file or directory and returns the actual new path
 func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string, error) {
 	ext := ".md"
@@ -569,6 +578,60 @@ func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string
 func (a *App) IsFileExists(filePath string) bool {
 	_, err := os.Stat(filePath)
 	return !os.IsNotExist(err)
+}
+
+// GetDecryptedFullPath take a path and return it decrypted
+func (a *App) GetDecryptedFullPath(path string, part int) string {
+	// split by file separator
+	segments := strings.Split(path, string(filepath.Separator))
+
+	// decrypt segments that start with the MDE* prefix
+	for i, seg := range segments {
+		if strings.HasPrefix(seg, a.cryptVersionMDE1) {
+			if i == len(segments)-1 { // the file
+				fmt.Println("XXX", seg)
+				if isMDE(seg) {
+					fmt.Println("xxxx")
+					segments[i] = a.GetDecryptedFileName(path)
+					fmt.Println("eeeee", segments[i])
+				} else if isMD(seg) {
+					segments[i] = seg
+				}
+			} else {
+				value, err := a.decryptMDE1([]byte(seg), true)
+				if err != nil {
+					segments[i] = seg // fail beautifully
+				} else {
+					segments[i] = string(value)
+				}
+			}
+		}
+	}
+
+	if part != 0 {
+		segments = segments[len(segments)-part:]
+	}
+
+	// rebuild the path
+	return filepath.Join(segments...)
+}
+
+// GetDecryptedFileName take a path and return the filename decrypted value
+func (a *App) GetDecryptedFileName(path string) string {
+	base := filepath.Base(path)
+	ext := ""
+	if isMD(path) {
+		ext = ".md"
+	}
+	if isMDE(path) {
+		ext = ".mde"
+	}
+	filename := stripFileExt(base)
+	name, err := a.decryptMDE1([]byte(filename), true)
+	if err != nil {
+		return filename
+	}
+	return string(name) + ext
 }
 
 // GetTapeVersion returns the TAPE_VERSION environment variable
