@@ -842,10 +842,12 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil // Skip files with errors
+			return nil // skip files with errors
 		}
 
-		// Skip hidden files and directories
+		name := info.Name()
+
+		// skip hidden files and directories
 		if strings.HasPrefix(info.Name(), ".") {
 			if info.IsDir() {
 				return filepath.SkipDir
@@ -853,33 +855,43 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 			return nil
 		}
 
-		// Get relative path for display
-		relPath, _ := filepath.Rel(rootPath, path)
-		if relPath == "." {
-			return nil // Skip root directory
+		// skip tape.config
+		if info.Name() == "tape.json" {
+			return nil
 		}
 
-		// Search in directory names
-		if info.IsDir() && fuzzyMatch(query, info.Name()) {
+		// decrypt if needed
+		if a.HasSecurity(rootPath) {
+			name = a.GetDecryptedFileName(path)
+		}
+
+		// get relative path for display
+		relPath, _ := filepath.Rel(rootPath, path)
+		if relPath == "." {
+			return nil // skip root directory
+		}
+
+		// search in directory names
+		if info.IsDir() && fuzzyMatch(query, name) {
 			results = append(results, SearchResult{
 				Path:      path,
-				Name:      info.Name(),
+				Name:      name,
 				IsDir:     true,
 				MatchType: "foldername",
-				MatchText: info.Name(),
+				MatchText: name,
 			})
 		}
 
-		// Search in file names and content (only .md or .mde files)
+		// search in file names and content (only .md or .mde files)
 		if !info.IsDir() {
-			// Check filename match
-			if fuzzyMatch(query, info.Name()) {
+			// check filename match
+			if fuzzyMatch(query, name) {
 				results = append(results, SearchResult{
 					Path:      path,
-					Name:      info.Name(),
+					Name:      name,
 					IsDir:     false,
 					MatchType: "filename",
-					MatchText: info.Name(),
+					MatchText: name,
 				})
 			}
 
@@ -892,14 +904,14 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 
 				contentLower := strings.ToLower(content)
 
-				// Look for query in content
+				// look for query in content
 				if strings.Contains(contentLower, query) {
 					matchIndex := strings.Index(contentLower, query)
 					matchText, contextText := getContextAroundMatch(content, query, matchIndex)
 
 					results = append(results, SearchResult{
 						Path:        path,
-						Name:        info.Name(),
+						Name:        name,
 						IsDir:       false,
 						MatchType:   "content",
 						MatchText:   matchText,
@@ -916,7 +928,7 @@ func (a *App) SearchFiles(rootPath string, query string) ([]SearchResult, error)
 		return nil, err
 	}
 
-	// Sort results: filename matches first, then folder matches, then content matches
+	// sort results: filename matches first, then folder matches, then content matches
 	sort.Slice(results, func(i, j int) bool {
 		if results[i].MatchType != results[j].MatchType {
 			order := map[string]int{"foldername": 0, "filename": 1, "content": 2}
