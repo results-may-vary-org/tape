@@ -538,9 +538,13 @@ func (a *App) DeleteDirectory(dirPath string) error {
 	return os.RemoveAll(dirPath)
 }
 
-// todo: create one fc for directory and this one for file
-// RenameFile renames a file or directory and returns the actual new path
+// RenameFile renames a file or a directory and returns the actual new path
 func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string, error) {
+	// isFile  true
+	// oldPath  /home/a2n/Documents/empty/MDE1bSxp6UK3J8AO21VUhKHs2BNO5GZcuoakadUByf1GMIM/MDE1uixiuXyP_PRM2QPV5vNNMZMRrrRToFz9GY9rZ1DrHZTGPTvpLw/MDE1_YnB__pmz23UFVquKvbyHV1TGbstz5vMeNxZDQIuT3g5ntGjdjj_/MDE1FNUZ7wJfe9duGe7GWUTtuzMtyrFjph5j_yzNx05UsFRq9iOGqA.mde
+	// newPath  /home/a2n/Documents/empty/MDE1bSxp6UK3J8AO21VUhKHs2BNO5GZcuoakadUByf1GMIM/MDE1uixiuXyP_PRM2QPV5vNNMZMRrrRToFz9GY9rZ1DrHZTGPTvpLw/MDE1_YnB__pmz23UFVquKvbyHV1TGbstz5vMeNxZDQIuT3g5ntGjdjj_
+	// filename  test.mde
+
 	ext := ".md"
 
 	if (isFile) {
@@ -549,17 +553,19 @@ func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string
 	
 	if a.HasSecurity(a.rootPath) {
 		ext = ".mde"
-		rawfilename, err := a.decryptMDE1([]byte(filename), true)
+		nonce, ciphertext, err := a.encryptData(a.masterkey, []byte(filename))
 		if err != nil {
 			return "", err
 		}
-		filename = string(rawfilename)
+		base64Payload := base64.RawURLEncoding.EncodeToString(append(nonce, ciphertext...))
+		filename = a.cryptVersionMDE1 + string(base64Payload)
 	}
 
 	if (isFile) {
 		filename = filename + ext
 	}
 
+	newPath = filepath.Join(newPath, filename)
 	isFileExist := a.IsFileExists(newPath)
 	if isFileExist {
 		return "", fmt.Errorf("file_already_exist")
