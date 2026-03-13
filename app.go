@@ -13,7 +13,9 @@ import (
 	"regexp"
 	goruntime "runtime"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -299,6 +301,96 @@ func (a *App) PasswordIsCorrect(password string, rootPath string) bool {
 	return false
 }
 
+func (a *App) TransformTreeIntoMDE1(password  string, path string) error {
+	// set password and crypto data
+	response := a.SetupPassword(password, path)
+	if response != "ok" {
+		return fmt.Errorf("error_setting_crypto")
+	}
+
+	// create the save directory
+	currentDate := strconv.FormatInt(time.Now().Unix(), 10)
+	backupDir := filepath.Join(path, "save_"+currentDate)
+	isFolderExist := a.IsFileExists(backupDir)
+	if isFolderExist {
+		return fmt.Errorf("backup_folder_already_exist")
+	}
+	err := os.MkdirAll(backupDir, 0700)
+	if err != nil {
+    return fmt.Errorf("failed to create backup directory: %v", err)
+	}
+
+	var processedItems []string
+	var processErrors []string
+	
+	// walk the tree and transform name and content
+	// processed files and folders are moved into the save directory
+	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			processErrors = append(processErrors, err.Error())
+		}
+
+		// skip hidden files and directories
+		if strings.HasPrefix(info.Name(), ".") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// skip tape.config
+		if info.Name() == "tape.json" {
+			return nil
+		}
+
+		// move the data
+		if info.IsDir() {
+			err := a.CreateDirectory(path, info.Name())
+			if err != nil {
+				return err
+			}
+			processedItems = append(processedItems, info.Name())
+		} else {
+			// read original data
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			// create enc file
+			filepath, err := a.CreateFile(path, info.Name())
+			if err != nil {
+				return err
+			}
+			// inject data
+			err = a.WriteContentInFile(filepath, string(content))
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}) // end walk
+
+	if err != nil {
+		return err
+	}
+
+	if len(processedItems) > 0 {
+		for _, folderPath := range processedItems {
+			err := os.Rename(folderPath, filepath.Join(backupDir, folderPath))
+			if err != nil {
+				processErrors = append(processErrors, err.Error())
+			}
+		}
+	}
+
+	if len(processErrors) > 0 {
+		return fmt.Errorf(strings.Join(processErrors, "\n"))
+	}
+
+	return nil
+}
+
 /**
  * --- Diff
  */
@@ -524,7 +616,10 @@ func (a *App) CreateDirectory(dirPath, foldername string) error {
 		foldername = a.cryptVersionMDE1 + string(base64Payload)
 	}
 	dirPath = filepath.Join(dirPath, foldername)
-	a.IsFileExists(dirPath)
+	isFolderExist := a.IsFileExists(dirPath)
+	if isFolderExist {
+		return fmt.Errorf("folder_already_exist")
+	}
 	return os.MkdirAll(dirPath, 0700)
 }
 

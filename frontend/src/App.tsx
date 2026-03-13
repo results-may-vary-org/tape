@@ -176,7 +176,6 @@ function App() {
       console.log('No config found for this folder, using defaults');
       setExpandedFolders([]);
     }
-
   }
 
   // Load last opened folder on app startup
@@ -415,12 +414,16 @@ function App() {
     if (!newFolderName.trim()) return;
 
     try {
-      await CreateDirectory(currentParentPath, newFolderName); // todo: check for duplicate error
+      await CreateDirectory(currentParentPath, newFolderName);
       await refreshFileTree();
       setShowCreateFolderDialog(false);
       setNewFolderName("");
       setCreateFolderDialogError("");
     } catch (error) {
+      if (typeof error === "string" && error === "folder_already_exist") {
+        setCreateFolderDialogError(`Folder "${newFolderName}" already exists in this directory.`);
+        return;
+      }
       console.error('Error creating folder:', error);
       setCreateFolderDialogError('Error creating folder. Please try again.');
     }
@@ -525,7 +528,7 @@ function App() {
             </div>
           </div>
           <div className="header-right">
-            <SettingsPopover fileTree={fileTree}/>
+            <SettingsPopover fileTree={fileTree} isVaultSecured={isVaultSecured}/>
             <div className="view-toggle">
               <Button
                 size="2"

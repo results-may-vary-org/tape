@@ -114,6 +114,10 @@ export function SetupPassword(arg1, arg2) {
   return window['go']['main']['App']['SetupPassword'](arg1, arg2);
 }
 
+export function TransformTreeIntoMDE1(arg1, arg2) {
+  return window['go']['main']['App']['TransformTreeIntoMDE1'](arg1, arg2);
+}
+
 export function WriteContentInFile(arg1, arg2) {
   return window['go']['main']['App']['WriteContentInFile'](arg1, arg2);
 }
