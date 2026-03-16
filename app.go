@@ -44,8 +44,8 @@ type Config struct {
 	ViewMode         string   `json:"viewMode"`
 	Theme            string   `json:"theme"`
 	PrivacyMode      bool     `json:"privacyMode"`
-	Check						 []byte   `json:"check"`
-	NonceCheck			 []byte   `json:"nonceCheck"`
+	Check            []byte   `json:"check"`
+	NonceCheck       []byte   `json:"nonceCheck"`
 	Salt             []byte   `json:"salt"`
 }
 
@@ -58,13 +58,23 @@ type SearchResult struct {
 	ContextText string `json:"contextText"` // Surrounding context for content matches
 }
 
+type PathPart struct {
+	walkIndex int
+	fullPath  string
+	encPath   string
+	pathParts []string
+	lastOri   string
+	lastEnc   string
+	info      os.FileInfo
+}
+
 // App struct
 type App struct {
-	ctx context.Context
-	rootPath string
-	masterkey []byte
+	ctx              context.Context
+	rootPath         string
+	masterkey        []byte
 	cryptVersionMDE1 string
-	os string
+	os               string
 }
 
 // NewApp creates a new App application struct
@@ -228,7 +238,7 @@ func (a *App) decryptMDE1(rawcontent []byte, isBase64 bool) ([]byte, error) {
 		}
 		payload = string(originalValue)
 	}
-	
+
 	if len(payload) < nonceSize {
 		return nil, fmt.Errorf("payload too short, smaller than nonce size")
 	}
@@ -240,7 +250,7 @@ func (a *App) decryptMDE1(rawcontent []byte, isBase64 bool) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	
+
 	return text, nil
 }
 
@@ -250,7 +260,7 @@ func (a *App) SetupPassword(password string, rootPath string) string {
 	if err != nil {
 		return err.Error()
 	}
-	
+
 	// generate a random checkdata data to compare password for user checking
 	checkdata, err := generateRandValue()
 	if err != nil {
@@ -268,7 +278,7 @@ func (a *App) SetupPassword(password string, rootPath string) string {
 		return err.Error()
 	}
 	a.masterkey = masterkey
-	
+
 	return "ok"
 }
 
@@ -283,112 +293,152 @@ func (a *App) HasSecurity(rootPath string) bool {
 func (a *App) PasswordIsCorrect(password string, rootPath string) bool {
 	if a.HasSecurity(rootPath) {
 		_, check, nonceCheck, salt := a.getCryptoOptions(rootPath)
-		
+
 		candidateKey := deriveKeyWithSalt(password, salt)
 
 		aead := a.getAEAD(candidateKey)
 		if aead == nil {
 			return false
 		}
-		
+
 		if _, err := aead.Open(nil, nonceCheck, check, nil); err != nil {
 			return false
 		}
-		
+
 		a.masterkey = candidateKey
 		return true
 	}
 	return false
 }
 
-func (a *App) TransformTreeIntoMDE1(password  string, path string) error {
+// transformTreeIntoMDE1 perform a walk and encrypt/create all file and folder placed in the rootPath
+// note: folder and file are named in function of the nameFunc param, this is mostly here for test purpose
+func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int, bool, string) (string, error)) error {
+	// rootPath = /home/a2n/Documents/notenc
+	// password = string
+
 	// set password and crypto data
-	response := a.SetupPassword(password, path)
+	response := a.SetupPassword(password, rootPath)
 	if response != "ok" {
 		return fmt.Errorf("error_setting_crypto")
 	}
 
+	// set the rootPath for later use by file/folder func
+	a.rootPath = rootPath
+
 	// create the save directory
+	// we check in the walk to not process it
+	// we want it there because we want to fail if an already created backup folder exist
 	currentDate := strconv.FormatInt(time.Now().Unix(), 10)
-	backupDir := filepath.Join(path, "save_"+currentDate)
+	backupDirName := "save_" + currentDate
+	backupDir := filepath.Join(rootPath, backupDirName)
 	isFolderExist := a.IsFileExists(backupDir)
 	if isFolderExist {
 		return fmt.Errorf("backup_folder_already_exist")
 	}
 	err := os.MkdirAll(backupDir, 0700)
 	if err != nil {
-    return fmt.Errorf("failed to create backup directory: %v", err)
+		return fmt.Errorf("failed to create backup directory: %v", err)
 	}
 
-	var processedItems []string
-	var processErrors []string
-	
-	// walk the tree and transform name and content
-	// processed files and folders are moved into the save directory
-	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			processErrors = append(processErrors, err.Error())
-		}
+	var nodes []PathPart
+	i := 0 // index for the walk
 
-		// skip hidden files and directories
-		if strings.HasPrefix(info.Name(), ".") {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
+	// walk the tree and encrypt each name to rebuild the tree
+	err = filepath.Walk(rootPath, func(itemFullPath string, info os.FileInfo, err error) error {
+
+		if itemFullPath == rootPath ||
+			strings.HasPrefix(info.Name(), ".") ||
+			info.Name() == "tape.json" ||
+			info.Name() == backupDirName {
 			return nil
 		}
 
-		// skip tape.config
-		if info.Name() == "tape.json" {
-			return nil
-		}
+		relative, err := filepath.Rel(rootPath, itemFullPath)
+		parts := strings.Split(relative, string(filepath.Separator))
 
-		// move the data
+		lastpart := parts[len(parts)-1]
+
+		lastenc := lastpart
 		if info.IsDir() {
-			err := a.CreateDirectory(path, info.Name())
+			nonce, cipher, err := a.encryptData(a.masterkey, []byte(lastpart))
 			if err != nil {
 				return err
 			}
-			processedItems = append(processedItems, info.Name())
+			lastenc = a.cryptVersionMDE1 + string(nonce) + string(cipher)
+			if test {
+				lastenc = strconv.Itoa(i) + "XXX-" + lastpart
+			}
 		} else {
-			// read original data
-			content, err := os.ReadFile(path)
+			filename := stripFileExt(lastpart)
+			nonce, cipher, err := a.encryptData(a.masterkey, []byte(filename))
 			if err != nil {
 				return err
 			}
-			// create enc file
-			filepath, err := a.CreateFile(path, info.Name())
-			if err != nil {
-				return err
-			}
-			// inject data
-			err = a.WriteContentInFile(filepath, string(content))
-			if err != nil {
-				return err
+			lastenc = a.cryptVersionMDE1 + string(nonce) + string(cipher) + ".mde"
+			if test {
+				lastenc = strconv.Itoa(i) + "YYY-" + lastpart
 			}
 		}
 
+		pathObject := PathPart{
+			walkIndex: i,
+			fullPath:  relative,
+			pathParts: parts,
+			lastOri:   lastpart,
+			lastEnc:   lastenc,
+			info:      info,
+		}
+		nodes = append(nodes, pathObject)
+		i++
 		return nil
-	}) // end walk
+	})
 
-	if err != nil {
-		return err
-	}
+	// rebuild the path with each of his encrypted part
+	for i, node := range nodes {
+		pathSplits := node.pathParts
+		var encPath []string
 
-	if len(processedItems) > 0 {
-		for _, folderPath := range processedItems {
-			err := os.Rename(folderPath, filepath.Join(backupDir, folderPath))
-			if err != nil {
-				processErrors = append(processErrors, err.Error())
+		// if the elem is only one no need to search, encrypted value is stored on the same object
+		if len(pathSplits) == 1 {
+			nodes[i].encPath = filepath.Join(node.lastEnc)
+			continue
+		}
+
+		// note: we store and remove processed part of the slice to:
+		// - avoid matching already processed parent that got the same name has the children
+		// - optimize by removing already found part, but this only work if the node is ordered like the walk func do
+		searchValue := nodes
+		for _, pathElem := range pathSplits { // for each path element
+			for j, nodeB := range searchValue { // we search a match in the node list
+				if nodeB.lastOri == pathElem {
+					encPath = append(encPath, nodeB.lastEnc)
+					searchValue = searchValue[j+1:]
+					break // value is found so no need to continue
+				}
 			}
 		}
-	}
 
-	if len(processErrors) > 0 {
-		return fmt.Errorf(strings.Join(processErrors, "\n"))
+		nodes[i].encPath = filepath.Join(encPath...)
 	}
 
 	return nil
+}
+
+// TransformTreeIntoMDE1 Exposed to TypeScript, uses real encryption
+func (a *App) TransformTreeIntoMDE1(password, rootPath string) error {
+	return a.transformTreeIntoMDE1(password, rootPath, func(i int, isDir bool, name string) (string, error) {
+		// real AES encrypt logic
+	})
+}
+
+// transformTreeIntoMDE1Test is for dev/testing, deterministic names
+func (a *App) transformTreeIntoMDE1Test(password, rootPath string) error {
+	return a.transformTreeIntoMDE1(password, rootPath, func(i int, isDir bool, name string) (string, error) {
+		suffix := "XXX"
+		if !isDir { suffix = "YYY" }
+		return strconv.Itoa(i) + suffix + "-" + name, nil
+	})
 }
 
 /**
@@ -501,8 +551,8 @@ func (a *App) buildFileTree(parent *FileItem, rootPath string) error {
 
 		fullPath := filepath.Join(parent.Path, entry.Name())
 		child := &FileItem{
-			Name: string(realName),
-			Path: fullPath,
+			Name:  string(realName),
+			Path:  fullPath,
 			IsDir: entry.IsDir(),
 		}
 
@@ -534,11 +584,11 @@ func (a *App) ReadFile(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	if len(rawContent) == 0 {
 		return "", nil
 	}
-	
+
 	if a.HasSecurity(a.rootPath) {
 		text, err := a.decryptMDE1(rawContent, false)
 		if err != nil {
@@ -590,7 +640,7 @@ func (a *App) CreateFile(filePath string, filename string) (string, error) {
 		filename = a.cryptVersionMDE1 + string(base64Payload)
 	}
 
-	filePath = filepath.Join(filePath, filename + ext)
+	filePath = filepath.Join(filePath, filename+ext)
 	isFileExist := a.IsFileExists(filePath)
 	if isFileExist {
 		return "", fmt.Errorf("file_already_exist")
@@ -606,11 +656,11 @@ func (a *App) CreateFile(filePath string, filename string) (string, error) {
 }
 
 // CreateDirectory creates a new directory
-func (a *App) CreateDirectory(dirPath, foldername string) error {
+func (a *App) CreateDirectory(dirPath, foldername string) (string, error) {
 	if a.HasSecurity(a.rootPath) {
 		nonce, cipher, err := a.encryptData(a.masterkey, []byte(foldername))
 		if err != nil {
-			return err
+			return "", err
 		}
 		base64Payload := base64.RawURLEncoding.EncodeToString(append(nonce, cipher...))
 		foldername = a.cryptVersionMDE1 + string(base64Payload)
@@ -618,9 +668,13 @@ func (a *App) CreateDirectory(dirPath, foldername string) error {
 	dirPath = filepath.Join(dirPath, foldername)
 	isFolderExist := a.IsFileExists(dirPath)
 	if isFolderExist {
-		return fmt.Errorf("folder_already_exist")
+		return "", fmt.Errorf("folder_already_exist")
 	}
-	return os.MkdirAll(dirPath, 0700)
+	err := os.MkdirAll(dirPath, 0700)
+	if err != nil {
+		return "", err
+	}
+	return dirPath, nil
 }
 
 // DeleteFile deletes a file
@@ -642,10 +696,10 @@ func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string
 
 	ext := ".md"
 
-	if (isFile) {
+	if isFile {
 		filename = stripFileExt(filename)
 	}
-	
+
 	if a.HasSecurity(a.rootPath) {
 		ext = ".mde"
 		nonce, ciphertext, err := a.encryptData(a.masterkey, []byte(filename))
@@ -656,7 +710,7 @@ func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string
 		filename = a.cryptVersionMDE1 + string(base64Payload)
 	}
 
-	if (isFile) {
+	if isFile {
 		filename = filename + ext
 	}
 
@@ -912,8 +966,8 @@ func fuzzyMatch(pattern, text string) bool {
 func getContextAroundMatch(content, query string, matchIndex int) (string, string) {
 	const contextLength = 100
 
-	start := max(matchIndex - contextLength, 0)
-	end := min(matchIndex + len(query) + contextLength, len(content))
+	start := max(matchIndex-contextLength, 0)
+	end := min(matchIndex+len(query)+contextLength, len(content))
 
 	context := content[start:end]
 	matchText := content[matchIndex : matchIndex+len(query)]

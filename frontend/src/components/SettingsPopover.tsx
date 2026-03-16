@@ -35,6 +35,8 @@ const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null,
     if (typeof response === "string" && response === "error_setting_crypto") {
       setSetupEncError("Error while setting your password, please retry.");
       return;
+    } else {
+      console.log("@@@@", response)
     }
   }
 
