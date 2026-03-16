@@ -58,6 +58,6 @@ export function SearchFiles(arg1:string,arg2:string):Promise<Array<main.SearchRe
 
 export function SetupPassword(arg1:string,arg2:string):Promise<string>;
 
-export function TransformTreeIntoMDE1(arg1:string,arg2:string,arg3:boolean):Promise<void>;
+export function TransformTreeIntoMDE1(arg1:string,arg2:string):Promise<void>;
 
 export function WriteContentInFile(arg1:string,arg2:string):Promise<void>;

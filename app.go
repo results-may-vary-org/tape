@@ -361,23 +361,14 @@ func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int
 
 		lastenc := lastpart
 		if info.IsDir() {
-			nonce, cipher, err := a.encryptData(a.masterkey, []byte(lastpart))
+			lastenc, err = nameFunc(i, info.IsDir(), lastpart)
 			if err != nil {
 				return err
-			}
-			lastenc = a.cryptVersionMDE1 + string(nonce) + string(cipher)
-			if test {
-				lastenc = strconv.Itoa(i) + "XXX-" + lastpart
 			}
 		} else {
-			filename := stripFileExt(lastpart)
-			nonce, cipher, err := a.encryptData(a.masterkey, []byte(filename))
+			lastenc, err = nameFunc(i, info.IsDir(), lastpart)
 			if err != nil {
 				return err
-			}
-			lastenc = a.cryptVersionMDE1 + string(nonce) + string(cipher) + ".mde"
-			if test {
-				lastenc = strconv.Itoa(i) + "YYY-" + lastpart
 			}
 		}
 
@@ -420,15 +411,47 @@ func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int
 		}
 
 		nodes[i].encPath = filepath.Join(encPath...)
+
+		// recreate the tree
+		fullPath := filepath.Join(rootPath, nodes[i].encPath)
+		if node.info.IsDir() {
+			err := os.MkdirAll(fullPath, 0700)
+			if err != nil {
+				return err
+			}
+		} else {
+			file, err := os.Create(fullPath)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+		}
 	}
+
+	// todo: move content into each created file
+
+	// todo: move old folder/file to the save directory
 
 	return nil
 }
 
-// TransformTreeIntoMDE1 Exposed to TypeScript, uses real encryption
+// TransformTreeIntoMDE1 perform a walk and encrypt/create all file and folder placed in the rootPath
+// note: Exposed to TypeScript, uses real encryption, see transformTreeIntoMDE1Test() for testing
 func (a *App) TransformTreeIntoMDE1(password, rootPath string) error {
 	return a.transformTreeIntoMDE1(password, rootPath, func(i int, isDir bool, name string) (string, error) {
-		// real AES encrypt logic
+		if !isDir {
+			name = stripFileExt(name)
+		}
+		nonce, cipher, err := a.encryptData(a.masterkey, []byte(name))
+		if err != nil {
+			return "", err
+		}
+		base64Payload := base64.RawURLEncoding.EncodeToString(append(nonce, cipher...))
+		filename := a.cryptVersionMDE1 + string(base64Payload)
+		if !isDir {
+			return filename + ".mde", nil
+		}
+		return filename, nil
 	})
 }
 
