@@ -26,17 +26,31 @@ const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null,
   const handleEncSetup = async (password: string) => {
     if (!password) {
       setIsSetupEncOpen(false);
+      return;
     }
+
     if (!fileTree || !fileTree.path) {
       setSetupEncError("Error no file tree selected.");
       return;
     }
+
     const response = await TransformTreeIntoMDE1(password, fileTree.path);
-    if (typeof response === "string" && response === "error_setting_crypto") {
-      setSetupEncError("Error while setting your password, please retry.");
-      return;
-    } else {
-      console.log("@@@@", response)
+
+    console.warn("Transform tree response:", response)
+
+    if (typeof response === "string") {
+      if (response === "error_setting_crypto") {
+        setSetupEncError("Error while setting your password, please retry.");
+      } else if (response === "backup_folder_already_exist") {
+        setSetupEncError("Error the backup folder already exist.");
+      } else {
+        setSetupEncError(response);
+      }
+    }
+
+    if (response === null) {
+      setSetupEncError("");
+      setIsSetupEncOpen(false);
     }
   }
 

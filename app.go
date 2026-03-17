@@ -60,7 +60,7 @@ type SearchResult struct {
 
 type PathPart struct {
 	walkIndex int
-	fullPath  string
+	relativePath  string
 	encPath   string
 	pathParts []string
 	lastOri   string
@@ -355,6 +355,9 @@ func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int
 		}
 
 		relative, err := filepath.Rel(rootPath, itemFullPath)
+		if err != nil {
+			return err
+		}
 		parts := strings.Split(relative, string(filepath.Separator))
 
 		lastpart := parts[len(parts)-1]
@@ -374,11 +377,11 @@ func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int
 
 		pathObject := PathPart{
 			walkIndex: i,
-			fullPath:  relative,
+			relativePath: relative,
 			pathParts: parts,
-			lastOri:   lastpart,
-			lastEnc:   lastenc,
-			info:      info,
+			lastOri: lastpart,
+			lastEnc: lastenc,
+			info: info,
 		}
 		nodes = append(nodes, pathObject)
 		i++
@@ -415,22 +418,41 @@ func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int
 		// recreate the tree
 		fullPath := filepath.Join(rootPath, nodes[i].encPath)
 		if node.info.IsDir() {
+			// create dir
 			err := os.MkdirAll(fullPath, 0700)
 			if err != nil {
 				return err
 			}
 		} else {
+			// create file
 			file, err := os.Create(fullPath)
 			if err != nil {
 				return err
 			}
 			defer file.Close()
+			// write content
+			oldPath := filepath.Join(rootPath, node.relativePath)
+			content, err := os.ReadFile(oldPath)
+			if err != nil {
+				return err
+			}
+			// handle crypt itself
+			a.WriteContentInFile(fullPath, string(content))
 		}
 	}
 
-	// todo: move content into each created file
-
-	// todo: move old folder/file to the save directory
+	// move old folder/file into the save directory
+	for _, node := range nodes {
+		// os.Rename move all the children
+		if len(node.pathParts) == 1 {
+			oldPath := filepath.Join(rootPath, node.relativePath)
+			savePath := filepath.Join(rootPath, backupDirName, node.relativePath)
+			err := os.Rename(oldPath, savePath)
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	return nil
 }
