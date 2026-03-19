@@ -50,12 +50,14 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, er
     <Dialog.Root open={isOpen} onOpenChange={() => onSubmit("")}>
       <Dialog.Content className="search-modal" maxWidth="600px">
 
-        <Dialog.Title style={{fontFamily: "vt32"}}>Do you want to create an encrypted tape box?</Dialog.Title>
+        <Dialog.Title style={{fontFamily: "vt32"}}>Add extra privacy over your tape box</Dialog.Title>
 
         <Dialog.Description size="2" mb="4" className="vt32">
           {!error && (
             <Fragment>
-              Enter a password if you want to create a secured tape box where all the content of your files are encrypted by default.
+              Enter a password if you want to create a secured tape box where all the name and
+              content of your folders and files are encrypted by default.
+              <br/>
               <span className="important">
                 If you lost your password any data can't be recovered.
               </span>
@@ -89,7 +91,7 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, er
               </TextField.Slot>
             </TextField.Root>
             <Button onClick={() => onSubmit(value)}>Create</Button>
-            <Button onClick={() => onSubmit("")}>Skip</Button>
+            <Button variant="soft" color="orange" onClick={() => onSubmit("")}>Cancel</Button>
           </Flex>
           <Separator style={{width: "100%"}}/>
         </Flex>

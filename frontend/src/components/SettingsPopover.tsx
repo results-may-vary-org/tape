@@ -4,6 +4,8 @@ import { useTheme } from "next-themes";
 import { useState } from "react";
 import { SaveTheme, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
 import type { FileItem, ThemeMode } from "../types/types";
+import EncTreeConfirmationModal from "./EncTreeConfirmationModal";
+import EncTreeDoneModal from "./EncTreeDoneModal";
 import UseEncVaultModal from "./UseEncVaultModal";
 
 const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null, isVaultSecured: boolean}) => {
@@ -11,6 +13,7 @@ const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null,
   const {theme, setTheme} = useTheme();
   const [isSetupEncOpen, setIsSetupEncOpen] = useState<boolean>(false);
   const [setupEncError, setSetupEncError] = useState<string>("");
+  const [encIsSucess, setEncIsSucess] = useState<boolean>(false);
 
   const handleThemeChange = async (newTheme: ThemeMode) => {
     setTheme(newTheme);
@@ -44,13 +47,15 @@ const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null,
       } else if (response === "backup_folder_already_exist") {
         setSetupEncError("Error the backup folder already exist.");
       } else {
-        setSetupEncError(response);
+        setSetupEncError("We encountered an error, contact us for support. Error message:" + response);
       }
     }
 
     if (response === null) {
       setSetupEncError("");
       setIsSetupEncOpen(false);
+      setEncIsSucess(true);
+      // todo: refresh the tree
     }
   }
 
@@ -103,12 +108,7 @@ const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null,
               </Select.Item>
             </Select.Content>
           </Select.Root>
-          {!isVaultSecured &&
-            <Button onClick={() => setIsSetupEncOpen(true)}>
-              <KeyIcon size={16} />
-              Encrypt your tape box
-            </Button>
-          }
+          {!isVaultSecured && <EncTreeConfirmationModal nextStep={() => setIsSetupEncOpen(true)}/>}
         </Flex>
 
         <UseEncVaultModal
@@ -116,6 +116,8 @@ const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null,
           onSubmit={handleEncSetup}
           error={setupEncError}
         />
+
+        <EncTreeDoneModal isOpen={encIsSucess} onClose={() => setEncIsSucess(false)} />
 
       </Popover.Content>
     </Popover.Root>

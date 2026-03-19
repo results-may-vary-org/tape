@@ -18,7 +18,7 @@ function handleKeys(
 ) {
 
   // Esc for modal
-  if (event.key === 'escape') {
+  if (event.key === 'Escape') {
     event.preventDefault();
     // close only one modal
     if (isShortcutsModalOpen) {
