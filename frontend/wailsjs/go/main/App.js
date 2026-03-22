@@ -102,6 +102,10 @@ export function SaveTheme(arg1, arg2) {
   return window['go']['main']['App']['SaveTheme'](arg1, arg2);
 }
 
+export function SaveUITheme(arg1, arg2) {
+  return window['go']['main']['App']['SaveUITheme'](arg1, arg2);
+}
+
 export function SaveViewMode(arg1, arg2) {
   return window['go']['main']['App']['SaveViewMode'](arg1, arg2);
 }

@@ -47,7 +47,7 @@ import appIconBck from './assets/images/logo-background.png';
 import Stats from "./components/Stats";
 import handleKeys from "./services/handleKeys";
 import SettingsPopover from './components/SettingsPopover';
-import type { FileItem, ViewMode, ThemeMode, SearchResult } from './types/types';
+import type { FileItem, ViewMode, ThemeMode, UIThemeMode, SearchResult } from './types/types';
 import UseEncVaultModal from './components/UseEncVaultModal';
 import UnlockVaultModal from './components/UnlockVaultModal';
 
@@ -75,6 +75,7 @@ function App() {
   const [isUnlockVaultModalOpen, setIsUnlockVaultModalOpen] = useState<boolean>(false);
   const [unlockVaultModalError, setUnlockVaultModalError] = useState<string>("");
   const [isVaultSecured, setIsVaultSecured] = useState<boolean>(false);
+  const [uiTheme, setUITheme] = useState<UIThemeMode>('original');
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState<boolean>(false);
@@ -149,6 +150,11 @@ function App() {
       }
       if (folderConfig.theme) {
         setTheme(folderConfig.theme as ThemeMode);
+      }
+      if (folderConfig.uiTheme) {
+        setUITheme(folderConfig.uiTheme as UIThemeMode);
+      } else {
+        setUITheme('original');
       }
       if (folderConfig.expandedFolders) {
         setExpandedFolders(folderConfig.expandedFolders);
@@ -462,16 +468,16 @@ function App() {
     }
   };
 
+  const radixThemeProps = uiTheme === 'modern'
+    ? { accentColor: 'violet' as const, grayColor: 'slate' as const, radius: 'large' as const, scaling: '100%' as const }
+    : uiTheme === 'agrume'
+      ? { accentColor: 'orange' as const, grayColor: 'sand' as const, radius: 'medium' as const, scaling: '100%' as const }
+      : { accentColor: 'gold' as const, grayColor: 'sand' as const, radius: 'small' as const, scaling: '100%' as const };
+
   if (!fileTree || isUnlockVaultModalOpen || isUseEncModalOpen) {
     return (
-      <RadixTheme
-        accentColor="gold"
-        grayColor="sand"
-        radius="small"
-        scaling="100%"
-        panelBackground="translucent"
-      >
-        <div className="app-container">
+      <RadixTheme {...radixThemeProps} panelBackground="translucent">
+        <div className="app-container" data-ui-theme={uiTheme}>
           <div className="welcome-screen">
             <div>
               <img src={appIcon} alt="Tape app icon"/>
@@ -518,13 +524,8 @@ function App() {
   }
 
   return (
-    <RadixTheme
-      accentColor="gold"
-      grayColor="auto"
-      radius="medium"
-      scaling="100%"
-    >
-      <div className="app-container">
+    <RadixTheme {...radixThemeProps}>
+      <div className="app-container" data-ui-theme={uiTheme}>
 
         <div className="header header-extended" ref={mainHeaderRef}>
           <div className="header-left">
@@ -537,6 +538,8 @@ function App() {
             <SettingsPopover
               fileTree={fileTree}
               isVaultSecured={isVaultSecured}
+              uiTheme={uiTheme}
+              onUIThemeChange={(t) => setUITheme(t)}
               onEncryptionComplete={async () => {
                 await refreshFileTree();
                 setIsVaultSecured(true);
@@ -626,6 +629,7 @@ function App() {
               <FileTree
                 fileTree={fileTree}
                 isVaultSecured={isVaultSecured}
+                uiTheme={uiTheme}
                 onFileSelect={handleFileSelect}
                 selectedFile={selectedFilePath}
                 onCreateFile={handleCreateFile}

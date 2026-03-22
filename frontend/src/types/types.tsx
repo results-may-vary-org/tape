@@ -16,4 +16,5 @@ export interface SearchResult {
 
 export type ViewMode = 'editor' | 'reader';
 export type ThemeMode = 'system' | 'light' | 'dark';
+export type UIThemeMode = 'original' | 'modern' | 'agrume';
 

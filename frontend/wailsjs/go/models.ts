@@ -25,6 +25,7 @@ export namespace main {
 	    expandedFolders: string[];
 	    viewMode: string;
 	    theme: string;
+	    uiTheme: string;
 	    privacyMode: boolean;
 	    check: number[];
 	    nonceCheck: number[];
@@ -41,6 +42,7 @@ export namespace main {
 	        this.expandedFolders = source["expandedFolders"];
 	        this.viewMode = source["viewMode"];
 	        this.theme = source["theme"];
+	        this.uiTheme = source["uiTheme"];
 	        this.privacyMode = source["privacyMode"];
 	        this.check = source["check"];
 	        this.nonceCheck = source["nonceCheck"];

@@ -3,11 +3,14 @@ import {
   ChevronRight,
   ChevronDown,
   Folder,
+  FolderOpen,
+  FileText,
   Plus,
   Edit3,
   Trash2,
   CassetteTape, PackageOpen, Package, ShieldCheck
 } from 'lucide-react';
+import type { UIThemeMode } from '../types/types';
 import { ContextMenu, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 
 interface FileItem {
@@ -28,6 +31,7 @@ interface FileTreeProps {
   expandedFolders: string[];
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
   isVaultSecured: boolean;
+  uiTheme: UIThemeMode;
 }
 
 interface FileTreeNodeProps {
@@ -43,6 +47,7 @@ interface FileTreeNodeProps {
   expandedFolders: string[];
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
   isVaultSecured: boolean;
+  uiTheme: UIThemeMode;
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({
@@ -57,8 +62,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   isRootFolder = false,
   expandedFolders,
   onExpandedFoldersChange,
-  isVaultSecured
+  isVaultSecured,
+  uiTheme,
 }: FileTreeNodeProps) => {
+  const useAltIcons = uiTheme === 'modern' || uiTheme === 'agrume';
   const isExpanded = expandedFolders.includes(item.path);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -172,10 +179,15 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               {item.isDir ? (
                 <>
                   {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  {isExpanded ? <PackageOpen size={16} /> : <Package size={16} />}
+                  {useAltIcons
+                    ? isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />
+                    : isExpanded ? <PackageOpen size={16} /> : <Package size={16} />
+                  }
                 </>
               ) : (
-                <CassetteTape size={16} style={{marginLeft: 5}} />
+                useAltIcons
+                  ? <FileText size={16} style={{marginLeft: 5}} />
+                  : <CassetteTape size={16} style={{marginLeft: 5}} />
               )}
               {(isRootFolder && isVaultSecured) && <ShieldCheck size={16}/>}
             </span>
@@ -223,6 +235,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               expandedFolders={expandedFolders}
               onExpandedFoldersChange={onExpandedFoldersChange}
               isVaultSecured={isVaultSecured}
+              uiTheme={uiTheme}
             />
           ))}
         </div>
@@ -311,7 +324,8 @@ const FileTree: React.FC<FileTreeProps> = ({
   onDeleteItem,
   expandedFolders,
   onExpandedFoldersChange,
-  isVaultSecured
+  isVaultSecured,
+  uiTheme,
 }) => {
   if (!fileTree) {
     return (
@@ -337,6 +351,7 @@ const FileTree: React.FC<FileTreeProps> = ({
         expandedFolders={expandedFolders}
         onExpandedFoldersChange={onExpandedFoldersChange}
         isVaultSecured={isVaultSecured}
+        uiTheme={uiTheme}
       />
     </div>
   );

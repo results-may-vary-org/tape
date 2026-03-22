@@ -1,9 +1,9 @@
 import { Popover, Button, Flex, Select } from "@radix-ui/themes"
-import { KeyIcon, Monitor, Moon, Settings2, Sun } from "lucide-react";
+import { CassetteTape, Citrus, File, Folder, GemIcon, Monitor, Moon, Settings2, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
-import { SaveTheme, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
-import type { FileItem, ThemeMode } from "../types/types";
+import { SaveTheme, SaveUITheme, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
+import type { FileItem, ThemeMode, UIThemeMode } from "../types/types";
 import EncTreeConfirmationModal from "./EncTreeConfirmationModal";
 import EncTreeDoneModal from "./EncTreeDoneModal";
 import UseEncVaultModal from "./UseEncVaultModal";
@@ -11,10 +11,14 @@ import UseEncVaultModal from "./UseEncVaultModal";
 const SettingsPopover = ({
   fileTree,
   isVaultSecured,
+  uiTheme,
+  onUIThemeChange,
   onEncryptionComplete,
 }: {
   fileTree: FileItem | null;
   isVaultSecured: boolean;
+  uiTheme: UIThemeMode;
+  onUIThemeChange: (t: UIThemeMode) => void;
   onEncryptionComplete: () => Promise<void>;
 }) => {
 
@@ -22,6 +26,17 @@ const SettingsPopover = ({
   const [isSetupEncOpen, setIsSetupEncOpen] = useState<boolean>(false);
   const [setupEncError, setSetupEncError] = useState<string>("");
   const [encIsSucess, setEncIsSucess] = useState<boolean>(false);
+
+  const handleUIThemeChange = async (newUITheme: UIThemeMode) => {
+    onUIThemeChange(newUITheme);
+    if (fileTree?.path) {
+      try {
+        await SaveUITheme(fileTree.path, newUITheme);
+      } catch (error) {
+        console.error("Error saving UI theme:", error);
+      }
+    }
+  };
 
   const handleThemeChange = async (newTheme: ThemeMode) => {
     setTheme(newTheme);
@@ -116,6 +131,41 @@ const SettingsPopover = ({
               </Select.Item>
             </Select.Content>
           </Select.Root>
+          {/* UI theme preset selector */}
+          <Select.Root value={uiTheme} onValueChange={(value: UIThemeMode) => handleUIThemeChange(value)}>
+            <Select.Trigger className="theme-select-trigger">
+              <Flex as="span" align="center" gap="2">
+                {uiTheme === 'original'
+                  ? <CassetteTape size={16}/>
+                  : uiTheme === 'agrume'
+                    ? <Citrus size={16}/>
+                    : <GemIcon size={16}/>
+                }
+                {uiTheme === 'original' ? 'Original' : uiTheme === 'modern' ? 'Modern' : 'Agrume'}
+              </Flex>
+            </Select.Trigger>
+            <Select.Content className="select-content" position="popper">
+              <Select.Item value="original" className="select-item">
+                <Flex as="span" align="center" gap="2">
+                  <CassetteTape size={16}/>
+                  Original
+                </Flex>
+              </Select.Item>
+              <Select.Item value="modern" className="select-item">
+                <Flex as="span" align="center" gap="2">
+                  <GemIcon size={16}/>
+                  Modern
+                </Flex>
+              </Select.Item>
+              <Select.Item value="agrume" className="select-item">
+                <Flex as="span" align="center" gap="2">
+                  <Citrus size="16"/>
+                  Agrume
+                </Flex>
+              </Select.Item>
+            </Select.Content>
+          </Select.Root>
+
           {!isVaultSecured && <EncTreeConfirmationModal nextStep={() => setIsSetupEncOpen(true)}/>}
         </Flex>
 

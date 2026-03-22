@@ -43,6 +43,7 @@ type Config struct {
 	ExpandedFolders  []string `json:"expandedFolders"`
 	ViewMode         string   `json:"viewMode"`
 	Theme            string   `json:"theme"`
+	UITheme          string   `json:"uiTheme"`
 	PrivacyMode      bool     `json:"privacyMode"`
 	Check            []byte   `json:"check"`
 	NonceCheck       []byte   `json:"nonceCheck"`
@@ -922,6 +923,18 @@ func (a *App) SaveTheme(folderPath string, theme string) error {
 	}
 
 	config.Theme = theme
+	config.LastOpenedFolder = folderPath
+	return a.SaveConfig(config, folderPath)
+}
+
+// SaveUITheme saves the UI theme preset to config
+func (a *App) SaveUITheme(folderPath string, uiTheme string) error {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		config = &Config{}
+	}
+
+	config.UITheme = uiTheme
 	config.LastOpenedFolder = folderPath
 	return a.SaveConfig(config, folderPath)
 }

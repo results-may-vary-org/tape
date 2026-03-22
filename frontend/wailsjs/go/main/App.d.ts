@@ -52,6 +52,8 @@ export function SavePrivacyMode(arg1:string,arg2:boolean):Promise<void>;
 
 export function SaveTheme(arg1:string,arg2:string):Promise<void>;
 
+export function SaveUITheme(arg1:string,arg2:string):Promise<void>;
+
 export function SaveViewMode(arg1:string,arg2:string):Promise<void>;
 
 export function SearchFiles(arg1:string,arg2:string):Promise<Array<main.SearchResult>>;
