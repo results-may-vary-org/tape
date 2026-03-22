@@ -29,7 +29,6 @@ export namespace main {
 	    privacyMode: boolean;
 	    check: number[];
 	    nonceCheck: number[];
-	    salt: number[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Config(source);
@@ -46,7 +45,6 @@ export namespace main {
 	        this.privacyMode = source["privacyMode"];
 	        this.check = source["check"];
 	        this.nonceCheck = source["nonceCheck"];
-	        this.salt = source["salt"];
 	    }
 	}
 	export class Diff {

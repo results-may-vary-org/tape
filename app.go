@@ -364,55 +364,31 @@ func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int
 		return nil
 	})
 
-	// rebuild the path with each of his encrypted part
-	for i, node := range nodes {
-		pathSplits := node.pathParts
-		var encPath []string
+	// resolve encrypted path for every node (pure, no filesystem access)
+	nodes = buildEncryptedPaths(nodes)
 
-		// if the elem is only one no need to search, encrypted value is stored on the same object
-		if len(pathSplits) == 1 {
-			nodes[i].encPath = filepath.Join(node.lastEnc)
-			continue
+	// recreate the tree with encrypted names and content
+	for _, node := range nodes {
+		if len(node.pathParts) == 1 {
+			continue // top-level items are handled by the backup step below
 		}
-
-		// note: we store and remove processed part of the slice to:
-		// - avoid matching already processed parent that got the same name has the children
-		// - optimize by removing already found part, but this only work if the node is ordered like the walk func do
-		searchValue := nodes
-		for _, pathElem := range pathSplits { // for each path element
-			for j, nodeB := range searchValue { // we search a match in the node list
-				if nodeB.lastOri == pathElem {
-					encPath = append(encPath, nodeB.lastEnc)
-					searchValue = searchValue[j+1:]
-					break // value is found so no need to continue
-				}
-			}
-		}
-
-		nodes[i].encPath = filepath.Join(encPath...)
-
-		// recreate the tree
-		fullPath := filepath.Join(rootPath, nodes[i].encPath)
+		fullPath := filepath.Join(rootPath, node.encPath)
 		if node.info.IsDir() {
-			// create dir
 			err := os.MkdirAll(fullPath, 0700)
 			if err != nil {
 				return err
 			}
 		} else {
-			// create file
 			file, err := os.Create(fullPath)
 			if err != nil {
 				return err
 			}
 			defer file.Close()
-			// write content
 			oldPath := filepath.Join(rootPath, node.relativePath)
 			content, err := os.ReadFile(oldPath)
 			if err != nil {
 				return err
 			}
-			// handle crypt itself
 			a.WriteContentInFile(fullPath, string(content))
 		}
 	}
@@ -433,23 +409,60 @@ func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int
 	return nil
 }
 
+// encryptName encrypts a file or folder name and returns the MDE1-formatted string.
+// For files, strips the extension before encrypting and appends .mde to the result.
+func (a *App) encryptName(name string, isDir bool) (string, error) {
+	if !isDir {
+		name = stripFileExt(name)
+	}
+	nonce, cipher, err := a.encryptData(a.masterkey, []byte(name))
+	if err != nil {
+		return "", err
+	}
+	base64Payload := base64.RawURLEncoding.EncodeToString(append(nonce, cipher...))
+	filename := a.cryptVersionMDE1 + base64Payload
+	if !isDir {
+		return filename + ".mde", nil
+	}
+	return filename, nil
+}
+
+// buildEncryptedPaths resolves the encrypted filesystem path for each node.
+// It is a pure function: no filesystem access, no encryption — only path string assembly
+// based on the lastOri/lastEnc/pathParts already set on each node.
+func buildEncryptedPaths(nodes []PathPart) []PathPart {
+	for i, node := range nodes {
+		pathSplits := node.pathParts
+
+		if len(pathSplits) == 1 {
+			nodes[i].encPath = node.lastEnc
+			continue
+		}
+
+		// note: we store and remove processed part of the slice to:
+		// - avoid matching already processed parent that got the same name as the children
+		// - optimize by removing already found part, but this only works if nodes are ordered like the walk func produces
+		var encPath []string
+		searchValue := nodes
+		for _, pathElem := range pathSplits {
+			for j, nodeB := range searchValue {
+				if nodeB.lastOri == pathElem {
+					encPath = append(encPath, nodeB.lastEnc)
+					searchValue = searchValue[j+1:]
+					break
+				}
+			}
+		}
+		nodes[i].encPath = filepath.Join(encPath...)
+	}
+	return nodes
+}
+
 // TransformTreeIntoMDE1 perform a walk and encrypt/create all file and folder placed in the rootPath
 // note: Exposed to TypeScript, uses real encryption, see transformTreeIntoMDE1Test() for testing
 func (a *App) TransformTreeIntoMDE1(password, rootPath string) error {
 	return a.transformTreeIntoMDE1(password, rootPath, func(i int, isDir bool, name string) (string, error) {
-		if !isDir {
-			name = stripFileExt(name)
-		}
-		nonce, cipher, err := a.encryptData(a.masterkey, []byte(name))
-		if err != nil {
-			return "", err
-		}
-		base64Payload := base64.RawURLEncoding.EncodeToString(append(nonce, cipher...))
-		filename := a.cryptVersionMDE1 + string(base64Payload)
-		if !isDir {
-			return filename + ".mde", nil
-		}
-		return filename, nil
+		return a.encryptName(name, isDir)
 	})
 }
 

@@ -78,8 +78,8 @@ export function SaveConfig(arg1, arg2) {
   return window['go']['main']['App']['SaveConfig'](arg1, arg2);
 }
 
-export function SaveCryptoData(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['SaveCryptoData'](arg1, arg2, arg3, arg4);
+export function SaveCryptoData(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SaveCryptoData'](arg1, arg2, arg3);
 }
 
 export function SaveExpandedFolders(arg1, arg2) {

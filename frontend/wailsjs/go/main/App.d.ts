@@ -40,7 +40,7 @@ export function RenameFile(arg1:string,arg2:string,arg3:string,arg4:boolean):Pro
 
 export function SaveConfig(arg1:main.Config,arg2:string):Promise<void>;
 
-export function SaveCryptoData(arg1:string,arg2:Array<number>,arg3:Array<number>,arg4:Array<number>):Promise<void>;
+export function SaveCryptoData(arg1:string,arg2:Array<number>,arg3:Array<number>):Promise<void>;
 
 export function SaveExpandedFolders(arg1:string,arg2:Array<string>):Promise<void>;
 
