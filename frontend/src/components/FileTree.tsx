@@ -6,7 +6,7 @@ import {
   Plus,
   Edit3,
   Trash2,
-  CassetteTape, PackageOpen, Package
+  CassetteTape, PackageOpen, Package, ShieldCheck
 } from 'lucide-react';
 import { ContextMenu, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 
@@ -27,6 +27,7 @@ interface FileTreeProps {
   onDeleteItem: (itemPath: string, isDir: boolean) => void;
   expandedFolders: string[];
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
+  isVaultSecured: boolean;
 }
 
 interface FileTreeNodeProps {
@@ -41,6 +42,7 @@ interface FileTreeNodeProps {
   isRootFolder?: boolean;
   expandedFolders: string[];
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
+  isVaultSecured: boolean;
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({
@@ -55,6 +57,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   isRootFolder = false,
   expandedFolders,
   onExpandedFoldersChange,
+  isVaultSecured
 }: FileTreeNodeProps) => {
   const isExpanded = expandedFolders.includes(item.path);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -174,6 +177,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               ) : (
                 <CassetteTape size={16} style={{marginLeft: 5}} />
               )}
+              {(isRootFolder && isVaultSecured) && <ShieldCheck size={16}/>}
             </span>
             <span className="file-tree-name">{item.name}</span>
           </div>
@@ -218,6 +222,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               isRootFolder={false}
               expandedFolders={expandedFolders}
               onExpandedFoldersChange={onExpandedFoldersChange}
+              isVaultSecured={isVaultSecured}
             />
           ))}
         </div>
@@ -306,6 +311,7 @@ const FileTree: React.FC<FileTreeProps> = ({
   onDeleteItem,
   expandedFolders,
   onExpandedFoldersChange,
+  isVaultSecured
 }) => {
   if (!fileTree) {
     return (
@@ -330,6 +336,7 @@ const FileTree: React.FC<FileTreeProps> = ({
         isRootFolder={true}
         expandedFolders={expandedFolders}
         onExpandedFoldersChange={onExpandedFoldersChange}
+        isVaultSecured={isVaultSecured}
       />
     </div>
   );

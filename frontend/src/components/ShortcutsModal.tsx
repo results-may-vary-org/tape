@@ -87,7 +87,6 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
         </Dialog.Title>
 
         <Dialog.Description size="2" mb="4" className="vt32">
-          Master Tape with these keyboard shortcuts.
         </Dialog.Description>
 
         <div className="shortcuts-content">

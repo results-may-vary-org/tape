@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { GetContentDiff, GetDecryptedFileName, GetDecryptedFullPath } from "../../wailsjs/go/main/App";
 import {main} from "../../wailsjs/go/models";
-import {Bug, CircleCheck, Loader, CassetteTape, CircleAlert} from "lucide-react";
+import {Bug, CircleCheck, Loader, CassetteTape, CircleAlert, ShieldCheck} from "lucide-react";
 import Diff = main.Diff;
 import { Tooltip } from "@radix-ui/themes";
 
@@ -10,6 +10,7 @@ type props = {
   edited: string
   selectedFilePath: string | null
   hasUnsavedChanges: boolean
+  isVaultSecured: boolean
 }
 
 const Stats = (props: props) => {
@@ -66,6 +67,13 @@ const Stats = (props: props) => {
     <div className="note-status-bar vt32">
 
       <div className="stat-container">
+        {props.isVaultSecured && (
+          <div className="stat-icon">
+            <Tooltip content="Vault is encrypted">
+              <ShieldCheck size="14"/>
+            </Tooltip>
+          </div>
+        )}
         <div className="stat-icon">
           <Tooltip content={`Edit: ${getContentDiffString().e}, Add: ${getContentDiffString().a}, Delete: ${getContentDiffString().d}`}>
             {isLoading ? <Loader className="spin-fast" size="14"/> : isError ? <Bug size="14"/> : <CircleCheck size="14"/>}

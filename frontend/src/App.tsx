@@ -464,7 +464,13 @@ function App() {
 
   if (!fileTree || isUnlockVaultModalOpen || isUseEncModalOpen) {
     return (
-      <RadixTheme accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
+      <RadixTheme
+        accentColor="gold"
+        grayColor="sand"
+        radius="small"
+        scaling="100%"
+        panelBackground="translucent"
+      >
         <div className="app-container">
           <div className="welcome-screen">
             <div>
@@ -528,7 +534,14 @@ function App() {
             </div>
           </div>
           <div className="header-right">
-            <SettingsPopover fileTree={fileTree} isVaultSecured={isVaultSecured}/>
+            <SettingsPopover
+              fileTree={fileTree}
+              isVaultSecured={isVaultSecured}
+              onEncryptionComplete={async () => {
+                await refreshFileTree();
+                setIsVaultSecured(true);
+              }}
+            />
             <div className="view-toggle">
               <Button
                 size="2"
@@ -604,6 +617,7 @@ function App() {
               edited={fileContent}
               selectedFilePath={selectedFilePath}
               hasUnsavedChanges={hasUnsavedChanges}
+              isVaultSecured={isVaultSecured}
             />
           </div>
 
@@ -611,6 +625,7 @@ function App() {
             <div className="sidebar sidebar-extended" ref={sidebarRef}>
               <FileTree
                 fileTree={fileTree}
+                isVaultSecured={isVaultSecured}
                 onFileSelect={handleFileSelect}
                 selectedFile={selectedFilePath}
                 onCreateFile={handleCreateFile}

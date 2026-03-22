@@ -17,8 +17,8 @@ const EncTreeConfirmationModal: React.FC<props> = ({ nextStep }: props) => {
           <Text>Your note will be securely encrypted for extra privacy at the next step.</Text>
           <br/>
           <Text>We recommend backing up your files.</Text>
-          <Separator my="3" size="4" />
-          <Text>Learn more <a href="https://github.com/results-may-vary-org/tape/blob/main/README.md" rel="noreferrer">here</a>.</Text>
+          {/* <Separator my="3" size="4" /> */}
+          {/* <Text>Learn more <a href="https://github.com/results-may-vary-org/tape/blob/main/README.md" rel="noreferrer">here</a>.</Text> */}
         </AlertDialog.Description>
         <Flex gap="3" mt="4" justify="end">
           <AlertDialog.Cancel>

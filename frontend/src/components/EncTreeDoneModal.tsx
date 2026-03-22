@@ -1,5 +1,5 @@
 import React, { useEffect} from 'react';
-import {Dialog, Separator, Text} from '@radix-ui/themes';
+import {Button, Dialog, Flex, Separator, Text} from '@radix-ui/themes';
 
 interface props {
   isOpen: boolean;
@@ -37,16 +37,23 @@ const EncTreeDoneModal: React.FC<props> = ({isOpen, onClose}) => {
             notes if you’ve lost it.
           </Text>
           <br/>
+          <Separator my="3" size="4" />
           <Text>
             A backup folder has been created alongside your encrypted notes;
             it contains your original, unencrypted notes. If everything looks
             in order, you can delete it.
           </Text>
-          <Separator my="3" size="4" />
-          <Text>Learn more <a href="https://github.com/results-may-vary-org/tape/blob/main/README.md" rel="noreferrer">here</a>.</Text>
+          {/* <Separator my="3" size="4" /> */}
+          {/* <Text>Learn more <a href="https://github.com/results-may-vary-org/tape/blob/main/README.md" rel="noreferrer">here</a>.</Text> */}
         </Dialog.Description>
 
-        <Separator style={{width: "100%"}}/>
+        <Flex gap="3" mt="4" justify="end">
+          <Dialog.Close onClick={onClose}>
+            <Button>Ok</Button>
+          </Dialog.Close>
+        </Flex>
+
+        <Separator style={{width: "100%", marginTop: "1rem"}}/>
 
         <div>
           <div className="search-footer vt32">

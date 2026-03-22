@@ -8,7 +8,15 @@ import EncTreeConfirmationModal from "./EncTreeConfirmationModal";
 import EncTreeDoneModal from "./EncTreeDoneModal";
 import UseEncVaultModal from "./UseEncVaultModal";
 
-const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null, isVaultSecured: boolean}) => {
+const SettingsPopover = ({
+  fileTree,
+  isVaultSecured,
+  onEncryptionComplete,
+}: {
+  fileTree: FileItem | null;
+  isVaultSecured: boolean;
+  onEncryptionComplete: () => Promise<void>;
+}) => {
 
   const {theme, setTheme} = useTheme();
   const [isSetupEncOpen, setIsSetupEncOpen] = useState<boolean>(false);
@@ -55,7 +63,7 @@ const SettingsPopover = ({fileTree, isVaultSecured}: {fileTree: FileItem | null,
       setSetupEncError("");
       setIsSetupEncOpen(false);
       setEncIsSucess(true);
-      // todo: refresh the tree
+      await onEncryptionComplete();
     }
   }
 
