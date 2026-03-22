@@ -58,6 +58,31 @@ cd tape
 wails build
 ```
 
+## Encryption (Privacy Mode)
+
+When privacy mode is enabled, tape encrypts both the **content** and the **names** of all your files and folders. Your password is the only thing you need to decrypt them.
+
+### How it works
+
+**Key derivation** — your password is processed through [Argon2id](https://en.wikipedia.org/wiki/Argon2) (2 passes, 64MB memory, 4 threads) to produce a 256-bit encryption key. This makes brute-force attacks expensive.
+
+**Content encryption** — each file's content is encrypted with AES-256-GCM. A unique random nonce is generated for every write, so encrypting the same content twice produces different ciphertext.
+
+**Filename & folder encryption** — names are also encrypted with AES-256-GCM. Because raw encrypted bytes contain arbitrary binary data that filesystems can't handle, the result is encoded to [Base64 URL-safe](https://en.wikipedia.org/wiki/Base64#URL_applications) before being used as the actual name on disk. Encrypted files get the `.mde` extension.
+
+**File format** — every encrypted file starts with a `MDE1` version prefix, followed by the nonce, then the ciphertext:
+```
+MDE1 + nonce (12 bytes) + ciphertext
+```
+Filenames follow the same layout but base64-encoded:
+```
+MDE1 + base64url(nonce + ciphertext) + .mde
+```
+
+**Password verification** — `tape.json` stores a small encrypted blob (a random value encrypted with your key) and its nonce. On login, tape re-derives the key from your password and tries to decrypt this blob. If it succeeds, the password is correct. The key itself is never stored anywhere.
+
+> Your password alone is sufficient to recover your files. There is no recovery key and no secondary secret to keep.
+
 ## Configuration `tape.json`
 
 The config is mostly there to remember your last opened folder, selection and view mode.

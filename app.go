@@ -47,7 +47,6 @@ type Config struct {
 	PrivacyMode      bool     `json:"privacyMode"`
 	Check            []byte   `json:"check"`
 	NonceCheck       []byte   `json:"nonceCheck"`
-	Salt             []byte   `json:"salt"`
 }
 
 type SearchResult struct {
@@ -150,34 +149,13 @@ func generateRandValue() ([]byte, error) {
 	return check, nil
 }
 
-// deriveKey Derive a key from a password, return it with a salt
-func deriveKey(password string) ([]byte, []byte, error) {
-	salt := make([]byte, 16)
-
-	_, err := rand.Read(salt)
-	if err != nil { // in theory Read never return an error (see doc)
-		return nil, nil, err
-	}
-
-	key := argon2.IDKey(
-		[]byte(password),
-		salt,
-		2,
-		64*1024, // 64MB
-		4,
-		32,
-	)
-
-	return key, salt, nil
-}
-
-// deriveKeyWithSalt derive the original data from a salt
-func deriveKeyWithSalt(password string, salt []byte) []byte {
+// deriveKey derive a key from a password using a fixed app-level salt
+func deriveKey(password string) []byte {
 	return argon2.IDKey(
 		[]byte(password),
-		salt,
+		[]byte("tape-mde1"),
 		2,
-		64*1024,
+		64*1024, // 64MB
 		4,
 		32,
 	)
@@ -257,10 +235,7 @@ func (a *App) decryptMDE1(rawcontent []byte, isBase64 bool) ([]byte, error) {
 
 // SetupPassword generate needed data and store it to setup encrypted tape box
 func (a *App) SetupPassword(password string, rootPath string) string {
-	masterkey, passwordSalt, err := deriveKey(password)
-	if err != nil {
-		return err.Error()
-	}
+	masterkey := deriveKey(password)
 
 	// generate a random checkdata data to compare password for user checking
 	checkdata, err := generateRandValue()
@@ -274,7 +249,7 @@ func (a *App) SetupPassword(password string, rootPath string) string {
 	}
 
 	// save data
-	err = a.SaveCryptoData(rootPath, checkCipher, nonceCheck, passwordSalt)
+	err = a.SaveCryptoData(rootPath, checkCipher, nonceCheck)
 	if err != nil {
 		return err.Error()
 	}
@@ -286,16 +261,16 @@ func (a *App) SetupPassword(password string, rootPath string) string {
 // check if the user has the right setup to encrypt notes
 func (a *App) HasSecurity(rootPath string) bool {
 	hasPrivacyOn := a.getPrivacyMode(rootPath)
-	_, check, nonceCheck, salt := a.getCryptoOptions(rootPath)
-	return hasPrivacyOn && len(check) > 0 && len(nonceCheck) > 0 && len(salt) > 0
+	_, check, nonceCheck := a.getCryptoOptions(rootPath)
+	return hasPrivacyOn && len(check) > 0 && len(nonceCheck) > 0
 }
 
 // PasswordIsCorrect check if the given password is correct comparing with the check data in the config
 func (a *App) PasswordIsCorrect(password string, rootPath string) bool {
 	if a.HasSecurity(rootPath) {
-		_, check, nonceCheck, salt := a.getCryptoOptions(rootPath)
+		_, check, nonceCheck := a.getCryptoOptions(rootPath)
 
-		candidateKey := deriveKeyWithSalt(password, salt)
+		candidateKey := deriveKey(password)
 
 		aead := a.getAEAD(candidateKey)
 		if aead == nil {
@@ -875,15 +850,14 @@ func (a *App) SaveConfig(config *Config, folderPath string) error {
 	return os.WriteFile(configPath, data, 0600)
 }
 
-// SaveCryptoData saves check, salt, nonce and mode to config
-func (a *App) SaveCryptoData(folderPath string, check []byte, nonceCheck []byte, salt []byte) error {
+// SaveCryptoData saves check, nonce and mode to config
+func (a *App) SaveCryptoData(folderPath string, check []byte, nonceCheck []byte) error {
 	config, err := a.LoadConfig(folderPath)
 	if err != nil {
 		config = &Config{}
 	}
 
 	config.Check = check
-	config.Salt = salt
 	config.NonceCheck = nonceCheck
 	config.PrivacyMode = true
 	return a.SaveConfig(config, folderPath)
@@ -984,13 +958,13 @@ func (a *App) getPrivacyMode(folderPath string) bool {
 }
 
 // getCryptoOptions return all related config for crypto
-// privacyMode, Check, NonceCheck, Salt
-func (a *App) getCryptoOptions(folderPath string) (bool, []byte, []byte, []byte) {
+// privacyMode, Check, NonceCheck
+func (a *App) getCryptoOptions(folderPath string) (bool, []byte, []byte) {
 	config, err := a.LoadConfig(folderPath)
 	if err != nil {
-		return false, nil, nil, nil
+		return false, nil, nil
 	}
-	return config.PrivacyMode, config.Check, config.NonceCheck, config.Salt
+	return config.PrivacyMode, config.Check, config.NonceCheck
 }
 
 // LoadInitialConfig loads initial configuration - returns empty config if no previous folder
