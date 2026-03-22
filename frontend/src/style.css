@@ -1,4 +1,12 @@
 @font-face {
+  font-family: "Jacquard12-Regular";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("assets/fonts/Jacquard12-Regular.ttf") format("truetype");
+}
+
+@font-face {
   font-family: "jetbrains-mono";
   font-style: normal;
   font-weight: 400;
@@ -63,6 +71,12 @@
 
 .vt32 {
   font-family: "vt32", monospace;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.j12 {
+  font-family: "Jacquard12-Regular", sans-serif;
   font-weight: 400;
   font-style: normal;
 }

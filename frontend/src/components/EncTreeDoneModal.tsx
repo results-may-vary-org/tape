@@ -25,7 +25,7 @@ const EncTreeDoneModal: React.FC<props> = ({isOpen, onClose}) => {
     <Dialog.Root open={isOpen}>
       <Dialog.Content className="search-modal" maxWidth="600px">
 
-        <Dialog.Title style={{fontFamily: "vt32"}} color="gold">
+        <Dialog.Title style={{fontFamily: "vt32"}}>
           Your tape box is not fully encrypted!
         </Dialog.Title>
 

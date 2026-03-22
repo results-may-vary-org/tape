@@ -481,13 +481,13 @@ function App() {
           <div className="welcome-screen">
             <div>
               <img src={appIcon} alt="Tape app icon"/>
-              <h1 className="workbench">Tape</h1>
+              <h1 className="j12">Tape</h1>
             </div>
             <div className="welcome-button">
               <Tooltip content="Select a directory to browse markdown files">
                 <Button disabled={isLoading} onClick={() => handleRootOpen()} className="primary-button">
                   <FolderOpen size={20}/>
-                  Open your tape box
+                  Open a tape box
                 </Button>
               </Tooltip>
               {getLastOpenedFolder() && isVaultSecured && (
