@@ -8,6 +8,7 @@ import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
 import SearchModal from './components/SearchModal';
 import ShortcutsModal from './components/ShortcutsModal';
+import { getRadixThemeSettings } from './services/themeService';
 import {
   FolderOpen,
   FileText,
@@ -468,15 +469,11 @@ function App() {
     }
   };
 
-  const radixThemeProps = uiTheme === 'modern'
-    ? { accentColor: 'violet' as const, grayColor: 'slate' as const, radius: 'large' as const, scaling: '100%' as const }
-    : uiTheme === 'agrume'
-      ? { accentColor: 'orange' as const, grayColor: 'sand' as const, radius: 'medium' as const, scaling: '100%' as const }
-      : { accentColor: 'gold' as const, grayColor: 'sand' as const, radius: 'small' as const, scaling: '100%' as const };
+  const radixThemeSettings = getRadixThemeSettings(uiTheme);
 
   if (!fileTree || isUnlockVaultModalOpen || isUseEncModalOpen) {
     return (
-      <RadixTheme {...radixThemeProps} panelBackground="translucent">
+      <RadixTheme {...radixThemeSettings} panelBackground="translucent">
         <div className="app-container" data-ui-theme={uiTheme}>
           <div className="welcome-screen">
             <div>
@@ -524,7 +521,7 @@ function App() {
   }
 
   return (
-    <RadixTheme {...radixThemeProps}>
+    <RadixTheme {...radixThemeSettings}>
       <div className="app-container" data-ui-theme={uiTheme}>
 
         <div className="header header-extended" ref={mainHeaderRef}>
@@ -539,7 +536,7 @@ function App() {
               fileTree={fileTree}
               isVaultSecured={isVaultSecured}
               uiTheme={uiTheme}
-              onUIThemeChange={(t) => setUITheme(t)}
+              onUIThemeChange={(theme) => setUITheme(theme)}
               onEncryptionComplete={async () => {
                 await refreshFileTree();
                 setIsVaultSecured(true);

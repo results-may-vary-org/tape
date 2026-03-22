@@ -67,6 +67,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
 }: FileTreeNodeProps) => {
   const useAltIcons = uiTheme === 'modern' || uiTheme === 'agrume';
   const isExpanded = expandedFolders.includes(item.path);
+  const displayName = (isVaultSecured && !item.isDir && item.name.endsWith('.mde'))
+    ? item.name.slice(0, -4)
+    : item.name;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newName, setNewName] = useState<string>(item.name);
@@ -191,7 +194,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               )}
               {(isRootFolder && isVaultSecured) && <ShieldCheck size={16}/>}
             </span>
-            <span className="file-tree-name">{item.name}</span>
+            <span className="file-tree-name">{displayName}</span>
           </div>
         </ContextMenu.Trigger>
         <ContextMenu.Content className="context-menu-content">
@@ -241,7 +244,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
+
+{/* Delete Confirmation Dialog */}
       <Dialog.Root open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>Delete {item.isDir ? 'Folder' : 'File'}</Dialog.Title>
