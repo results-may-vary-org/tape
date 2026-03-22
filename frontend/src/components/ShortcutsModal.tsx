@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Dialog, Text, Flex, Separator, Button } from '@radix-ui/themes';
 import {Keyboard, Heart, CodeIcon} from 'lucide-react';
+import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
 
 interface ShortcutItem {
   keys: string[];
@@ -68,7 +69,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
   };
 
   const openGitHub = () => {
-    window.open('https://github.com/results-may-vary-org/tape', '_blank', 'noopener,noreferrer');
+    BrowserOpenURL('https://github.com/results-may-vary-org/tape');
   };
 
   return (
