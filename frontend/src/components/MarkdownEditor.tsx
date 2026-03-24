@@ -2,11 +2,8 @@ import React, {useState, useRef, useLayoutEffect} from "react";
 import { useScrollSync } from "../services/useScrollSync";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "codemirror";
-import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropCursor,
-  rectangularSelection, crosshairCursor,
-  lineNumbers, highlightActiveLineGutter} from "@codemirror/view";
-import {defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching,
-  foldGutter, foldKeymap} from "@codemirror/language";
+import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropCursor, crosshairCursor, highlightActiveLineGutter} from "@codemirror/view";
+import {defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching, foldKeymap} from "@codemirror/language";
 import {defaultKeymap, history, historyKeymap} from "@codemirror/commands";
 import {searchKeymap, highlightSelectionMatches} from "@codemirror/search";
 import {autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap} from "@codemirror/autocomplete";

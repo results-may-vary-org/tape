@@ -81,21 +81,3 @@
   font-style: normal;
 }
 
-/* ── Agrume theme: warm citrus tint ─────────────────────────────────── */
-/* Light mode */
-:root:not(.dark) [data-ui-theme="agrume"],
-.light [data-ui-theme="agrume"] {
-  --color-background: 249 245 231;         /* #f9f5e7 warm cream */
-  --color-panel-solid: 243 236 210;        /* slightly deeper cream for panels */
-  --color-surface: 249 245 231;
-  background-color: #f9f5e7;
-}
-
-/* Dark mode */
-.dark [data-ui-theme="agrume"] {
-  --color-background: 28 24 12;            /* #1c180c warm dark */
-  --color-panel-solid: 36 30 14;           /* #241e0e panels */
-  --color-surface: 28 24 12;
-  background-color: #1c180c;
-}
-

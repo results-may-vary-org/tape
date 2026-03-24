@@ -623,7 +623,7 @@ func (a *App) ReadFile(filePath string) (string, error) {
 		return "", nil
 	}
 
-	if a.HasSecurity(a.rootPath) {
+	if a.HasSecurity(a.rootPath) && isMDE(filePath) {
 		text, err := a.decryptMDE1(rawContent, false)
 		if err != nil {
 			return "", err
@@ -636,7 +636,7 @@ func (a *App) ReadFile(filePath string) (string, error) {
 
 // WriteContentInFile writes content to a file
 func (a *App) WriteContentInFile(filePath, content string) error {
-	if a.HasSecurity(a.rootPath) {
+	if a.HasSecurity(a.rootPath) && isMDE(filePath) {
 		nonce, cipher, err := a.encryptData(a.masterkey, []byte(content))
 		if err != nil {
 			return err
@@ -734,7 +734,7 @@ func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string
 		filename = stripFileExt(filename)
 	}
 
-	if a.HasSecurity(a.rootPath) {
+	if a.HasSecurity(a.rootPath) && isMDE(oldPath) {
 		ext = ".mde"
 		nonce, ciphertext, err := a.encryptData(a.masterkey, []byte(filename))
 		if err != nil {

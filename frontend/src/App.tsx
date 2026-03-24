@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import '@radix-ui/themes/styles.css';
-import {Theme as RadixTheme } from '@radix-ui/themes';
+import {AlertDialog, Theme as RadixTheme } from '@radix-ui/themes';
 import {useTheme} from "next-themes";
 import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
@@ -86,12 +86,17 @@ function App() {
   const [newFileName, setNewFileName] = useState<string>('');
   const [newFolderName, setNewFolderName] = useState<string>('');
   const [currentParentPath, setCurrentParentPath] = useState<string>('');
+  const [alertMDinMDE, setAlertMDinMDE] = useState<boolean>(false);
 
   // maybe one day we can calculate the height automatically,
   // but for now this is the fastest since none of the elements change height
   // 53 = header, 40 = subheader
   const [containerHeight, setContainerHeight] = useState<string>("calc(100vh - (40px + 53px))");
   const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
+
+  const noMDinMDEWarning = async () => {
+    window.localStorage.setItem("noMDinMDEWarning", "1");
+  }
 
   const handleVaultSetup = async (password: string) => {
     if (password) {
@@ -290,6 +295,16 @@ function App() {
           console.error('Error saving last opened file:', error);
         }
       }
+
+      // alert if a md file is opened in a mde vault
+      if (isVaultSecured && item.path.endsWith(".md")) {
+        const noMDinMDEWarning = window.localStorage.getItem("noMDinMDEWarning");
+        console.log(noMDinMDEWarning)
+        if (noMDinMDEWarning !== "1") {
+          setAlertMDinMDE(true);
+        }
+      }
+
     } catch (error) {
       console.error('Error reading file:', error);
     } finally {
@@ -669,8 +684,8 @@ function App() {
       {/* Create File Dialog */}
       <Dialog.Root open={showCreateFileDialog} onOpenChange={setShowCreateFileDialog}>
         <Dialog.Content maxWidth="450px">
-          <Dialog.Title>Create New File</Dialog.Title>
-          <Dialog.Description size="2" mb="4">
+          <Dialog.Title style={{ fontFamily: "vt32" }}>Create New File</Dialog.Title>
+          <Dialog.Description size="2" mb="4" style={{ fontFamily: "vt32" }}>
             {createFileDialogError
               ? <span className="important">{createFileDialogError}</span>
               : <>Enter a name for the new markdown file.</>
@@ -679,7 +694,7 @@ function App() {
 
           <Flex direction="column" gap="3">
             <label>
-              <Text as="div" size="2" mb="1" weight="bold">
+              <Text as="div" size="2" mb="1" weight="bold" style={{ fontFamily: "vt32" }}>
                 File name
               </Text>
               <TextField.Root
@@ -713,8 +728,8 @@ function App() {
       {/* Create Folder Dialog */}
       <Dialog.Root open={showCreateFolderDialog} onOpenChange={setShowCreateFolderDialog}>
         <Dialog.Content maxWidth="450px">
-          <Dialog.Title>Create New Folder</Dialog.Title>
-          <Dialog.Description size="2" mb="4">
+          <Dialog.Title style={{ fontFamily: "vt32" }}>Create New Folder</Dialog.Title>
+          <Dialog.Description size="2" mb="4" style={{ fontFamily: "vt32" }}>
             {createFolderDialogError
               ? <span className="important">{createFolderDialogError}</span>
               : <>Enter a name for the new folder.</>
@@ -723,7 +738,7 @@ function App() {
 
           <Flex direction="column" gap="3">
             <label>
-              <Text as="div" size="2" mb="1" weight="bold">
+              <Text as="div" size="2" mb="1" weight="bold" style={{ fontFamily: "vt32" }}>
                 Folder name
               </Text>
               <TextField.Root
@@ -765,6 +780,30 @@ function App() {
         onClose={() => setIsShortcutsModalOpen(false)}
         version={version}
       />
+
+      {/* alert when md in mde vault */}
+      <AlertDialog.Root open={alertMDinMDE} onOpenChange={setAlertMDinMDE}>
+        <AlertDialog.Content maxWidth="450px">
+          <AlertDialog.Title style={{ fontFamily: "vt32" }}>Warning</AlertDialog.Title>
+          <AlertDialog.Description size="2" style={{ fontFamily: "vt32" }}>
+            This note isn’t encrypted, even though it’s inside an encrypted vault.
+            For full encryption, please create notes using the in-app menu.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray" onClick={noMDinMDEWarning}>
+                Don't notify me anymore
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button variant="solid" color="red">
+                Ok
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
     </RadixTheme>
   );
 }
