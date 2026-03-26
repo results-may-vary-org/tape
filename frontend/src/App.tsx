@@ -543,7 +543,10 @@ function App() {
           <div className="header-left">
             <div className="logo">
               <img src={appIconBck} alt="Tape app icon"/>
-              <h1 className="workbench">Tape <small style={{fontSize: 'xx-small'}}>{version}</small></h1>
+              <h1 className="j12">
+                Tape
+                <small className="jetbrains-mono" style={{fontSize: "xx-small"}}> {version}</small>
+              </h1>
             </div>
           </div>
           <div className="header-right">

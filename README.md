@@ -13,7 +13,7 @@ Tape is designed as a no-bloat markdown editor that focuses on simplicity and ef
 
 I want it to be just what I need it for: taking notes.
 
-No paywall, no outdated ui, no journaling system, simple and plain `.md` files.
+No paywall, no outdated UI, no journaling system, simple and plain `.md` files.
 
 ## Tape?!?
 
@@ -35,7 +35,9 @@ The design is inspired by old cassette color, the logo represents the wheel of a
 - **Cross-platform**: Available for Linux, Windows, and macOS
 - **Full keyboard integration**: You can navigate the ui with `tab` and `shift+tab`, `enter` to open
 - **Shortcut help**: just hit `ctrl+h` to get the full list of shortcuts
-- **Sync yourself**: because the app handle plain `.md` files and the config file is place at the root of your notes folder, you can sync your notes with any other app you want
+- **Sync yourself**: because the app handles plain `.md` files and the config file is placed at the root of your notes folder, you can sync your notes with any other app you want
+- **Encryption**: `new` encryption is available out of the box, you can also encrypt your already existing .md file via the option
+- **Theme**: `new` you can choose from 3 built-in themes (I plan to add more later)
 
 ## Installation
 
@@ -58,9 +60,11 @@ cd tape
 wails build
 ```
 
-## Encryption (Privacy Mode)
+## Encryption
 
-When privacy mode is enabled, tape encrypts both the **content** and the **names** of all your files and folders. Your password is the only thing you need to decrypt them.
+When privacy mode is enabled, tape encrypts both the **content** and the **names** of all your files and folders.
+
+Your password is the only thing you need to decrypt them.
 
 ### How it works
 
@@ -79,7 +83,7 @@ Filenames follow the same layout but base64-encoded:
 MDE1 + base64url(nonce + ciphertext) + .mde
 ```
 
-**Password verification** — `tape.json` stores a small encrypted blob (a random value encrypted with your key) and its nonce. On login, tape re-derives the key from your password and tries to decrypt this blob. If it succeeds, the password is correct. The key itself is never stored anywhere.
+**Password verification** — `tape.json` stores a small encrypted blob (a random value encrypted with your key) and its nonce. On login, tape re-derives the key from your password and tries to decrypt this blob. If it succeeds, the password is correct. The key itself is never stored anywhere. This is only stored for UX purposes.
 
 > Your password alone is sufficient to recover your files. There is no recovery key and no secondary secret to keep.
 
@@ -101,9 +105,9 @@ It must be placed at the root of your notes folder.
 
 ## Markdown flavor example
 
-The supported flavor is the GFM one with some addons.
+The supported flavor is the GFM one with some add-ons.
 
-A example exist here: [example](./example.md).
+An example exists here: [example](./example.md).
 
 ## Code of conduct, license, authors, changelog, contributing
 
@@ -113,7 +117,7 @@ See the following files:
 - [changelog](CHANGELOG.md)
 - [code of conduct](CODE_OF_CONDUCT.md)
 
-## Want to participate? Have a bug or a request feature?
+## Want to participate? Have a bug or a feature request?
 
 Do not hesitate to open a PR or an issue. I reply when I can.
 
