@@ -87,6 +87,8 @@ MDE1 + base64url(nonce + ciphertext) + .mde
 
 > Your password alone is sufficient to recover your files. There is no recovery key and no secondary secret to keep.
 
+![Encryption Overview](/.github/assets/screenshot_enc.png)
+
 ## Configuration `tape.json`
 
 The config is mostly there to remember your last opened folder, selection and view mode.
