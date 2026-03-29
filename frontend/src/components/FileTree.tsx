@@ -3,11 +3,14 @@ import {
   ChevronRight,
   ChevronDown,
   Folder,
+  FolderOpen,
+  FileText,
   Plus,
   Edit3,
   Trash2,
-  CassetteTape, PackageOpen, Package
+  CassetteTape, PackageOpen, Package, ShieldCheck
 } from 'lucide-react';
+import type { UIThemeMode } from '../types/types';
 import { ContextMenu, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 
 interface FileItem {
@@ -19,7 +22,7 @@ interface FileItem {
 
 interface FileTreeProps {
   fileTree: FileItem | null;
-  onFileSelect: (filePath: string) => void;
+  onFileSelect: (item: FileItem) => void;
   selectedFile: string | null;
   onCreateFile: (parentPath: string) => void;
   onCreateFolder: (parentPath: string) => void;
@@ -27,11 +30,13 @@ interface FileTreeProps {
   onDeleteItem: (itemPath: string, isDir: boolean) => void;
   expandedFolders: string[];
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
+  isVaultSecured: boolean;
+  uiTheme: UIThemeMode;
 }
 
 interface FileTreeNodeProps {
   item: FileItem;
-  onFileSelect: (filePath: string) => void;
+  onFileSelect: (item: FileItem) => void;
   selectedFile: string | null;
   level: number;
   onCreateFile: (parentPath: string) => void;
@@ -41,6 +46,8 @@ interface FileTreeNodeProps {
   isRootFolder?: boolean;
   expandedFolders: string[];
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
+  isVaultSecured: boolean;
+  uiTheme: UIThemeMode;
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({
@@ -54,12 +61,19 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   onDeleteItem,
   isRootFolder = false,
   expandedFolders,
-  onExpandedFoldersChange
+  onExpandedFoldersChange,
+  isVaultSecured,
+  uiTheme,
 }: FileTreeNodeProps) => {
+  const useAltIcons = uiTheme === 'modern' || uiTheme === 'agrume';
   const isExpanded = expandedFolders.includes(item.path);
+  const displayName = (isVaultSecured && !item.isDir && item.name.endsWith('.mde'))
+    ? item.name.slice(0, -4)
+    : item.name;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newName, setNewName] = useState<string>(item.name);
+  const [renameError, setRenameError] = useState<string>("");
   const itemRef = React.useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
@@ -69,20 +83,38 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
         : [...expandedFolders, item.path];
       onExpandedFoldersChange(newExpandedFolders);
     } else {
-      onFileSelect(item.path);
+      onFileSelect(item);
     }
   };
 
   const handleRename = () => {
-    setNewName(item.name);
+    const stem = item.isDir ? item.name : item.name.replace(/\.(mde|md)$/i, "");
+    setNewName(stem);
+    setRenameError("");
     setShowRenameDialog(true);
   };
 
-  const confirmRename = (isDir: boolean) => {
-    if (newName.trim() && newName !== item.name) {
-      onRenameItem(item.path, newName.trim(), !isDir);
+  const confirmRename = async (isDir: boolean) => {
+    if (!newName.trim()) return;
+    const ext = !isDir ? (item.name.match(/\.(mde|md)$/i)?.[0] ?? "") : "";
+    const fullName = newName.trim() + ext;
+    if (fullName === item.name) {
+      setShowRenameDialog(false);
+      return;
     }
-    setShowRenameDialog(false);
+    try {
+      // linter say no but await is very important here
+      await onRenameItem(item.path, fullName, !isDir);
+      setShowRenameDialog(false);
+      setRenameError("");
+    } catch (error) {
+      if (typeof error === "string" && error === "file_already_exist") {
+        setRenameError(`${isDir ? "Folder" : "File"} "${fullName}" already exists in this directory.`);
+      } else {
+        setRenameError(`Error renaming ${isDir ? "folder" : "file"}. Please try again.`);
+        console.warn("Rename error:", error);
+      }
+    }
   };
 
   const handleDelete = () => {
@@ -150,13 +182,19 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               {item.isDir ? (
                 <>
                   {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  {isExpanded ? <PackageOpen size={16} /> : <Package size={16} />}
+                  {useAltIcons
+                    ? isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />
+                    : isExpanded ? <PackageOpen size={16} /> : <Package size={16} />
+                  }
                 </>
               ) : (
-                <CassetteTape size={16} style={{marginLeft: 5}} />
+                useAltIcons
+                  ? <FileText size={16} style={{marginLeft: 5}} />
+                  : <CassetteTape size={16} style={{marginLeft: 5}} />
               )}
+              {(isRootFolder && isVaultSecured) && <ShieldCheck size={16}/>}
             </span>
-            <span className="file-tree-name">{item.name}</span>
+            <span className="file-tree-name">{displayName}</span>
           </div>
         </ContextMenu.Trigger>
         <ContextMenu.Content className="context-menu-content">
@@ -199,12 +237,15 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               isRootFolder={false}
               expandedFolders={expandedFolders}
               onExpandedFoldersChange={onExpandedFoldersChange}
+              isVaultSecured={isVaultSecured}
+              uiTheme={uiTheme}
             />
           ))}
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
+
+{/* Delete Confirmation Dialog */}
       <Dialog.Root open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>Delete {item.isDir ? 'Folder' : 'File'}</Dialog.Title>
@@ -237,7 +278,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>Rename {item.isDir ? 'Folder' : 'File'}</Dialog.Title>
           <Dialog.Description size="2" mb="4">
-            Enter a new name for this {item.isDir ? 'folder' : 'file'}.
+            {renameError
+              ? <span className="important">{renameError}</span>
+              : <>Enter a new name for this {item.isDir ? 'folder' : 'file'}.</>
+            }
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
@@ -246,21 +290,15 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
                 {item.isDir ? 'Folder' : 'File'} name
               </Text>
               <TextField.Root
-                value={item.isDir ? newName : newName.replace(".md", "") }
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
+                value={item.isDir ? newName : newName.replace(/\.(mde|md)$/i, "")}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setNewName(e.target.value); setRenameError(""); }}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     confirmRename(item.isDir);
                   }
                 }}
-              >
-                {!item.isDir && (
-                  <TextField.Slot side="right">
-                    <Text size="2" color="gray">.md</Text>
-                  </TextField.Slot>
-                )}
-              </TextField.Root>
+              />
             </label>
           </Flex>
 
@@ -289,7 +327,9 @@ const FileTree: React.FC<FileTreeProps> = ({
   onRenameItem,
   onDeleteItem,
   expandedFolders,
-  onExpandedFoldersChange
+  onExpandedFoldersChange,
+  isVaultSecured,
+  uiTheme,
 }) => {
   if (!fileTree) {
     return (
@@ -314,6 +354,8 @@ const FileTree: React.FC<FileTreeProps> = ({
         isRootFolder={true}
         expandedFolders={expandedFolders}
         onExpandedFoldersChange={onExpandedFoldersChange}
+        isVaultSecured={isVaultSecured}
+        uiTheme={uiTheme}
       />
     </div>
   );

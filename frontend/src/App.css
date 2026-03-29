@@ -6,6 +6,24 @@
   --header-height: 36px;
 }
 
+/* agrume theme */
+/* Light mode */
+:root:not(.dark) [data-ui-theme="agrume"],
+.light [data-ui-theme="agrume"] {
+  --color-background: 249 245 231;/* #f9f5e7 warm cream */
+  --color-panel-solid: 243 236 210; /* slightly deeper cream for panels */
+  /* --color-surface: 249 245 231; */
+  background-color: #f9f5e7;
+}
+
+/* Dark mode */
+.dark [data-ui-theme="agrume"] {
+  --color-background: 28 24 12; /* #1c180c warm dark */
+  --color-panel-solid: 36 30 14; /* #241e0e panels */
+  --color-surface: 28 24 12;
+  background-color: #1c180c;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -18,6 +36,14 @@ button:hover {
 
 .appname {
   font-family: var(--main-font), monospace;
+}
+
+.important {
+  color: var(--orange-9)
+}
+
+.hover:hover {
+  cursor: pointer;
 }
 
 .app-container {
@@ -64,6 +90,15 @@ button:hover {
   font-size: 1.1rem;
   opacity: 0.8;
   margin: 0;
+}
+
+.welcome-button {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-button > button {
+  margin-bottom: 1rem;
 }
 
 /* Header */
@@ -445,6 +480,35 @@ div[data-remark-code-title="true"] + pre {
   display: flex;
 }
 
+.stat-container, .file-container, .save-container {
+  display: flex;
+}
+
+@media (max-width: 476px) {
+  .stat-text-small, .stat-text {
+    display: none;
+  }
+}
+
+@media (min-width: 664px) {
+  .stat-text-small {
+    display: none;
+  }
+}
+
+@media (max-width: 665px) and (min-width: 476px) {
+  .stat-text {
+    display: none;
+  }
+  .stat-text-small {
+    margin-top: 2px;
+    margin-right: 0.5rem;
+  }
+  .stat-text-small > span {
+    margin-right: 2px;
+  }
+}
+
 /* align the text with the icon */
 .stat-text {
   margin-top: 2px;
@@ -484,6 +548,10 @@ div[data-remark-code-title="true"] + pre {
 
 .note-status-bar .stat-delta-modified {
   color: var(--blue-9);
+}
+
+.stat-save {
+  color: var(--orange-9);
 }
 
 .search-results {

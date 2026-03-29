@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import '@radix-ui/themes/styles.css';
-import {Theme as RadixTheme } from '@radix-ui/themes';
+import {AlertDialog, Theme as RadixTheme } from '@radix-ui/themes';
 import {useTheme} from "next-themes";
 import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
 import SearchModal from './components/SearchModal';
 import ShortcutsModal from './components/ShortcutsModal';
+import { getRadixThemeSettings } from './services/themeService';
 import {
   FolderOpen,
   FileText,
@@ -16,87 +17,178 @@ import {
   RefreshCw,
   Edit,
   Eye,
-  Sun,
-  Moon,
-  Monitor,
-  PanelTopClose
+  PanelTopClose,
+  LockIcon
 } from 'lucide-react';
-import { DropdownMenu, Select, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
+import { DropdownMenu, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 import {
   OpenDirectoryDialog,
   GetDirectoryTree,
   ReadFile,
-  WriteFile,
   CreateFile,
   CreateDirectory,
   DeleteFile,
   DeleteDirectory,
   RenameFile,
-  FileExists,
   LoadConfig,
   SaveLastOpenedFolder,
   SaveLastOpenedFile,
   SaveExpandedFolders,
   SaveViewMode,
-  SaveTheme,
-  SearchFiles
+  SearchFiles,
+  SetupPassword,
+  HasSecurity,
+  PasswordIsCorrect,
+  IsFileExists,
+  WriteContentInFile,
+  GetOs,
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/logo.png';
 import appIconBck from './assets/images/logo-background.png';
 import Stats from "./components/Stats";
 import handleKeys from "./services/handleKeys";
-
-interface FileItem {
-  name: string;
-  path: string;
-  isDir: boolean;
-  children?: FileItem[];
-}
-
-interface SearchResult {
-  path: string;
-  name: string;
-  isDir: boolean;
-  matchType: 'filename' | 'foldername' | 'content';
-  matchText: string;
-  contextText: string;
-}
-
-type ViewMode = 'editor' | 'reader';
-export type ThemeMode = 'system' | 'light' | 'dark';
+import SettingsPopover from './components/SettingsPopover';
+import type { FileItem, ViewMode, ThemeMode, UIThemeMode, SearchResult } from './types/types';
+import UseEncVaultModal from './components/UseEncVaultModal';
+import UnlockVaultModal from './components/UnlockVaultModal';
 
 function App() {
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
+  const scrollRatioRef = useRef<number>(0);
 
   const [version] = useState<string>(__TAPE_VERSION__);
+  const [dirPath, setDirPath] = useState<string>("");
   const [fileTree, setFileTree] = useState<FileItem | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
   const [originalContent, setOriginalContent] = useState<string>('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
-  const scrollRatioRef = useRef<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
+  const [isUseEncModalOpen, setIsUseEncModalOpen] = useState<boolean>(false);
+  const [useEncModalError, setUseEncModalError] = useState<string>("");
+  const [isUnlockVaultModalOpen, setIsUnlockVaultModalOpen] = useState<boolean>(false);
+  const [unlockVaultModalError, setUnlockVaultModalError] = useState<string>("");
+  const [isVaultSecured, setIsVaultSecured] = useState<boolean>(false);
+  const [uiTheme, setUITheme] = useState<UIThemeMode>('original');
 
   // Modal states
-  const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
-  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
-  const [newFileName, setNewFileName] = useState('');
-  const [newFolderName, setNewFolderName] = useState('');
+  const [showCreateFileDialog, setShowCreateFileDialog] = useState<boolean>(false);
+  const [createFileDialogError, setCreateFileDialogError] = useState<string>("");
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState<boolean>(false);
+  const [createFolderDialogError, setCreateFolderDialogError] = useState<string>("");
+  const [newFileName, setNewFileName] = useState<string>('');
+  const [newFolderName, setNewFolderName] = useState<string>('');
   const [currentParentPath, setCurrentParentPath] = useState<string>('');
+  const [alertMDinMDE, setAlertMDinMDE] = useState<boolean>(false);
 
   // maybe one day we can calculate the height automatically,
   // but for now this is the fastest since none of the elements change height
   // 53 = header, 40 = subheader
   const [containerHeight, setContainerHeight] = useState<string>("calc(100vh - (40px + 53px))");
-
   const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
+
+  const noMDinMDEWarning = async () => {
+    window.localStorage.setItem("noMDinMDEWarning", "1");
+  }
+
+  const handleVaultSetup = async (password: string) => {
+    if (password) {
+      const resp = await SetupPassword(password, dirPath);
+      if (resp !== "ok") {
+        setUseEncModalError(`Error setting up vault: ${resp.substring(0, 30)}`);
+        return;
+      }
+    }
+    setUseEncModalError("");
+    setIsUseEncModalOpen(false);
+    loadConfig();
+  };
+
+  const handleVaultUnlock = async (password: string) => {
+    const isValid = await PasswordIsCorrect(password, dirPath);
+    if (!isValid) {
+      setUnlockVaultModalError("Wrong password. Please try again.");
+      return;
+    }
+    const isSecured = await HasSecurity(dirPath);
+    setIsVaultSecured(isSecured);
+    setUnlockVaultModalError("");
+    setIsUnlockVaultModalOpen(false);
+    loadConfig();
+  };
+
+  const lockVault = () => {
+    setDirPath("");
+    setFileTree(null);
+  }
+
+  const getLastOpenedFolder = () => {
+    return window.localStorage.getItem("lastOpenedFolder");
+  }
+
+  // load the config and set up the app
+  const loadConfig = async (dPath?: string) => {
+    const path = dPath ?? dirPath;
+
+    // set rootPath on Go side before any file reads so HasSecurity works correctly
+    localStorage.setItem('lastOpenedFolder', path);
+    await SaveLastOpenedFolder(path);
+
+    const tree = await GetDirectoryTree(path);
+    setFileTree(tree);
+    setSelectedFilePath(null);
+    setFileContent('');
+    setOriginalContent('');
+    setHasUnsavedChanges(false);
+
+    // Load folder-specific config including view mode, theme, expanded folders, and last file
+    try {
+      const folderConfig = await LoadConfig(path);
+      if (folderConfig.viewMode) {
+        setViewMode(folderConfig.viewMode as ViewMode);
+      }
+      if (folderConfig.theme) {
+        setTheme(folderConfig.theme as ThemeMode);
+      }
+      if (folderConfig.uiTheme) {
+        setUITheme(folderConfig.uiTheme as UIThemeMode);
+      } else {
+        setUITheme('original');
+      }
+      if (folderConfig.expandedFolders) {
+        setExpandedFolders(folderConfig.expandedFolders);
+      } else {
+        setExpandedFolders([]);
+      }
+
+      // Restore last opened file if it exists
+      if (folderConfig.lastOpenedFile) {
+        try {
+          const fileExists = await IsFileExists(folderConfig.lastOpenedFile);
+          if (fileExists) {
+            const content = await ReadFile(folderConfig.lastOpenedFile);
+            setSelectedFilePath(folderConfig.lastOpenedFile);
+            setFileContent(content);
+            setOriginalContent(content);
+            setHasUnsavedChanges(false);
+          }
+        } catch (error) {
+          console.log('Last opened file no longer exists or cannot be read:', error);
+        }
+      }
+    } catch (error) {
+      // If no config exists, use defaults
+      console.log('No config found for this folder, using defaults');
+      setExpandedFolders([]);
+    }
+  }
 
   // Load last opened folder on app startup
   useEffect(() => {
@@ -109,19 +201,6 @@ function App() {
     }
     setIsLoading(false);
   }, []);
-
-  const handleThemeChange = async (newTheme: ThemeMode) => {
-    setTheme(newTheme);
-
-    // Save to config if we have a selected folder
-    if (fileTree?.path) {
-      try {
-        await SaveTheme(fileTree.path, newTheme);
-      } catch (error) {
-        console.error('Error saving theme:', error);
-      }
-    }
-  };
 
   const handleViewModeChange = async (newViewMode: ViewMode) => {
     setViewMode(newViewMode);
@@ -148,11 +227,12 @@ function App() {
     }
   }
 
-  // todo: to improve
   const toggleZenMode = () => {
     if (mainHeaderRef && mainHeaderRef.current && sidebarRef && sidebarRef.current) {
       mainHeaderRef.current.classList.toggle("header-extended");
       mainHeaderRef.current.classList.toggle("header-hidden");
+
+      // not toggle on sidebarRef class because we need to force the class not to inverse
       if (mainHeaderRef.current.classList.contains("header-hidden")) {
         setContainerHeight("calc(100vh - 40px)");
         sidebarRef.current.classList.remove("sidebar-extended");
@@ -167,68 +247,42 @@ function App() {
     }
   }
 
+  // handle the opening of any root (new or old)
   const handleRootOpen = async (rootPath?: string) => {
     try {
-      const dirPath = rootPath ?? await OpenDirectoryDialog();
-      if (dirPath) {
-        const tree = await GetDirectoryTree(dirPath);
-        setFileTree(tree);
-        setSelectedFilePath(null);
-        setFileContent('');
-        setOriginalContent('');
-        setHasUnsavedChanges(false);
+      const dPath = rootPath ?? await OpenDirectoryDialog();
+      if (dPath) {
+        setDirPath(dPath);
+        const tree = await GetDirectoryTree(dPath);
 
-        // Load folder-specific config including view mode, theme, expanded folders, and last file
-        try {
-          const folderConfig = await LoadConfig(dirPath);
-          if (folderConfig.viewMode) {
-            setViewMode(folderConfig.viewMode as ViewMode);
-          }
-          if (folderConfig.theme) {
-            setTheme(folderConfig.theme as ThemeMode);
-          }
-          if (folderConfig.expandedFolders) {
-            setExpandedFolders(folderConfig.expandedFolders);
-          } else {
-            setExpandedFolders([]);
-          }
-
-          // Restore last opened file if it exists
-          if (folderConfig.lastOpenedFile) {
-            try {
-              const fileExists = await FileExists(folderConfig.lastOpenedFile);
-              if (fileExists) {
-                const content = await ReadFile(folderConfig.lastOpenedFile);
-                setSelectedFilePath(folderConfig.lastOpenedFile);
-                setFileContent(content);
-                setOriginalContent(content);
-                setHasUnsavedChanges(false);
-              }
-            } catch (error) {
-              console.log('Last opened file no longer exists or cannot be read:', error);
-            }
-          }
-        } catch (error) {
-          // If no config exists, use defaults
-          console.log('No config found for this folder, using defaults');
-          setExpandedFolders([]);
+        // ask if the user want an encrypted vault or not
+        // or ask for the password to unlock vault
+        const noChildren = !tree.children || (tree.children && tree.children.length === 0);
+        const needAuth = await HasSecurity(dPath);
+        if (needAuth) { // first because the config file is actually filtered from children list
+          setIsUnlockVaultModalOpen(true);
+          return null; // next step handled via onSubmit callback
+        } else {
+          setIsVaultSecured(false);
         }
-
-        // Save to config for future sessions
-        localStorage.setItem('lastOpenedFolder', dirPath);
-        await SaveLastOpenedFolder(dirPath);
+        if (noChildren && !needAuth) {
+          setIsUseEncModalOpen(true);
+          return null; // next step handled via onSubmit callback
+        }
+        loadConfig(dPath);
       }
     } catch (error) {
       console.error('Error opening directory:', error);
     }
   };
 
-  const handleFileSelect = async (filePath: string) => {
+  // open a file and save the state in the config
+  const handleFileSelect = async (item: FileItem) => {
     try {
       setIsLoading(true);
       scrollRatioRef.current = 0;
-      const content = await ReadFile(filePath);
-      setSelectedFilePath(filePath);
+      const content = await ReadFile(item.path);
+      setSelectedFilePath(item.path);
       setFileContent(content);
       setOriginalContent(content);
       setHasUnsavedChanges(false);
@@ -236,11 +290,21 @@ function App() {
       // Save last opened file to config
       if (fileTree?.path) {
         try {
-          await SaveLastOpenedFile(fileTree.path, filePath);
+          await SaveLastOpenedFile(fileTree.path, item.path);
         } catch (error) {
           console.error('Error saving last opened file:', error);
         }
       }
+
+      // alert if a md file is opened in a mde vault
+      if (isVaultSecured && item.path.endsWith(".md")) {
+        const noMDinMDEWarning = window.localStorage.getItem("noMDinMDEWarning");
+        console.log(noMDinMDEWarning)
+        if (noMDinMDEWarning !== "1") {
+          setAlertMDinMDE(true);
+        }
+      }
+
     } catch (error) {
       console.error('Error reading file:', error);
     } finally {
@@ -248,6 +312,7 @@ function App() {
     }
   };
 
+  // expand folder and save the state in the config
   const handleExpandedFoldersChange = async (newExpandedFolders: string[]) => {
     setExpandedFolders(newExpandedFolders);
 
@@ -261,6 +326,7 @@ function App() {
     }
   };
 
+  // get the search result from the go backend
   const handleSearch = async (query: string): Promise<SearchResult[]> => {
     if (!fileTree?.path || !query.trim()) {
       return [];
@@ -275,16 +341,18 @@ function App() {
     }
   };
 
+  // write new content and tell that the file need saving
   const handleContentChange = useCallback((content: string) => {
     setFileContent(content);
     setHasUnsavedChanges(content !== originalContent);
   }, [originalContent]);
 
+  // write content into a file
   const handleSave = async () => {
     if (!selectedFilePath) return;
 
     try {
-      await WriteFile(selectedFilePath, fileContent);
+      await WriteContentInFile(selectedFilePath, fileContent);
       setOriginalContent(fileContent);
       setHasUnsavedChanges(false);
       console.log('File saved successfully');
@@ -293,13 +361,19 @@ function App() {
     }
   };
 
-  // Global keyboard handler - app shortcuts work everywhere
+  // global keyboard handler - app shortcuts work everywhere
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       handleKeys(
         event,
         setIsSearchModalOpen,
         setIsShortcutsModalOpen,
+        setIsUseEncModalOpen,
+        setIsUnlockVaultModalOpen,
+        isSearchModalOpen,
+        isShortcutsModalOpen,
+        isUseEncModalOpen,
+        isUnlockVaultModalOpen,
         viewMode,
         selectedFilePath,
         hasUnsavedChanges,
@@ -335,26 +409,19 @@ function App() {
     if (!newFileName.trim()) return;
 
     try {
-      const filePath = `${currentParentPath}/${newFileName}.md`;
-
-      // Check if file already exists
-      const exists = await FileExists(filePath);
-      if (exists) {
-        alert(`File "${newFileName}.md" already exists in this directory.`);
+      const actualPath = await CreateFile(currentParentPath, newFileName);
+      await refreshFileTree();
+      await handleFileSelect({ name: newFileName, path: actualPath, isDir: false });
+      setShowCreateFileDialog(false);
+      setNewFileName("");
+      setCreateFileDialogError("");
+    } catch (error) {
+      if (typeof error === "string" && error === "file_already_exist") {
+        setCreateFileDialogError(`File "${newFileName}" already exists in this directory.`);
         return;
       }
-
-      await CreateFile(filePath);
-      await refreshFileTree();
-
-      // Auto-open the newly created file
-      await handleFileSelect(filePath);
-
-      setShowCreateFileDialog(false);
-      setNewFileName('');
-    } catch (error) {
       console.error('Error creating file:', error);
-      alert('Error creating file. Please try again.');
+      setCreateFileDialogError('Error creating file. Please try again.');
     }
   };
 
@@ -369,54 +436,30 @@ function App() {
     if (!newFolderName.trim()) return;
 
     try {
-      const folderPath = `${currentParentPath}/${newFolderName}`;
-
-      // Check if folder already exists
-      const exists = await FileExists(folderPath);
-      if (exists) {
-        alert(`Folder "${newFolderName}" already exists in this directory.`);
-        return;
-      }
-
-      await CreateDirectory(folderPath);
+      await CreateDirectory(currentParentPath, newFolderName);
       await refreshFileTree();
       setShowCreateFolderDialog(false);
-      setNewFolderName('');
+      setNewFolderName("");
+      setCreateFolderDialogError("");
     } catch (error) {
+      if (typeof error === "string" && error === "folder_already_exist") {
+        setCreateFolderDialogError(`Folder "${newFolderName}" already exists in this directory.`);
+        return;
+      }
       console.error('Error creating folder:', error);
-      alert('Error creating folder. Please try again.');
+      setCreateFolderDialogError('Error creating folder. Please try again.');
     }
   };
 
   const handleRenameItem = async (itemPath: string, newName: string, isFile: boolean) => {
-    try {
-      const parentPath = itemPath.substring(0, itemPath.lastIndexOf('/'));
-      let newPath = `${parentPath}/${newName}`;
-
-      // suffix .md for already exists test
-      if (isFile && !newPath.endsWith(".md")) {
-        newPath += ".md";
-      }
-
-      // check if new name already exists
-      if (itemPath !== newPath) {
-        const exists = await FileExists(newPath);
-        if (exists) {
-          alert(`"${newName}" already exists in this directory.`);
-          return;
-        }
-      }
-
-      await RenameFile(itemPath, newPath, isFile);
-      await refreshFileTree();
-
-      // Update selected file path if it was renamed
-      if (selectedFilePath === itemPath) {
-        setSelectedFilePath(newPath);
-      }
-    } catch (error) {
-      console.error('Error renaming item:', error);
-      alert('Error renaming item. Please try again.');
+    const os = await GetOs();
+    let sep = "/";
+    if (os !== "linux") sep = "\\";
+    const parentPath = itemPath.substring(0, itemPath.lastIndexOf(sep));
+    const actualPath = await RenameFile(itemPath, parentPath, newName, isFile);
+    await refreshFileTree();
+    if (selectedFilePath === itemPath) {
+      setSelectedFilePath(actualPath);
     }
   };
 
@@ -441,106 +484,100 @@ function App() {
     }
   };
 
-  if (!fileTree) {
+  const radixThemeSettings = getRadixThemeSettings(uiTheme);
+
+  if (!fileTree || isUnlockVaultModalOpen || isUseEncModalOpen) {
     return (
-      <RadixTheme accentColor="gold" grayColor="sand" radius="medium" scaling="100%">
-        <div className="app-container">
+      <RadixTheme {...radixThemeSettings} panelBackground="translucent">
+        <div className="app-container" data-ui-theme={uiTheme}>
           <div className="welcome-screen">
             <div>
               <img src={appIcon} alt="Tape app icon"/>
-              <h1 className="workbench">Tape</h1>
+              <h1 className="j12">Tape</h1>
             </div>
-            <div className="welcome-buttons">
+            <div className="welcome-button">
               <Tooltip content="Select a directory to browse markdown files">
                 <Button disabled={isLoading} onClick={() => handleRootOpen()} className="primary-button">
                   <FolderOpen size={20}/>
-                  Open your tape box
+                  Open a tape box
                 </Button>
               </Tooltip>
+              {getLastOpenedFolder() && isVaultSecured && (
+                <Tooltip content="Unlock your tape box">
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => handleRootOpen(getLastOpenedFolder() ?? undefined)}
+                    className="primary-button"
+                  >
+                    <FolderOpen size={20}/>
+                    Unlock your tape box {getLastOpenedFolder()}
+                  </Button>
+                </Tooltip>
+              )}
             </div>
           </div>
         </div>
+
+        <UseEncVaultModal
+          isOpen={isUseEncModalOpen}
+          onSubmit={handleVaultSetup}
+          error={useEncModalError}
+        />
+
+        <UnlockVaultModal
+          isOpen={isUnlockVaultModalOpen}
+          onSubmit={handleVaultUnlock}
+          onAbort={() => setIsUnlockVaultModalOpen(false)}
+          error={unlockVaultModalError}
+          dirPath={dirPath}
+        />
       </RadixTheme>
     );
   }
 
   return (
-    <RadixTheme
-      accentColor="gold"
-      grayColor="auto"
-      radius="medium"
-      scaling="100%"
-    >
-      <div className="app-container">
+    <RadixTheme {...radixThemeSettings}>
+      <div className="app-container" data-ui-theme={uiTheme}>
 
         <div className="header header-extended" ref={mainHeaderRef}>
           <div className="header-left">
             <div className="logo">
               <img src={appIconBck} alt="Tape app icon"/>
-              <h1 className="workbench">Tape <small style={{fontSize: 'xx-small'}}>{version}</small></h1>
-              <div id="info" className="info vt32">
-                {hasUnsavedChanges && "unsaved file_"}
-              </div>
+              <h1 className="j12">
+                Tape
+                <small className="jetbrains-mono" style={{fontSize: "xx-small"}}> {version}</small>
+              </h1>
             </div>
           </div>
           <div className="header-right">
-              <Select.Root value={theme} onValueChange={(value: ThemeMode) => handleThemeChange(value)}>
-                <Select.Trigger className="theme-select-trigger">
-                  <Flex as="span" align="center" gap="2">
-                    {theme === 'system'
-                      ? <Monitor size={16}/>
-                      : theme === 'dark'
-                        ? <Moon size={16}/>
-                        : <Sun size={16}/>
-                    }
-                    {theme === 'system'
-                      ? "System"
-                      : theme === 'dark'
-                        ? "Dark"
-                        : "Light"
-                    }
-                  </Flex>
-                </Select.Trigger>
-                <Select.Content className="select-content" position="popper">
-                  <Select.Item value="system" className="select-item">
-                    <Flex as="span" align="center" gap="2">
-                      <Monitor size={16} />
-                      System
-                    </Flex>
-                  </Select.Item>
-                  <Select.Item value="light" className="select-item">
-                    <Flex as="span" align="center" gap="2">
-                      <Sun size={16} />
-                      Light
-                    </Flex>
-                  </Select.Item>
-                  <Select.Item value="dark" className="select-item">
-                    <Flex as="span" align="center" gap="2">
-                      <Moon size={16} />
-                      Dark
-                    </Flex>
-                  </Select.Item>
-                </Select.Content>
-              </Select.Root>
-
-              <div className="view-toggle">
-                <Button
-                  size="2"
-                  variant={viewMode === "editor" ? "solid" : "soft"}
-                  onClick={() => handleViewModeChange('editor')}
-                  style={{borderBottomRightRadius: 0, borderTopRightRadius: 0}}
-                >
-                  <Edit size="16"/> Editor
-                </Button>
-                <Button
-                  size="2"
-                  variant={viewMode === "reader" ? "solid" : "soft"}
-                  onClick={() => handleViewModeChange('reader')}
-                  style={{borderBottomLeftRadius: 0, borderTopLeftRadius: 0}}
-                >
-                  <Eye size="16"/> Reader
-                </Button>
-              </div>
+            <SettingsPopover
+              fileTree={fileTree}
+              isVaultSecured={isVaultSecured}
+              uiTheme={uiTheme}
+              onUIThemeChange={(theme) => setUITheme(theme)}
+              onEncryptionComplete={async () => {
+                await refreshFileTree();
+                setIsVaultSecured(true);
+              }}
+            />
+            <div className="view-toggle">
+              <Button
+                size="2"
+                variant={viewMode === "editor" ? "solid" : "soft"}
+                onClick={() => handleViewModeChange('editor')}
+                style={{borderBottomRightRadius: 0, borderTopRightRadius: 0}}
+              >
+                <Edit size="16"/> Editor
+              </Button>
+              <Button
+                size="2"
+                variant={viewMode === "reader" ? "solid" : "soft"}
+                onClick={() => handleViewModeChange('reader')}
+                style={{borderBottomLeftRadius: 0, borderTopLeftRadius: 0}}
+              >
+                <Eye size="16"/> Reader
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -559,6 +596,14 @@ function App() {
                   <FolderOpen size={16} />
                 </button>
               </Tooltip>
+
+              {isVaultSecured &&
+                <Tooltip content="Lock your tape box">
+                  <button onClick={() => lockVault()} className="action-button">
+                    <LockIcon size={16} />
+                  </button>
+                </Tooltip>
+              }
 
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger>
@@ -585,13 +630,21 @@ function App() {
               </Tooltip>
             </div>
 
-            <Stats original={originalContent} edited={fileContent} selectedFilePath={selectedFilePath}/>
+            <Stats
+              original={originalContent}
+              edited={fileContent}
+              selectedFilePath={selectedFilePath}
+              hasUnsavedChanges={hasUnsavedChanges}
+              isVaultSecured={isVaultSecured}
+            />
           </div>
 
           <div className="content-container" style={{ height: containerHeight }}>
             <div className="sidebar sidebar-extended" ref={sidebarRef}>
               <FileTree
                 fileTree={fileTree}
+                isVaultSecured={isVaultSecured}
+                uiTheme={uiTheme}
                 onFileSelect={handleFileSelect}
                 selectedFile={selectedFilePath}
                 onCreateFile={handleCreateFile}
@@ -634,14 +687,17 @@ function App() {
       {/* Create File Dialog */}
       <Dialog.Root open={showCreateFileDialog} onOpenChange={setShowCreateFileDialog}>
         <Dialog.Content maxWidth="450px">
-          <Dialog.Title>Create New File</Dialog.Title>
-          <Dialog.Description size="2" mb="4">
-            Enter a name for the new markdown file.
+          <Dialog.Title style={{ fontFamily: "vt32" }}>Create New File</Dialog.Title>
+          <Dialog.Description size="2" mb="4" style={{ fontFamily: "vt32" }}>
+            {createFileDialogError
+              ? <span className="important">{createFileDialogError}</span>
+              : <>Enter a name for the new markdown file.</>
+            }
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
             <label>
-              <Text as="div" size="2" mb="1" weight="bold">
+              <Text as="div" size="2" mb="1" weight="bold" style={{ fontFamily: "vt32" }}>
                 File name
               </Text>
               <TextField.Root
@@ -655,9 +711,6 @@ function App() {
                   }
                 }}
               >
-                <TextField.Slot side="right">
-                  <Text size="2" color="gray">.md</Text>
-                </TextField.Slot>
               </TextField.Root>
             </label>
           </Flex>
@@ -678,14 +731,17 @@ function App() {
       {/* Create Folder Dialog */}
       <Dialog.Root open={showCreateFolderDialog} onOpenChange={setShowCreateFolderDialog}>
         <Dialog.Content maxWidth="450px">
-          <Dialog.Title>Create New Folder</Dialog.Title>
-          <Dialog.Description size="2" mb="4">
-            Enter a name for the new folder.
+          <Dialog.Title style={{ fontFamily: "vt32" }}>Create New Folder</Dialog.Title>
+          <Dialog.Description size="2" mb="4" style={{ fontFamily: "vt32" }}>
+            {createFolderDialogError
+              ? <span className="important">{createFolderDialogError}</span>
+              : <>Enter a name for the new folder.</>
+            }
           </Dialog.Description>
 
           <Flex direction="column" gap="3">
             <label>
-              <Text as="div" size="2" mb="1" weight="bold">
+              <Text as="div" size="2" mb="1" weight="bold" style={{ fontFamily: "vt32" }}>
                 Folder name
               </Text>
               <TextField.Root
@@ -715,38 +771,42 @@ function App() {
         </Dialog.Content>
       </Dialog.Root>
 
-      {/* Search Modal */}
       <SearchModal
         isOpen={isSearchModalOpen}
-        onClose={() => {
-          setIsSearchModalOpen(false);
-          // Refocus editor in editor mode after modal closes
-          if (viewMode === 'editor') {
-            setTimeout(() => {
-              const editor = document.getElementById('editor') as HTMLDivElement;
-              editor?.focus();
-            }, 100);
-          }
-        }}
+        onClose={() => setIsSearchModalOpen(false)}
         onFileSelect={handleFileSelect}
         onSearch={handleSearch}
       />
 
-      {/* Shortcuts Modal */}
       <ShortcutsModal
         isOpen={isShortcutsModalOpen}
-        onClose={() => {
-          setIsShortcutsModalOpen(false);
-          // Refocus editor in editor mode after modal closes
-          if (viewMode === 'editor') {
-            setTimeout(() => {
-              const editor = document.getElementById('editor') as HTMLDivElement;
-              editor?.focus();
-            }, 100);
-          }
-        }}
+        onClose={() => setIsShortcutsModalOpen(false)}
         version={version}
       />
+
+      {/* alert when md in mde vault */}
+      <AlertDialog.Root open={alertMDinMDE} onOpenChange={setAlertMDinMDE}>
+        <AlertDialog.Content maxWidth="450px">
+          <AlertDialog.Title style={{ fontFamily: "vt32" }}>Warning</AlertDialog.Title>
+          <AlertDialog.Description size="2" style={{ fontFamily: "vt32" }}>
+            This note isn’t encrypted, even though it’s inside an encrypted vault.
+            For full encryption, please create notes using the in-app menu.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray" onClick={noMDinMDEWarning}>
+                Don't notify me anymore
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button variant="solid" color="red">
+                Ok
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
     </RadixTheme>
   );
 }

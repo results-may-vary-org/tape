@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {Dialog, TextField, Text, Flex, Separator} from '@radix-ui/themes';
 import {FileText, Folder, AlertCircle, SearchIcon} from 'lucide-react';
+import { FileItem } from '../types/types';
 
 interface SearchResult {
   path: string;
@@ -14,7 +15,7 @@ interface SearchResult {
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onFileSelect: (filePath: string) => void;
+  onFileSelect: (item: FileItem) => void;
   onSearch: (query: string) => Promise<SearchResult[]>;
 }
 
@@ -24,7 +25,7 @@ type resultLength = {
   s: string
 }
 
-const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect, onSearch}) => {
+const SearchModal: React.FC<SearchModalProps> = ({isOpen, onClose, onFileSelect, onSearch}) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -96,7 +97,7 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
         case 'Enter':
           e.preventDefault();
           if (results[selectedIndex] && !results[selectedIndex].isDir) {
-            onFileSelect(results[selectedIndex].path);
+            onFileSelect(results[selectedIndex]);
             onClose();
           }
           break;
@@ -131,7 +132,7 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen,  onClose, onFileSelect
 
   const handleResultClick = (result: SearchResult) => {
     if (!result.isDir) {
-      onFileSelect(result.path);
+      onFileSelect(result);
       onClose();
     }
   };

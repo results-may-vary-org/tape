@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Dialog, Text, Flex, Separator, Button } from '@radix-ui/themes';
-import {Keyboard, Heart, GithubIcon, Codepen, CodeIcon} from 'lucide-react';
+import {Keyboard, Heart, CodeIcon} from 'lucide-react';
+import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
 
 interface ShortcutItem {
   keys: string[];
@@ -33,7 +34,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
 
     // Editor
     { keys: ['Ctrl', 'm'], description: 'Zen mode', category: 'editor' },
-    { keys: ['Ctrl', 'n'], description: 'Fold sidebar', category: 'editor' },
+    { keys: ['Ctrl', 'm'], description: 'Fold sidebar', category: 'editor' },
     { keys: ['Ctrl', 'Z'], description: 'Undo change', category: 'editor' },
   ];
 
@@ -43,21 +44,6 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
       contentRef.current.focus();
     }
   }, [isOpen]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   const formatKeys = (keys: string[]) => {
     return keys.map((key, index) => (
@@ -83,7 +69,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
   };
 
   const openGitHub = () => {
-    window.open('https://github.com/results-may-vary-org/tape', '_blank', 'noopener,noreferrer');
+    BrowserOpenURL('https://github.com/results-may-vary-org/tape');
   };
 
   return (
@@ -102,7 +88,6 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
         </Dialog.Title>
 
         <Dialog.Description size="2" mb="4" className="vt32">
-          Master Tape with these keyboard shortcuts.
         </Dialog.Description>
 
         <div className="shortcuts-content">

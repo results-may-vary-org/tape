@@ -13,7 +13,7 @@ Tape is designed as a no-bloat markdown editor that focuses on simplicity and ef
 
 I want it to be just what I need it for: taking notes.
 
-No paywall, no outdated ui, no journaling system, simple and plain `.md` files.
+No paywall, no outdated UI, no journaling system, simple and plain `.md` files.
 
 ## Tape?!?
 
@@ -35,7 +35,9 @@ The design is inspired by old cassette color, the logo represents the wheel of a
 - **Cross-platform**: Available for Linux, Windows, and macOS
 - **Full keyboard integration**: You can navigate the ui with `tab` and `shift+tab`, `enter` to open
 - **Shortcut help**: just hit `ctrl+h` to get the full list of shortcuts
-- **Sync yourself**: because the app handle plain `.md` files and the config file is place at the root of your notes folder, you can sync your notes with any other app you want
+- **Sync yourself**: because the app handles plain `.md` files and the config file is placed at the root of your notes folder, you can sync your notes with any other app you want
+- **Encryption**: `new` encryption is available out of the box, you can also encrypt your already existing .md file via the option
+- **Theme**: `new` you can choose from 3 built-in themes (I plan to add more later)
 
 ## Installation
 
@@ -58,6 +60,35 @@ cd tape
 wails build
 ```
 
+## Encryption
+
+When privacy mode is enabled, tape encrypts both the **content** and the **names** of all your files and folders.
+
+Your password is the only thing you need to decrypt them.
+
+### How it works
+
+**Key derivation** — your password is processed through [Argon2id](https://en.wikipedia.org/wiki/Argon2) (2 passes, 64MB memory, 4 threads) to produce a 256-bit encryption key. This makes brute-force attacks expensive.
+
+**Content encryption** — each file's content is encrypted with AES-256-GCM. A unique random nonce is generated for every write, so encrypting the same content twice produces different ciphertext.
+
+**Filename & folder encryption** — names are also encrypted with AES-256-GCM. Because raw encrypted bytes contain arbitrary binary data that filesystems can't handle, the result is encoded to [Base64 URL-safe](https://en.wikipedia.org/wiki/Base64#URL_applications) before being used as the actual name on disk. Encrypted files get the `.mde` extension.
+
+**File format** — every encrypted file starts with a `MDE1` version prefix, followed by the nonce, then the ciphertext:
+```
+MDE1 + nonce (12 bytes) + ciphertext
+```
+Filenames follow the same layout but base64-encoded:
+```
+MDE1 + base64url(nonce + ciphertext) + .mde
+```
+
+**Password verification** — `tape.json` stores a small encrypted blob (a random value encrypted with your key) and its nonce. On login, tape re-derives the key from your password and tries to decrypt this blob. If it succeeds, the password is correct. The key itself is never stored anywhere. This is only stored for UX purposes.
+
+> Your password alone is sufficient to recover your files. There is no recovery key and no secondary secret to keep.
+
+![Encryption Overview](/.github/assets/screenshot_enc.png)
+
 ## Configuration `tape.json`
 
 The config is mostly there to remember your last opened folder, selection and view mode.
@@ -76,9 +107,9 @@ It must be placed at the root of your notes folder.
 
 ## Markdown flavor example
 
-The supported flavor is the GFM one with some addons.
+The supported flavor is the GFM one with some add-ons.
 
-A example exist here: [example](./example.md).
+An example exists here: [example](./example.md).
 
 ## Code of conduct, license, authors, changelog, contributing
 
@@ -88,7 +119,7 @@ See the following files:
 - [changelog](CHANGELOG.md)
 - [code of conduct](CODE_OF_CONDUCT.md)
 
-## Want to participate? Have a bug or a request feature?
+## Want to participate? Have a bug or a feature request?
 
 Do not hesitate to open a PR or an issue. I reply when I can.
 
