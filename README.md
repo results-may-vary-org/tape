@@ -41,6 +41,8 @@ The design is inspired by old cassette color, the logo represents the wheel of a
 
 ## Installation
 
+`libwebkit` is required on certain distro.
+
 ### Linux
 - Download via [AUR](https://aur.archlinux.org/packages/tape-bin)
 - Download the installer from [releases](https://github.com/results-may-vary-org/tape/releases)
