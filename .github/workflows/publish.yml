@@ -34,7 +34,7 @@ jobs:
         build:
           - name: 'tape'
             platform: 'linux/amd64'
-            platform_hyphen: 'linux-amd64'
+            platform_hyphen: 'linux-amd64-gtk3'
             os: 'ubuntu-22.04' # for libwebkit2gtk 4.0
           - name: 'tape'
             platform: 'windows/amd64'
@@ -81,9 +81,8 @@ jobs:
           build-platform: ${{ matrix.build.platform }}
           package: true
           nsis: ${{ matrix.build.platform == 'windows/amd64' }}
-          go-version: '1.23'
-          wails-version: 'v2.10.2'
-          build-tags: 'webkit2_41'
+          go-version: '1.26'
+          wails-version: 'v2.12.0'
 
       - name: Setup nFPM
         if: matrix.build.os == 'ubuntu-22.04'
@@ -100,7 +99,7 @@ jobs:
           ls -la build/bin/
 
           # Copy the versioned binary to the expected name
-          cp build/bin/tape-linux-amd64-${{ needs.get-tag.outputs.tag }} build/bin/tape
+          cp build/bin/tape-linux-amd64-gtk3-${{ needs.get-tag.outputs.tag }} build/bin/tape
           chmod +x build/bin/tape
 
           # Copy icon if it doesn't exist in the expected location
@@ -130,7 +129,7 @@ jobs:
         if: matrix.build.os == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
-          name: linux-packages-${{ needs.get-tag.outputs.tag }}
+          name: linux-packages-gtk3-${{ needs.get-tag.outputs.tag }}
           path: |
             build/*.deb
             build/*.rpm

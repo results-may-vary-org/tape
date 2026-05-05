@@ -1,0 +1,97 @@
+name: Build and Publish (GTK4 / webkit2_41)
+
+on: workflow_dispatch
+
+permissions:
+  contents: write
+  packages: read
+
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
+jobs:
+  get-tag:
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.get_tag.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v999.999.999")
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
+  build-linux-gtk4:
+    needs: get-tag
+    runs-on: ubuntu-24.04
+    env:
+      TAPE_VERSION: ${{ needs.get-tag.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.26'
+          cache: true
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build wails
+        uses: dAppServer/wails-build-action@main
+        id: build
+        env:
+          TAPE_VERSION: ${{ needs.get-tag.outputs.tag }}
+        with:
+          build-cache: false
+          build-name: tape-linux-amd64-gtk4-${{ needs.get-tag.outputs.tag }}
+          build-platform: linux/amd64
+          package: false
+          go-version: '1.26'
+          wails-version: 'v2.12.0'
+          build-tags: 'webkit2_41'
+
+      - name: Setup nFPM
+        run: |
+          wget https://github.com/goreleaser/nfpm/releases/download/v2.40.0/nfpm_2.40.0_Linux_x86_64.tar.gz
+          tar -xzf nfpm_2.40.0_Linux_x86_64.tar.gz
+          sudo mv nfpm /usr/local/bin/
+          nfpm --version
+
+      - name: Create Linux packages
+        run: |
+          ls -la build/bin/
+
+          cp build/bin/tape-linux-amd64-gtk4-${{ needs.get-tag.outputs.tag }} build/bin/tape
+          chmod +x build/bin/tape
+
+          if [ ! -f build/appicon.png ]; then
+            mkdir -p build
+            echo "PNG placeholder" > build/appicon.png
+          fi
+
+          TAPE_VERSION=${{ needs.get-tag.outputs.tag }} nfpm package --config nfpm-gtk4.yaml --packager deb --target ./build/
+
+          ls -la build/*.deb
+
+      - name: Upload Linux packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages-gtk4-${{ needs.get-tag.outputs.tag }}
+          path: build/*.deb

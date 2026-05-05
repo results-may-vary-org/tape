@@ -1,4 +1,4 @@
-name: "tape-gtk3"
+name: "tape-gtk4"
 arch: "amd64"
 platform: "linux"
 version: "${TAPE_VERSION}"
@@ -6,7 +6,7 @@ section: "default"
 priority: "extra"
 maintainer: "Bouteiller [a2n] Alan <a2n.dev@pm.me>"
 description: |
-  Tape - A markdown editor with no bloat.
+  Tape - A markdown editor with no bloat. (webkit2gtk 4.1 / GTK4 build)
 vendor: "a2n"
 homepage: "https://github.com/a2n-dev/tape"
 license: "MIT"
@@ -28,14 +28,4 @@ overrides:
     depends:
     - libc6
     - libgtk-3-0
-    - libwebkit2gtk-4.0-37
-  rpm:
-    depends:
-    - glibc
-    - gtk3
-    - webkit2gtk3
-  apk:
-    depends:
-    - musl
-    - gtk+3.0
-    - webkit2gtk
+    - libwebkit2gtk-4.1-0
