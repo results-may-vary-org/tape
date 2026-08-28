@@ -34,6 +34,7 @@ type FileItem struct {
 	Name     string      `json:"name"`
 	Path     string      `json:"path"`
 	IsDir    bool        `json:"isDir"`
+	ModTime  string      `json:"modTime"`
 	Children []*FileItem `json:"children,omitempty"`
 }
 
@@ -45,6 +46,7 @@ type Config struct {
 	Theme            string   `json:"theme"`
 	UITheme          string   `json:"uiTheme"`
 	PrivacyMode      bool     `json:"privacyMode"`
+	ShowFileMTime    bool     `json:"showFileMTime"`
 	Check            []byte   `json:"check"`
 	NonceCheck       []byte   `json:"nonceCheck"`
 }
@@ -532,9 +534,10 @@ func (a *App) GetDirectoryTree(dirPath string) (*FileItem, error) {
 	}
 
 	root := &FileItem{
-		Name:  info.Name(),
-		Path:  dirPath,
-		IsDir: info.IsDir(),
+		Name:    info.Name(),
+		Path:    dirPath,
+		IsDir:   info.IsDir(),
+		ModTime: formatFileModTime(info.ModTime()),
 	}
 
 	if info.IsDir() {
@@ -584,10 +587,15 @@ func (a *App) buildFileTree(parent *FileItem, rootPath string) error {
 		}
 
 		fullPath := filepath.Join(parent.Path, entry.Name())
+		modTime := ""
+		if info, err := entry.Info(); err == nil {
+			modTime = formatFileModTime(info.ModTime())
+		}
 		child := &FileItem{
-			Name:  string(realName),
-			Path:  fullPath,
-			IsDir: entry.IsDir(),
+			Name:    string(realName),
+			Path:    fullPath,
+			IsDir:   entry.IsDir(),
+			ModTime: modTime,
 		}
 
 		if entry.IsDir() {
@@ -761,6 +769,19 @@ func (a *App) RenameFile(oldPath, newPath, filename string, isFile bool) (string
 func (a *App) IsFileExists(filePath string) bool {
 	_, err := os.Stat(filePath)
 	return !os.IsNotExist(err)
+}
+
+// GetFileModTime returns the last modification time of a file
+func (a *App) GetFileModTime(filePath string) (string, error) {
+	info, err := os.Stat(filePath)
+	if err != nil {
+		return "", err
+	}
+	return formatFileModTime(info.ModTime()), nil
+}
+
+func formatFileModTime(t time.Time) string {
+	return t.Format("Jan 2, 2006 15:04")
 }
 
 // GetDecryptedFullPath take a path and return it decrypted
@@ -968,6 +989,17 @@ func (a *App) getPrivacyMode(folderPath string) bool {
 		return false
 	}
 	return config.PrivacyMode
+}
+
+// SaveShowFileMTime saves whether the file tree shows the last edited date
+func (a *App) SaveShowFileMTime(folderPath string, showFileMTime bool) error {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		config = &Config{}
+	}
+
+	config.ShowFileMTime = showFileMTime
+	return a.SaveConfig(config, folderPath)
 }
 
 // getCryptoOptions return all related config for crypto

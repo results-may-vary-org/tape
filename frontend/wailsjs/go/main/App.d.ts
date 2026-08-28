@@ -18,6 +18,8 @@ export function GetDecryptedFullPath(arg1:string,arg2:number):Promise<string>;
 
 export function GetDirectoryTree(arg1:string):Promise<main.FileItem>;
 
+export function GetFileModTime(arg1:string):Promise<string>;
+
 export function GetOs():Promise<string>;
 
 export function GetTapeVersion():Promise<string>;
@@ -49,6 +51,8 @@ export function SaveLastOpenedFile(arg1:string,arg2:string):Promise<void>;
 export function SaveLastOpenedFolder(arg1:string):Promise<void>;
 
 export function SavePrivacyMode(arg1:string,arg2:boolean):Promise<void>;
+
+export function SaveShowFileMTime(arg1:string,arg2:boolean):Promise<void>;
 
 export function SaveTheme(arg1:string,arg2:string):Promise<void>;
 

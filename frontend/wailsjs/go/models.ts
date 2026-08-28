@@ -27,6 +27,7 @@ export namespace main {
 	    theme: string;
 	    uiTheme: string;
 	    privacyMode: boolean;
+	    showFileMTime: boolean;
 	    check: number[];
 	    nonceCheck: number[];
 	
@@ -43,6 +44,7 @@ export namespace main {
 	        this.theme = source["theme"];
 	        this.uiTheme = source["uiTheme"];
 	        this.privacyMode = source["privacyMode"];
+	        this.showFileMTime = source["showFileMTime"];
 	        this.check = source["check"];
 	        this.nonceCheck = source["nonceCheck"];
 	    }
@@ -89,6 +91,7 @@ export namespace main {
 	    name: string;
 	    path: string;
 	    isDir: boolean;
+	    modTime: string;
 	    children?: FileItem[];
 	
 	    static createFrom(source: any = {}) {
@@ -100,6 +103,7 @@ export namespace main {
 	        this.name = source["name"];
 	        this.path = source["path"];
 	        this.isDir = source["isDir"];
+	        this.modTime = source["modTime"];
 	        this.children = this.convertValues(source["children"], FileItem);
 	    }
 	

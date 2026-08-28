@@ -1,8 +1,8 @@
-import { Popover, Button, Flex, Select } from "@radix-ui/themes"
+import { Popover, Button, Flex, Select, Switch, Text } from "@radix-ui/themes"
 import { CassetteTape, Citrus, File, Folder, GemIcon, Monitor, Moon, Settings2, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
-import { SaveTheme, SaveUITheme, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
+import { SaveTheme, SaveUITheme, SaveShowFileMTime, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
 import type { FileItem, ThemeMode, UIThemeMode } from "../types/types";
 import EncTreeConfirmationModal from "./EncTreeConfirmationModal";
 import EncTreeDoneModal from "./EncTreeDoneModal";
@@ -12,12 +12,16 @@ const SettingsPopover = ({
   fileTree,
   isVaultSecured,
   uiTheme,
+  showFileMTime,
+  onShowFileMTimeChange,
   onUIThemeChange,
   onEncryptionComplete,
 }: {
   fileTree: FileItem | null;
   isVaultSecured: boolean;
   uiTheme: UIThemeMode;
+  showFileMTime: boolean;
+  onShowFileMTimeChange: (show: boolean) => void;
   onUIThemeChange: (t: UIThemeMode) => void;
   onEncryptionComplete: () => Promise<void>;
 }) => {
@@ -45,6 +49,17 @@ const SettingsPopover = ({
         await SaveTheme(fileTree.path, newTheme);
       } catch (error) {
         console.error("Error saving theme:", error);
+      }
+    }
+  };
+
+  const handleShowFileMTimeChange = async (show: boolean) => {
+    onShowFileMTimeChange(show);
+    if (fileTree?.path) {
+      try {
+        await SaveShowFileMTime(fileTree.path, show);
+      } catch (error) {
+        console.error("Error saving last edited date setting:", error);
       }
     }
   };
@@ -165,6 +180,14 @@ const SettingsPopover = ({
               </Select.Item>
             </Select.Content>
           </Select.Root>
+
+          <Flex align="center" justify="between" gap="3">
+            <Text size="2">Show last edited date in the file tree</Text>
+            <Switch
+              checked={showFileMTime}
+              onCheckedChange={handleShowFileMTimeChange}
+            />
+          </Flex>
 
           {!isVaultSecured && <EncTreeConfirmationModal nextStep={() => setIsSetupEncOpen(true)}/>}
         </Flex>

@@ -79,6 +79,7 @@ function App() {
   const [unlockVaultModalError, setUnlockVaultModalError] = useState<string>("");
   const [isVaultSecured, setIsVaultSecured] = useState<boolean>(false);
   const [uiTheme, setUITheme] = useState<UIThemeMode>('original');
+  const [showFileMTime, setShowFileMTime] = useState<boolean>(true);
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState<boolean>(false);
@@ -184,6 +185,11 @@ function App() {
         setUITheme(folderConfig.uiTheme as UIThemeMode);
       } else {
         setUITheme('original');
+      }
+      if (folderConfig.showFileMTime !== undefined) {
+        setShowFileMTime(folderConfig.showFileMTime);
+      } else {
+        setShowFileMTime(true);
       }
       if (folderConfig.expandedFolders) {
         setExpandedFolders(folderConfig.expandedFolders);
@@ -363,6 +369,18 @@ function App() {
     setHasUnsavedChanges(content !== originalContent);
   }, [originalContent]);
 
+  // refresh the file tree so it shows up-to-date metadata (e.g. last edited date)
+  const refreshFileTree = async () => {
+    if (!fileTree) return;
+
+    try {
+      const tree = await GetDirectoryTree(fileTree.path);
+      setFileTree(tree);
+    } catch (error) {
+      console.error('Error refreshing file tree:', error);
+    }
+  };
+
   // write content into a file
   const handleSave = async () => {
     if (!selectedFilePath) return;
@@ -371,6 +389,7 @@ function App() {
       await WriteContentInFile(selectedFilePath, fileContent);
       setOriginalContent(fileContent);
       setHasUnsavedChanges(false);
+      await refreshFileTree();
       console.log('File saved successfully');
     } catch (error) {
       console.error('Error saving file:', error);
@@ -438,17 +457,6 @@ function App() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode]);
-
-  const refreshFileTree = async () => {
-    if (!fileTree) return;
-
-    try {
-      const tree = await GetDirectoryTree(fileTree.path);
-      setFileTree(tree);
-    } catch (error) {
-      console.error('Error refreshing file tree:', error);
-    }
-  };
 
   const handleCreateFile = (parentPath?: string) => {
     if (!fileTree && !parentPath) return;
@@ -678,6 +686,8 @@ function App() {
               fileTree={fileTree}
               isVaultSecured={isVaultSecured}
               uiTheme={uiTheme}
+              showFileMTime={showFileMTime}
+              onShowFileMTimeChange={(show) => setShowFileMTime(show)}
               onUIThemeChange={(theme) => setUITheme(theme)}
               onEncryptionComplete={async () => {
                 await refreshFileTree();
@@ -695,6 +705,7 @@ function App() {
                 fileTree={fileTree}
                 isVaultSecured={isVaultSecured}
                 uiTheme={uiTheme}
+                showFileMTime={showFileMTime}
                 onFileSelect={handleFileSelect}
                 selectedFile={selectedFilePath}
                 onCreateFile={handleCreateFile}

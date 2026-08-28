@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
 import {
-  ChevronRight,
-  ChevronDown,
   Folder,
-  FolderOpen,
-  FileText,
   Plus,
   Edit3,
   Trash2,
-  CassetteTape, PackageOpen, Package, ShieldCheck
 } from 'lucide-react';
 import type { UIThemeMode } from '../types/types';
 import { ContextMenu, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
+import treeElement, { type TreeItem } from './treeElement';
 
-interface FileItem {
-  name: string;
-  path: string;
-  isDir: boolean;
+const TreeElement = treeElement;
+
+interface FileItem extends TreeItem {
   children?: FileItem[];
 }
 
@@ -32,6 +27,7 @@ interface FileTreeProps {
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
   isVaultSecured: boolean;
   uiTheme: UIThemeMode;
+  showFileMTime: boolean;
 }
 
 interface FileTreeNodeProps {
@@ -48,6 +44,7 @@ interface FileTreeNodeProps {
   onExpandedFoldersChange: (expandedFolders: string[]) => void;
   isVaultSecured: boolean;
   uiTheme: UIThemeMode;
+  showFileMTime: boolean;
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({
@@ -64,17 +61,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   onExpandedFoldersChange,
   isVaultSecured,
   uiTheme,
+  showFileMTime,
 }: FileTreeNodeProps) => {
   const useAltIcons = uiTheme === 'modern' || uiTheme === 'agrume';
   const isExpanded = expandedFolders.includes(item.path);
-  const displayName = (isVaultSecured && !item.isDir && item.name.endsWith('.mde'))
-    ? item.name.slice(0, -4)
-    : item.name;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newName, setNewName] = useState<string>(item.name);
   const [renameError, setRenameError] = useState<string>("");
-  const itemRef = React.useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
     if (item.isDir) {
@@ -167,35 +161,18 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
     <div>
       <ContextMenu.Root>
         <ContextMenu.Trigger>
-          <div
-            ref={itemRef}
+          <TreeElement
+            item={item}
+            isExpanded={isExpanded}
+            isSelected={isSelected}
+            isRootFolder={isRootFolder}
+            isVaultSecured={isVaultSecured}
+            showFileMTime={showFileMTime}
+            indent={indent}
+            useAltIcons={useAltIcons}
             onClick={handleClick}
             onKeyDown={handleKeyDown}
-            className={`file-tree-item ${isSelected ? 'selected' : ''}`}
-            style={{ paddingLeft: `${indent}px` }}
-            tabIndex={0}
-            role={item.isDir ? "treeitem" : "button"}
-            aria-expanded={item.isDir ? isExpanded : undefined}
-            aria-selected={isSelected}
-          >
-            <span className="file-tree-icon">
-              {item.isDir ? (
-                <>
-                  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  {useAltIcons
-                    ? isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />
-                    : isExpanded ? <PackageOpen size={16} /> : <Package size={16} />
-                  }
-                </>
-              ) : (
-                useAltIcons
-                  ? <FileText size={16} style={{marginLeft: 5}} />
-                  : <CassetteTape size={16} style={{marginLeft: 5}} />
-              )}
-              {(isRootFolder && isVaultSecured) && <ShieldCheck size={16}/>}
-            </span>
-            <span className="file-tree-name">{displayName}</span>
-          </div>
+          />
         </ContextMenu.Trigger>
         <ContextMenu.Content className="context-menu-content">
           <ContextMenu.Item className="context-menu-item" onClick={handleCreateFile}>
@@ -239,6 +216,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               onExpandedFoldersChange={onExpandedFoldersChange}
               isVaultSecured={isVaultSecured}
               uiTheme={uiTheme}
+              showFileMTime={showFileMTime}
             />
           ))}
         </div>
@@ -330,6 +308,7 @@ const FileTree: React.FC<FileTreeProps> = ({
   onExpandedFoldersChange,
   isVaultSecured,
   uiTheme,
+  showFileMTime,
 }) => {
   if (!fileTree) {
     return (
@@ -356,6 +335,7 @@ const FileTree: React.FC<FileTreeProps> = ({
         onExpandedFoldersChange={onExpandedFoldersChange}
         isVaultSecured={isVaultSecured}
         uiTheme={uiTheme}
+        showFileMTime={showFileMTime}
       />
     </div>
   );

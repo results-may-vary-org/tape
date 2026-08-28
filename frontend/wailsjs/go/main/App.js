@@ -34,6 +34,10 @@ export function GetDirectoryTree(arg1) {
   return window['go']['main']['App']['GetDirectoryTree'](arg1);
 }
 
+export function GetFileModTime(arg1) {
+  return window['go']['main']['App']['GetFileModTime'](arg1);
+}
+
 export function GetOs() {
   return window['go']['main']['App']['GetOs']();
 }
@@ -96,6 +100,10 @@ export function SaveLastOpenedFolder(arg1) {
 
 export function SavePrivacyMode(arg1, arg2) {
   return window['go']['main']['App']['SavePrivacyMode'](arg1, arg2);
+}
+
+export function SaveShowFileMTime(arg1, arg2) {
+  return window['go']['main']['App']['SaveShowFileMTime'](arg1, arg2);
 }
 
 export function SaveTheme(arg1, arg2) {

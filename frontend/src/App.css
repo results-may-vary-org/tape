@@ -404,8 +404,23 @@ button {
   color: var(--gray-10);
 }
 
-.file-tree-name {
+.file-tree-name-wrap {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tree-mtime {
+  font-size: 0.625rem;
+  line-height: 1.2;
+  color: var(--gray-9);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
