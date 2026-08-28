@@ -34,7 +34,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
 
     // Editor
     { keys: ['Ctrl', 'm'], description: 'Zen mode', category: 'editor' },
-    { keys: ['Ctrl', 'm'], description: 'Fold sidebar', category: 'editor' },
+    { keys: ['Ctrl', 'n'], description: 'Fold sidebar', category: 'editor' },
     { keys: ['Ctrl', 'Z'], description: 'Undo change', category: 'editor' },
   ];
 
@@ -80,20 +80,20 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
         maxWidth="500px"
         tabIndex={-1}
       >
-        <Dialog.Title style={{ fontFamily: "vt32" }}>
+        <Dialog.Title>
           <Flex align="center" gap="2">
-            <Keyboard size={20} />
+            <Keyboard size={18} />
             Keyboard Shortcuts
           </Flex>
         </Dialog.Title>
 
-        <Dialog.Description size="2" mb="4" className="vt32">
+        <Dialog.Description size="2" mb="4">
         </Dialog.Description>
 
         <div className="shortcuts-content">
           {Object.entries(groupedShortcuts).map(([category, items], index) => (
             <div key={category} className="shortcut-category">
-              <Text size="3" weight="bold" mb="2" className="category-title vt32">
+              <Text size="3" weight="bold" mb="2" className="category-title">
                 {categoryNames[category as keyof typeof categoryNames]}
               </Text>
 
@@ -103,7 +103,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
                     <div className="shortcut-keys">
                       {formatKeys(shortcut.keys)}
                     </div>
-                    <div className="shortcut-description vt32">
+                    <div className="shortcut-description">
                       {shortcut.description}
                     </div>
                   </div>
@@ -118,7 +118,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
           <Separator style={{ width: "100%", margin: "16px 0" }} />
 
           <Flex direction="column" gap="3" align="center">
-            <Text size="2" className="vt32" style={{ textAlign: 'center' }}>
+            <Text size="2" style={{ textAlign: 'center' }}>
               <Flex align="center" gap="1" justify="center">
                 <Heart size={14} />
                 Thanks for using Tape!
@@ -126,7 +126,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
             </Text>
 
             <Flex align="center" gap="3">
-              <Text size="1" color="gray" className="vt32">
+              <Text size="1" color="gray">
                 Version {version}
               </Text>
 

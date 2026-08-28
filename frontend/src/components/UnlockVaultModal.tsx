@@ -52,11 +52,11 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen, onSubmit, on
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onAbort}>
-      <Dialog.Content className="search-modal" maxWidth="600px">
+        <Dialog.Content className="search-modal" maxWidth="600px">
 
-        <Dialog.Title style={{fontFamily: "vt32"}}>Unlock your tape box.</Dialog.Title>
+        <Dialog.Title>Unlock your tape box.</Dialog.Title>
 
-        <Dialog.Description size="2" mb="4" className="vt32">
+        <Dialog.Description size="2" mb="4">
           {!error && `Enter your password to unlock your tape box ${dirPath}`}
           {error && (<span className="important">{error}</span>)}
         </Dialog.Description>
@@ -89,7 +89,7 @@ const UnlockVaultModal: React.FC<UnlockVaultModalProps> = ({isOpen, onSubmit, on
         </Flex>
 
         <div>
-          <div className="search-footer vt32">
+          <div className="search-footer">
             <Text size="1" color="gray">
               Press Enter to unlock
             </Text>

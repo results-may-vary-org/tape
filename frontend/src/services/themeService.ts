@@ -10,12 +10,12 @@ export interface RadixThemeSettings {
 export function getRadixThemeSettings(uiTheme: UIThemeMode): RadixThemeSettings {
   switch (uiTheme) {
     case "modern":
-      return { accentColor: "violet", grayColor: "slate", radius: "small", scaling: "100%" };
+      return { accentColor: "indigo", grayColor: "slate", radius: "medium", scaling: "100%" };
     case "agrume":
-      return { accentColor: "orange", grayColor: "sand", radius: "small", scaling: "100%" };
+      return { accentColor: "iris", grayColor: "slate", radius: "medium", scaling: "100%" };
     case "original":
     default:
-      return { accentColor: "gold", grayColor: "sand", radius: "small", scaling: "100%" };
+      return { accentColor: "violet", grayColor: "slate", radius: "medium", scaling: "100%" };
   }
 }
 

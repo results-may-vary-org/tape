@@ -1,8 +1,8 @@
 // Helper module for styling options
 export const generalContent = {
-  fontSize: '1rem',
+  fontSize: '0.9rem',
   fontFamily: '"jetbrains-mono", monospace',
-  lineHeight: '1.4',
+  lineHeight: '1.5',
 };
 
 export const generalCursor = {

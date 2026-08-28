@@ -18,7 +18,6 @@ interface MarkdownEditorProps {
   content: string;
   onChange: (content: string) => void;
   filePath: string | null;
-  containerHeight: string;
   scrollRatio?: number;
   onScrollChange?: (ratio: number) => void;
 }
@@ -109,7 +108,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
     <div className="markdown-editor">
       <div
         ref={editorRef}
-        style={{ height: props.containerHeight, overflowY: "auto", maxWidth: "100%" }}
+        style={{ flex: 1, overflowY: "auto", maxWidth: "100%", minHeight: 0 }}
       ></div>
     </div>
   );

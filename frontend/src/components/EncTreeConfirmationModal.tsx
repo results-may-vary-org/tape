@@ -11,8 +11,8 @@ const EncTreeConfirmationModal: React.FC<props> = ({ nextStep }: props) => {
       <AlertDialog.Trigger>
         <Button>Encrypt my notes</Button>
       </AlertDialog.Trigger>
-      <AlertDialog.Content maxWidth="450px" className="vt32">
-        <AlertDialog.Title color="orange" style={{fontFamily: "vt32"}}>Important</AlertDialog.Title>
+      <AlertDialog.Content maxWidth="450px">
+        <AlertDialog.Title>Important</AlertDialog.Title>
         <AlertDialog.Description size="2">
           <Text>Your note will be securely encrypted for extra privacy at the next step.</Text>
           <br/>
@@ -22,12 +22,12 @@ const EncTreeConfirmationModal: React.FC<props> = ({ nextStep }: props) => {
         </AlertDialog.Description>
         <Flex gap="3" mt="4" justify="end">
           <AlertDialog.Cancel>
-            <Button variant="soft" color="orange">
+            <Button variant="soft">
               Cancel
             </Button>
           </AlertDialog.Cancel>
           <AlertDialog.Action>
-            <Button variant="solid" color="green" onClick={nextStep}>
+            <Button onClick={nextStep}>
               Continue
             </Button>
           </AlertDialog.Action>

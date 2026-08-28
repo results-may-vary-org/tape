@@ -17,8 +17,10 @@ import {
   RefreshCw,
   Edit,
   Eye,
-  PanelTopClose,
-  LockIcon
+  LockIcon,
+  Check,
+  CircleDashed,
+  Search as SearchIcon
 } from 'lucide-react';
 import { DropdownMenu, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 import {
@@ -56,7 +58,6 @@ function App() {
   const { setTheme } = useTheme();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const mainHeaderRef = useRef<HTMLDivElement>(null);
   const scrollRatioRef = useRef<number>(0);
 
   const [version] = useState<string>(__TAPE_VERSION__);
@@ -90,9 +91,8 @@ function App() {
 
   // maybe one day we can calculate the height automatically,
   // but for now this is the fastest since none of the elements change height
-  // 53 = header, 40 = subheader
-  const [containerHeight, setContainerHeight] = useState<string>("calc(100vh - (40px + 53px))");
-  const [sidebarRotate, setSidebarRotate] = useState<string>("270deg");
+  const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
+  const [zenMode, setZenMode] = useState<boolean>(false);
 
   const noMDinMDEWarning = async () => {
     window.localStorage.setItem("noMDinMDEWarning", "1");
@@ -216,35 +216,16 @@ function App() {
   };
 
   const toggleSidebar = () => {
-    if (sidebarRef && sidebarRef.current) {
-      sidebarRef.current.classList.toggle("sidebar-extended");
-      sidebarRef.current.classList.toggle("sidebar-hidden");
-      if (sidebarRef.current.classList.contains("sidebar-hidden")) {
-        setSidebarRotate("90deg");
-      } else {
-        setSidebarRotate("270deg");
-      }
-    }
+    setSidebarHidden((h) => !h);
   }
 
   const toggleZenMode = () => {
-    if (mainHeaderRef && mainHeaderRef.current && sidebarRef && sidebarRef.current) {
-      mainHeaderRef.current.classList.toggle("header-extended");
-      mainHeaderRef.current.classList.toggle("header-hidden");
-
-      // not toggle on sidebarRef class because we need to force the class not to inverse
-      if (mainHeaderRef.current.classList.contains("header-hidden")) {
-        setContainerHeight("calc(100vh - 40px)");
-        sidebarRef.current.classList.remove("sidebar-extended");
-        sidebarRef.current.classList.add("sidebar-hidden");
-        setSidebarRotate("90deg");
-      } else {
-        setContainerHeight("calc(100vh - (40px + 53px))");
-        sidebarRef.current.classList.add("sidebar-extended");
-        sidebarRef.current.classList.remove("sidebar-hidden");
-        setSidebarRotate("270deg");
-      }
-    }
+    setZenMode((z) => {
+      const next = !z;
+      // entering zen: collapse the sidebar for a distraction-free view
+      if (next) setSidebarHidden(true);
+      return next;
+    });
   }
 
   // handle the opening of any root (new or old)
@@ -489,11 +470,11 @@ function App() {
   if (!fileTree || isUnlockVaultModalOpen || isUseEncModalOpen) {
     return (
       <RadixTheme {...radixThemeSettings} panelBackground="translucent">
-        <div className="app-container" data-ui-theme={uiTheme}>
+      <div className={`app-container${zenMode ? " zen-mode" : ""}`} data-ui-theme={uiTheme}>
           <div className="welcome-screen">
             <div>
               <img src={appIcon} alt="Tape app icon"/>
-              <h1 className="j12">Tape</h1>
+              <h1>Tape</h1>
             </div>
             <div className="welcome-button">
               <Tooltip content="Select a directory to browse markdown files">
@@ -537,19 +518,90 @@ function App() {
 
   return (
     <RadixTheme {...radixThemeSettings}>
-      <div className="app-container" data-ui-theme={uiTheme}>
+      <div className={`app-container${zenMode ? " zen-mode" : ""}`} data-ui-theme={uiTheme}>
 
-        <div className="header header-extended" ref={mainHeaderRef}>
-          <div className="header-left">
-            <div className="logo">
+        <div className="topbar">
+          <div className="topbar-left">
+            <button className="brand" onClick={() => toggleSidebar()} title="Toggle sidebar">
               <img src={appIconBck} alt="Tape app icon"/>
-              <h1 className="j12">
-                Tape
-                <small className="jetbrains-mono" style={{fontSize: "xx-small"}}> {version}</small>
-              </h1>
+              <span className="brand-name">Tape</span>
+            </button>
+
+            <div className="topbar-actions">
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                  <button className="action-button action-button-primary">
+                    <Plus size={14} />
+                    New
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content className="dropdown-content" sideOffset={6} align="start">
+                  <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFile()}>
+                    <FileText size={15} />
+                    <span>New file</span>
+                    <span className="dropdown-hint">N</span>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFolder()}>
+                    <FolderPlus size={15} />
+                    <span>New folder</span>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+
+              <Tooltip content="Open another folder">
+                <button onClick={() => handleRootOpen()} className="action-button">
+                  <FolderOpen size={15} />
+                </button>
+              </Tooltip>
+
+              <Tooltip content="Refresh">
+                <button onClick={refreshFileTree} className="action-button">
+                  <RefreshCw size={15} />
+                </button>
+              </Tooltip>
+
+              {isVaultSecured && (
+                <Tooltip content="Lock vault">
+                  <button onClick={lockVault} className="action-button">
+                    <LockIcon size={15} />
+                  </button>
+                </Tooltip>
+              )}
             </div>
           </div>
-          <div className="header-right">
+
+          <div className="topbar-center">
+            <button className="search-trigger" onClick={() => setIsSearchModalOpen(true)}>
+              <SearchIcon size={14} />
+              <span className="search-trigger-text">Search notes…</span>
+              <kbd className="search-trigger-kbd">Ctrl K</kbd>
+            </button>
+          </div>
+
+          <div className="topbar-right">
+            <Tooltip content={hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}>
+              <div className={`save-indicator ${hasUnsavedChanges ? "dirty" : ""}`}>
+                {hasUnsavedChanges ? <CircleDashed size={13}/> : <Check size={13}/>}
+              </div>
+            </Tooltip>
+
+            <div className="view-toggle">
+              <button
+                className={`view-toggle-btn ${viewMode === "editor" ? "active" : ""}`}
+                onClick={() => handleViewModeChange('editor')}
+                title="Editor"
+              >
+                <Edit size={14} />
+              </button>
+              <button
+                className={`view-toggle-btn ${viewMode === "reader" ? "active" : ""}`}
+                onClick={() => handleViewModeChange('reader')}
+                title="Reader"
+              >
+                <Eye size={14} />
+              </button>
+            </div>
+
             <SettingsPopover
               fileTree={fileTree}
               isVaultSecured={isVaultSecured}
@@ -560,87 +612,13 @@ function App() {
                 setIsVaultSecured(true);
               }}
             />
-            <div className="view-toggle">
-              <Button
-                size="2"
-                variant={viewMode === "editor" ? "solid" : "soft"}
-                onClick={() => handleViewModeChange('editor')}
-                style={{borderBottomRightRadius: 0, borderTopRightRadius: 0}}
-              >
-                <Edit size="16"/> Editor
-              </Button>
-              <Button
-                size="2"
-                variant={viewMode === "reader" ? "solid" : "soft"}
-                onClick={() => handleViewModeChange('reader')}
-                style={{borderBottomLeftRadius: 0, borderTopLeftRadius: 0}}
-              >
-                <Eye size="16"/> Reader
-              </Button>
-            </div>
           </div>
         </div>
 
         <div className="content">
 
-          <div className="content-header">
-            <div className="file-actions">
-              <Tooltip content="Hide tree view">
-                <button onClick={() => toggleSidebar()} className='action-button'>
-                  <PanelTopClose size={16} style={{ rotate: sidebarRotate }} />
-                </button>
-              </Tooltip>
-
-              <Tooltip content="Select another root">
-                <button onClick={() => handleRootOpen()} className="action-button">
-                  <FolderOpen size={16} />
-                </button>
-              </Tooltip>
-
-              {isVaultSecured &&
-                <Tooltip content="Lock your tape box">
-                  <button onClick={() => lockVault()} className="action-button">
-                    <LockIcon size={16} />
-                  </button>
-                </Tooltip>
-              }
-
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
-                  <button className="action-button">
-                    <Plus size={16} />
-                  </button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content className="dropdown-content" sideOffset={5}>
-                  <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFile()}>
-                    <FileText size={16} />
-                    New File
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFolder()}>
-                    <FolderPlus size={16} />
-                    New Folder
-                  </DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
-
-              <Tooltip content="Refresh file tree">
-                <button onClick={refreshFileTree} className="action-button">
-                  <RefreshCw size={16} />
-                </button>
-              </Tooltip>
-            </div>
-
-            <Stats
-              original={originalContent}
-              edited={fileContent}
-              selectedFilePath={selectedFilePath}
-              hasUnsavedChanges={hasUnsavedChanges}
-              isVaultSecured={isVaultSecured}
-            />
-          </div>
-
-          <div className="content-container" style={{ height: containerHeight }}>
-            <div className="sidebar sidebar-extended" ref={sidebarRef}>
+          <div className="content-container">
+            <div className={`sidebar${sidebarHidden ? " sidebar-hidden" : " sidebar-extended"}`} ref={sidebarRef}>
               <FileTree
                 fileTree={fileTree}
                 isVaultSecured={isVaultSecured}
@@ -665,7 +643,6 @@ function App() {
                     content={fileContent}
                     onChange={handleContentChange}
                     filePath={selectedFilePath}
-                    containerHeight={containerHeight}
                     scrollRatio={scrollRatioRef.current}
                     onScrollChange={(r) => { scrollRatioRef.current = r; }}
                   />
@@ -681,14 +658,22 @@ function App() {
             </div>
           </div>
 
+          <Stats
+            original={originalContent}
+            edited={fileContent}
+            selectedFilePath={selectedFilePath}
+            hasUnsavedChanges={hasUnsavedChanges}
+            isVaultSecured={isVaultSecured}
+          />
+
         </div> {/* content */}
       </div>
 
       {/* Create File Dialog */}
       <Dialog.Root open={showCreateFileDialog} onOpenChange={setShowCreateFileDialog}>
         <Dialog.Content maxWidth="450px">
-          <Dialog.Title style={{ fontFamily: "vt32" }}>Create New File</Dialog.Title>
-          <Dialog.Description size="2" mb="4" style={{ fontFamily: "vt32" }}>
+          <Dialog.Title>Create New File</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
             {createFileDialogError
               ? <span className="important">{createFileDialogError}</span>
               : <>Enter a name for the new markdown file.</>
@@ -697,7 +682,7 @@ function App() {
 
           <Flex direction="column" gap="3">
             <label>
-              <Text as="div" size="2" mb="1" weight="bold" style={{ fontFamily: "vt32" }}>
+              <Text as="div" size="2" mb="1" weight="bold">
                 File name
               </Text>
               <TextField.Root
@@ -731,8 +716,8 @@ function App() {
       {/* Create Folder Dialog */}
       <Dialog.Root open={showCreateFolderDialog} onOpenChange={setShowCreateFolderDialog}>
         <Dialog.Content maxWidth="450px">
-          <Dialog.Title style={{ fontFamily: "vt32" }}>Create New Folder</Dialog.Title>
-          <Dialog.Description size="2" mb="4" style={{ fontFamily: "vt32" }}>
+          <Dialog.Title>Create New Folder</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
             {createFolderDialogError
               ? <span className="important">{createFolderDialogError}</span>
               : <>Enter a name for the new folder.</>
@@ -741,7 +726,7 @@ function App() {
 
           <Flex direction="column" gap="3">
             <label>
-              <Text as="div" size="2" mb="1" weight="bold" style={{ fontFamily: "vt32" }}>
+              <Text as="div" size="2" mb="1" weight="bold">
                 Folder name
               </Text>
               <TextField.Root
@@ -787,8 +772,8 @@ function App() {
       {/* alert when md in mde vault */}
       <AlertDialog.Root open={alertMDinMDE} onOpenChange={setAlertMDinMDE}>
         <AlertDialog.Content maxWidth="450px">
-          <AlertDialog.Title style={{ fontFamily: "vt32" }}>Warning</AlertDialog.Title>
-          <AlertDialog.Description size="2" style={{ fontFamily: "vt32" }}>
+          <AlertDialog.Title>Warning</AlertDialog.Title>
+          <AlertDialog.Description size="2">
             This note isn’t encrypted, even though it’s inside an encrypted vault.
             For full encryption, please create notes using the in-app menu.
           </AlertDialog.Description>

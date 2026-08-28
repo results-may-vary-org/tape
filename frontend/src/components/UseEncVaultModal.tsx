@@ -48,11 +48,11 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, er
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={() => onSubmit("")}>
-      <Dialog.Content className="search-modal" maxWidth="600px">
+        <Dialog.Content className="search-modal" maxWidth="600px">
 
-        <Dialog.Title style={{fontFamily: "vt32"}}>Add extra privacy over your tape box</Dialog.Title>
+        <Dialog.Title>Add extra privacy over your tape box</Dialog.Title>
 
-        <Dialog.Description size="2" mb="4" className="vt32">
+        <Dialog.Description size="2" mb="4">
           {!error && (
             <Fragment>
               Enter a password if you want to create a secured tape box where all the name and
@@ -91,13 +91,13 @@ const UseEncVaultModal: React.FC<UseEncVaultModalProps> = ({isOpen, onSubmit, er
               </TextField.Slot>
             </TextField.Root>
             <Button onClick={() => onSubmit(value)}>Create</Button>
-            <Button variant="soft" color="orange" onClick={() => onSubmit("")}>Cancel</Button>
+            <Button variant="soft" onClick={() => onSubmit("")}>Cancel</Button>
           </Flex>
           <Separator style={{width: "100%"}}/>
         </Flex>
 
         <div>
-          <div className="search-footer vt32">
+          <div className="search-footer">
             <Text size="1" color="gray">
               Press Enter to create, Esc to close
             </Text>

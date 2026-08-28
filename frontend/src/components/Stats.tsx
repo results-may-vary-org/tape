@@ -64,7 +64,7 @@ const Stats = (props: props) => {
   }
 
   return (
-    <div className="note-status-bar vt32">
+    <div className="note-status-bar">
 
       <div className="stat-container">
         {props.isVaultSecured && (

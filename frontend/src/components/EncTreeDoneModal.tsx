@@ -25,11 +25,11 @@ const EncTreeDoneModal: React.FC<props> = ({isOpen, onClose}) => {
     <Dialog.Root open={isOpen}>
       <Dialog.Content className="search-modal" maxWidth="600px">
 
-        <Dialog.Title style={{fontFamily: "vt32"}}>
+        <Dialog.Title>
           Your tape box is not fully encrypted!
         </Dialog.Title>
 
-        <Dialog.Description size="2" mb="4" className="vt32">
+        <Dialog.Description size="2" mb="4">
           <Text>All your notes are now encrypted, including new ones – by default!</Text>
           <br/>
           <Text>
@@ -56,7 +56,7 @@ const EncTreeDoneModal: React.FC<props> = ({isOpen, onClose}) => {
         <Separator style={{width: "100%", marginTop: "1rem"}}/>
 
         <div>
-          <div className="search-footer vt32">
+          <div className="search-footer">
             <Text size="1" color="gray">
               Press Enter or Esc to close
             </Text>

@@ -1,83 +1,51 @@
-@font-face {
-  font-family: "Jacquard12-Regular";
-  font-style: normal;
-  font-weight: 400;
-  src: local(""),
-    url("assets/fonts/Jacquard12-Regular.ttf") format("truetype");
-}
+/* Linear-style modern font stack. */
 
 @font-face {
   font-family: "jetbrains-mono";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 100 900;
   src: local(""),
     url("assets/fonts/JetBrainsMono-VariableFont_wght.ttf") format("truetype");
 }
 
-@font-face {
-  font-family: "ubuntu-regular";
-  font-style: normal;
-  font-weight: 400;
-  src: local(""),
-    url("assets/fonts/Ubuntu-Regular.ttf") format("truetype");
+/* Shared font stacks */
+:root {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    Roboto, Ubuntu, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "jetbrains-mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo,
+    Consolas, "Liberation Mono", monospace;
+  --main-font: var(--font-sans);
+  --jetbrains-mono: var(--font-mono);
 }
 
-@font-face {
-    font-family: "Nunito";
-    font-style: normal;
-    font-weight: 400;
-    src: local(""),
-      url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
-}
-
-@font-face {
-    font-family: "Workbench";
-    font-style: normal;
-    font-weight: 400;
-    src: local(""),
-      url("assets/fonts/Workbench-Regular.ttf") format("truetype");
-    font-display: swap;
-}
-
-@font-face {
-  font-family: "vt32";
-  font-style: normal;
-  font-weight: 400;
-  src: local(""),
-    url("assets/fonts/VT323-Regular.ttf") format("truetype");
-  font-display: swap;
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .jetbrains-mono {
-  font-family: "jetbrains-mono", monospace;
+  font-family: var(--font-mono);
   font-optical-sizing: auto;
   font-weight: 500;
   font-style: normal;
 }
 
 .ubuntu-regular {
-  font-family: "ubuntu-regular", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 400;
   font-style: normal;
 }
 
+/* Decorative display fonts are intentionally retired from the Linear-style UI.
+   Keep these utility hooks for compatibility so existing JSX still compiles. */
+.vt32,
+.j12,
 .workbench {
-    font-family: "Workbench", monospace;
-    font-optical-sizing: auto;
-    font-variation-settings:
-            "BLED" 0,
-            "SCAN" 0;
-}
-
-.vt32 {
-  font-family: "vt32", monospace;
+  font-family: var(--font-sans);
   font-weight: 400;
   font-style: normal;
-}
-
-.j12 {
-  font-family: "Jacquard12-Regular", sans-serif;
-  font-weight: 400;
-  font-style: normal;
+  letter-spacing: 0;
 }
 

@@ -189,9 +189,9 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen, onClose, onFileSelect,
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Content className="search-modal" maxWidth="600px">
 
-        <Dialog.Title style={{fontFamily: "vt32"}}>Search</Dialog.Title>
+        <Dialog.Title>Search</Dialog.Title>
 
-        <Dialog.Description size="2" mb="4" className="vt32">
+        <Dialog.Description size="2" mb="4">
           On files, folders, and content.
         </Dialog.Description>
 
@@ -208,7 +208,7 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen, onClose, onFileSelect,
               <SearchIcon height="16" width="16" />
             </TextField.Slot>
           </TextField.Root>
-          <div id="search-info" className="vt32">
+          <div id="search-info">
             Folder: {getResultLength().d} File: {getResultLength().f} String: {getResultLength().s}
           </div>
           <Separator style={{width: "100%"}}/>
@@ -216,7 +216,7 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen, onClose, onFileSelect,
 
         <div>
 
-          <div className="search-results vt32" ref={resultsRef}>
+          <div className="search-results" ref={resultsRef}>
 
             {(!results || results.length === 0) && (
               <div className="no-results">
@@ -256,7 +256,7 @@ const SearchModal: React.FC<SearchModalProps> = ({isOpen, onClose, onFileSelect,
             ))}
           </div>
 
-          <div className="search-footer vt32">
+          <div className="search-footer">
             <Text size="1" color="gray">
               Press ↑↓ to navigate, Enter to open, Tab to switch, Esc to close
             </Text>
