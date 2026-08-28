@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { GetContentDiff, GetDecryptedFileName, GetDecryptedFullPath } from "../../wailsjs/go/main/App";
 import {main} from "../../wailsjs/go/models";
-import {Bug, CircleCheck, Loader, CassetteTape, CircleAlert, ShieldCheck} from "lucide-react";
+import {Bug, CircleCheck, Loader, CassetteTape, ShieldCheck} from "lucide-react";
 import Diff = main.Diff;
 import { Tooltip } from "@radix-ui/themes";
+import SaveIndicator from "./SaveIndicator";
 
 type props = {
   original: string
@@ -59,8 +60,7 @@ const Stats = (props: props) => {
     const e = contentDiff ? contentDiff.edit : 0;
     const a = contentDiff ? contentDiff.add : 0;
     const d = contentDiff ? contentDiff.remove : 0;
-    const has = e > 0 || a > 0 || d > 0;
-    return { has, e, a, d };
+    return { e, a, d };
   }
 
   return (
@@ -124,23 +124,12 @@ const Stats = (props: props) => {
         </div>
       </div>
 
-      {/* fixme: should find  a better diff since we need to use getCD for certain case */}
-      {/* use case: 123456789 > save > 123456788 > save > 123456787 is marked has not edited */}
-      {(props.hasUnsavedChanges || getContentDiffString().has) && (
-        <div className="save-container">
-          <div className="stat-icon stat-save">
-            <Tooltip content="Unsaved file">
-              <CircleAlert size="14"/>
-            </Tooltip>
-          </div>
-          <div className="stat-text stat-save">
-            Unsaved file
-          </div>
-          <div className="stat-text-small stat-save">
-            Not saved
-          </div>
-        </div>
-      )}
+      <SaveIndicator
+        original={props.original}
+        edited={props.edited}
+        hasUnsavedChanges={props.hasUnsavedChanges}
+        showText
+      />
     </div>
   );
 };

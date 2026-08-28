@@ -18,8 +18,6 @@ import {
   Edit,
   Eye,
   LockIcon,
-  Check,
-  CircleDashed,
   Search as SearchIcon
 } from 'lucide-react';
 import { DropdownMenu, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
@@ -48,6 +46,7 @@ import {
 import appIcon from './assets/images/logo.png';
 import appIconBck from './assets/images/logo-background.png';
 import Stats from "./components/Stats";
+import SaveIndicator from "./components/SaveIndicator";
 import handleKeys from "./services/handleKeys";
 import SettingsPopover from './components/SettingsPopover';
 import type { FileItem, ViewMode, ThemeMode, UIThemeMode, SearchResult } from './types/types';
@@ -651,11 +650,12 @@ function App() {
           </div>
 
           <div className="topbar-right">
-            <Tooltip content={hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}>
-              <div className={`save-indicator ${hasUnsavedChanges ? "dirty" : ""}`}>
-                {hasUnsavedChanges ? <CircleDashed size={13}/> : <Check size={13}/>}
-              </div>
-            </Tooltip>
+            <SaveIndicator
+              original={originalContent}
+              edited={fileContent}
+              hasUnsavedChanges={hasUnsavedChanges}
+              showSavedState
+            />
 
             <div className="view-toggle">
               <button
