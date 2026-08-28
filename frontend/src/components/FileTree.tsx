@@ -63,7 +63,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   uiTheme,
   showFileMTime,
 }: FileTreeNodeProps) => {
-  const useAltIcons = uiTheme === 'modern' || uiTheme === 'agrume';
+  const useAltIcons = uiTheme !== 'default';
   const isExpanded = expandedFolders.includes(item.path);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);

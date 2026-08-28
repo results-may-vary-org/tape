@@ -17,6 +17,17 @@ export interface SearchResult {
 
 export type ViewMode = 'editor' | 'reader';
 export type ThemeMode = 'system' | 'light' | 'dark';
-export type UIThemeMode = 'original' | 'modern' | 'agrume';
+export type UIThemeMode =
+  | 'default'
+  | 'catppuccin-mocha'
+  | 'catppuccin-macchiato'
+  | 'catppuccin-frappe'
+  | 'catppuccin-latte'
+  | 'rose-pine'
+  | 'rose-pine-moon'
+  | 'rose-pine-dawn'
+  | 'tokyo-night'
+  | 'tokyo-night-storm'
+  | 'tokyo-night-light';
 export type LineNumberMode = 'none' | 'normal' | 'relative';
 

@@ -1,0 +1,227 @@
+/*
+ * Built-in UI theme presets.
+ *
+ * Each preset defines a small palette of tokens under --t-*, derived from the
+ * theme's official colors (catppuccin.com/palette, rose-pine/rose-pine-palette,
+ * folke/tokyonight.nvim). A shared block maps those tokens onto Radix Theme
+ * variables in two places:
+ *   - :root:has(.app-container[...])  → covers content portaled to <body>
+ *   - .app-container[...]             → covers everything rendered in-tree
+ * The two selectors have equal specificity (0,2,0), which beats Radix's
+ * :root / .dark rules (0,1,0).
+ *
+ * The "default" preset keeps Radix's stock light/dark behavior and is
+ * therefore excluded from every override block below.
+ */
+
+/* ---------------------------------- tokens --------------------------------- */
+
+:root:has(.app-container[data-ui-theme='catppuccin-mocha']),
+.app-container[data-ui-theme='catppuccin-mocha'] {
+  --t-scheme: dark;
+  --t-bg: #1e1e2e;
+  --t-panel: #181825;
+  --t-surface: #1e1e2e;
+  --t-overlay: #313244;
+  --t-accent: #cba6f7;
+  --t-accent-contrast: #1e1e2e;
+  --t-text: #cdd6f4;
+  --t-g1: #1e1e2e; --t-g2: #181825; --t-g3: #313244; --t-g4: #313244;
+  --t-g5: #45475a; --t-g6: #45475a; --t-g7: #585b70; --t-g8: #6c7086;
+  --t-g9: #7f849c; --t-g10: #9399b2; --t-g11: #a6adc8; --t-g12: #cdd6f4;
+}
+
+:root:has(.app-container[data-ui-theme='catppuccin-macchiato']),
+.app-container[data-ui-theme='catppuccin-macchiato'] {
+  --t-scheme: dark;
+  --t-bg: #24273a;
+  --t-panel: #1e2030;
+  --t-surface: #24273a;
+  --t-overlay: #363a4f;
+  --t-accent: #c6a0f6;
+  --t-accent-contrast: #24273a;
+  --t-text: #cad3f5;
+  --t-g1: #24273a; --t-g2: #1e2030; --t-g3: #363a4f; --t-g4: #363a4f;
+  --t-g5: #494d64; --t-g6: #494d64; --t-g7: #5b6078; --t-g8: #6e738d;
+  --t-g9: #8087a2; --t-g10: #939ab7; --t-g11: #a5adcb; --t-g12: #cad3f5;
+}
+
+:root:has(.app-container[data-ui-theme='catppuccin-frappe']),
+.app-container[data-ui-theme='catppuccin-frappe'] {
+  --t-scheme: dark;
+  --t-bg: #303446;
+  --t-panel: #292c3c;
+  --t-surface: #303446;
+  --t-overlay: #414559;
+  --t-accent: #ca9ee6;
+  --t-accent-contrast: #303446;
+  --t-text: #c6d0f5;
+  --t-g1: #303446; --t-g2: #292c3c; --t-g3: #414559; --t-g4: #414559;
+  --t-g5: #51576d; --t-g6: #51576d; --t-g7: #626880; --t-g8: #737994;
+  --t-g9: #838ba7; --t-g10: #949cbb; --t-g11: #a5adce; --t-g12: #c6d0f5;
+}
+
+:root:has(.app-container[data-ui-theme='catppuccin-latte']),
+.app-container[data-ui-theme='catppuccin-latte'] {
+  --t-scheme: light;
+  --t-bg: #eff1f5;
+  --t-panel: #e6e9ef;
+  --t-surface: #eff1f5;
+  --t-overlay: #ccd0da;
+  --t-accent: #8839ef;
+  --t-accent-contrast: #ffffff;
+  --t-text: #4c4f69;
+  --t-g1: #eff1f5; --t-g2: #e6e9ef; --t-g3: #ccd0da; --t-g4: #ccd0da;
+  --t-g5: #bcc0cc; --t-g6: #bcc0cc; --t-g7: #acb0be; --t-g8: #9ca0b0;
+  --t-g9: #8c8fa1; --t-g10: #7c7f93; --t-g11: #6c6f85; --t-g12: #4c4f69;
+}
+
+:root:has(.app-container[data-ui-theme='rose-pine']),
+.app-container[data-ui-theme='rose-pine'] {
+  --t-scheme: dark;
+  --t-bg: #191724;
+  --t-panel: #1f1d2e;
+  --t-surface: #191724;
+  --t-overlay: #26233a;
+  --t-accent: #c4a7e7;
+  --t-accent-contrast: #191724;
+  --t-text: #e0def4;
+  --t-g1: #191724; --t-g2: #1f1d2e; --t-g3: #26233a; --t-g4: #21202e;
+  --t-g5: #403d52; --t-g6: #403d52; --t-g7: #524f67; --t-g8: #6e6a86;
+  --t-g9: #6e6a86; --t-g10: #908caa; --t-g11: #908caa; --t-g12: #e0def4;
+}
+
+:root:has(.app-container[data-ui-theme='rose-pine-moon']),
+.app-container[data-ui-theme='rose-pine-moon'] {
+  --t-scheme: dark;
+  --t-bg: #232136;
+  --t-panel: #2a273f;
+  --t-surface: #232136;
+  --t-overlay: #393552;
+  --t-accent: #c4a7e7;
+  --t-accent-contrast: #232136;
+  --t-text: #e0def4;
+  --t-g1: #232136; --t-g2: #2a273f; --t-g3: #393552; --t-g4: #2a283e;
+  --t-g5: #44415a; --t-g6: #44415a; --t-g7: #56526e; --t-g8: #6e6a86;
+  --t-g9: #6e6a86; --t-g10: #908caa; --t-g11: #908caa; --t-g12: #e0def4;
+}
+
+:root:has(.app-container[data-ui-theme='rose-pine-dawn']),
+.app-container[data-ui-theme='rose-pine-dawn'] {
+  --t-scheme: light;
+  --t-bg: #faf4ed;
+  --t-panel: #fffaf3;
+  --t-surface: #faf4ed;
+  --t-overlay: #f2e9e1;
+  --t-accent: #907aa9;
+  --t-accent-contrast: #ffffff;
+  --t-text: #575279;
+  --t-g1: #fffaf3; --t-g2: #faf4ed; --t-g3: #f2e9e1; --t-g4: #f4ede8;
+  --t-g5: #dfdad9; --t-g6: #dfdad9; --t-g7: #cecacd; --t-g8: #9893a5;
+  --t-g9: #9893a5; --t-g10: #797593; --t-g11: #797593; --t-g12: #575279;
+}
+
+:root:has(.app-container[data-ui-theme='tokyo-night']),
+.app-container[data-ui-theme='tokyo-night'] {
+  --t-scheme: dark;
+  --t-bg: #1a1b26;
+  --t-panel: #16161e;
+  --t-surface: #1a1b26;
+  --t-overlay: #292e42;
+  --t-accent: #7aa2f7;
+  --t-accent-contrast: #16161e;
+  --t-text: #c0caf5;
+  --t-g1: #1a1b26; --t-g2: #16161e; --t-g3: #292e42; --t-g4: #292e42;
+  --t-g5: #343a55; --t-g6: #343a55; --t-g7: #3b4261; --t-g8: #414868;
+  --t-g9: #545c7e; --t-g10: #565f89; --t-g11: #a9b1d6; --t-g12: #c0caf5;
+}
+
+:root:has(.app-container[data-ui-theme='tokyo-night-storm']),
+.app-container[data-ui-theme='tokyo-night-storm'] {
+  --t-scheme: dark;
+  --t-bg: #24283b;
+  --t-panel: #1f2335;
+  --t-surface: #24283b;
+  --t-overlay: #292e42;
+  --t-accent: #7aa2f7;
+  --t-accent-contrast: #1f2335;
+  --t-text: #c0caf5;
+  --t-g1: #24283b; --t-g2: #1f2335; --t-g3: #292e42; --t-g4: #292e42;
+  --t-g5: #343a55; --t-g6: #343a55; --t-g7: #3b4261; --t-g8: #414868;
+  --t-g9: #545c7e; --t-g10: #565f89; --t-g11: #a9b1d6; --t-g12: #c0caf5;
+}
+
+:root:has(.app-container[data-ui-theme='tokyo-night-light']),
+.app-container[data-ui-theme='tokyo-night-light'] {
+  --t-scheme: light;
+  --t-bg: #e6e7ed;
+  --t-panel: #f3f4f7;
+  --t-surface: #e6e7ed;
+  --t-overlay: #e3e5eb;
+  --t-accent: #2959aa;
+  --t-accent-contrast: #ffffff;
+  --t-text: #343b58;
+  --t-g1: #f3f4f7; --t-g2: #e6e7ed; --t-g3: #e3e5eb; --t-g4: #e3e5eb;
+  --t-g5: #d3d6df; --t-g6: #d3d6df; --t-g7: #c2c5d0; --t-g8: #aeb1bd;
+  --t-g9: #8b8f9c; --t-g10: #6c6e75; --t-g11: #40434f; --t-g12: #343b58;
+}
+
+/* ------------------- map tokens onto Radix theme variables ------------------ */
+
+:root:has(.app-container[data-ui-theme]:not([data-ui-theme='default'])),
+.app-container[data-ui-theme]:not([data-ui-theme='default']) {
+  color-scheme: var(--t-scheme);
+  background-color: var(--t-bg);
+
+  --color-background: var(--t-bg);
+  --color-panel-solid: var(--t-panel);
+  --color-panel-translucent: var(--t-panel);
+  --color-panel: var(--t-panel);
+  --color-surface: var(--t-surface);
+  --backdrop-filter-panel: none;
+
+  --gray-1: var(--t-g1); --gray-2: var(--t-g2); --gray-3: var(--t-g3);
+  --gray-4: var(--t-g4); --gray-5: var(--t-g5); --gray-6: var(--t-g6);
+  --gray-7: var(--t-g7); --gray-8: var(--t-g8); --gray-9: var(--t-g9);
+  --gray-10: var(--t-g10); --gray-11: var(--t-g11); --gray-12: var(--t-g12);
+
+  --gray-a1: rgb(from var(--t-text) r g b / 0.012);
+  --gray-a2: rgb(from var(--t-text) r g b / 0.025);
+  --gray-a3: rgb(from var(--t-text) r g b / 0.04);
+  --gray-a4: rgb(from var(--t-text) r g b / 0.06);
+  --gray-a5: rgb(from var(--t-text) r g b / 0.09);
+  --gray-a6: rgb(from var(--t-text) r g b / 0.14);
+  --gray-a7: rgb(from var(--t-text) r g b / 0.2);
+  --gray-a8: rgb(from var(--t-text) r g b / 0.3);
+  --gray-a9: rgb(from var(--t-text) r g b / 0.42);
+  --gray-a10: rgb(from var(--t-text) r g b / 0.55);
+  --gray-a11: rgb(from var(--t-text) r g b / 0.72);
+  --gray-a12: rgb(from var(--t-text) r g b / 0.92);
+
+  --accent-1: rgb(from var(--t-accent) r g b / 0.04);
+  --accent-2: rgb(from var(--t-accent) r g b / 0.09);
+  --accent-3: rgb(from var(--t-accent) r g b / 0.14);
+  --accent-4: rgb(from var(--t-accent) r g b / 0.2);
+  --accent-5: rgb(from var(--t-accent) r g b / 0.3);
+  --accent-6: rgb(from var(--t-accent) r g b / 0.42);
+  --accent-7: rgb(from var(--t-accent) r g b / 0.55);
+  --accent-8: rgb(from var(--t-accent) r g b / 0.7);
+  --accent-9: var(--t-accent);
+  --accent-10: var(--t-accent);
+  --accent-11: var(--t-accent);
+  --accent-12: var(--t-accent);
+  --accent-contrast: var(--t-accent-contrast);
+
+  --accent-a1: rgb(from var(--t-accent) r g b / 0.04);
+  --accent-a2: rgb(from var(--t-accent) r g b / 0.09);
+  --accent-a3: rgb(from var(--t-accent) r g b / 0.14);
+  --accent-a4: rgb(from var(--t-accent) r g b / 0.2);
+  --accent-a5: rgb(from var(--t-accent) r g b / 0.3);
+  --accent-a6: rgb(from var(--t-accent) r g b / 0.42);
+  --accent-a7: rgb(from var(--t-accent) r g b / 0.55);
+  --accent-a8: rgb(from var(--t-accent) r g b / 0.7);
+  --accent-a9: var(--t-accent);
+  --accent-a10: var(--t-accent);
+  --accent-a11: var(--t-accent);
+  --accent-a12: var(--t-accent);
+}

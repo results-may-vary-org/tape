@@ -1,9 +1,10 @@
 import { Popover, Button, Flex, Select, Switch, Text } from "@radix-ui/themes"
-import { CassetteTape, Citrus, GemIcon, Hash, Monitor, Moon, Rows3, Scan, Settings2, Sun } from "lucide-react";
+import { Hash, Monitor, Moon, Rows3, Scan, Settings2, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { SaveTheme, SaveUITheme, SaveShowFileMTime, SaveShowVim, SaveLineNumberMode, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
 import type { FileItem, ThemeMode, UIThemeMode, LineNumberMode } from "../types/types";
+import { getThemeModeForUITheme, getUIThemePreset, UI_THEMES } from "../services/themeService";
 import EncTreeConfirmationModal from "./EncTreeConfirmationModal";
 import EncTreeDoneModal from "./EncTreeDoneModal";
 import UseEncVaultModal from "./UseEncVaultModal";
@@ -41,6 +42,7 @@ const SettingsPopover = ({
 
   const handleUIThemeChange = async (newUITheme: UIThemeMode) => {
     onUIThemeChange(newUITheme);
+    setTheme(getThemeModeForUITheme(newUITheme));
     if (fileTree?.path) {
       try {
         await SaveUITheme(fileTree.path, newUITheme);
@@ -180,34 +182,29 @@ const SettingsPopover = ({
           <Select.Root value={uiTheme} onValueChange={(value: UIThemeMode) => handleUIThemeChange(value)}>
             <Select.Trigger className="theme-select-trigger">
               <Flex as="span" align="center" gap="2">
-                {uiTheme === 'original'
-                  ? <CassetteTape size={16}/>
-                  : uiTheme === 'agrume'
-                    ? <Citrus size={16}/>
-                    : <GemIcon size={16}/>
+                {uiTheme === 'default'
+                  ? <Monitor size={16}/>
+                  : getUIThemePreset(uiTheme).appearance === 'dark'
+                    ? <Moon size={16}/>
+                    : <Sun size={16}/>
                 }
-                {uiTheme === 'original' ? 'Original' : uiTheme === 'modern' ? 'Modern' : 'Agrume'}
+                {getUIThemePreset(uiTheme).label}
               </Flex>
             </Select.Trigger>
             <Select.Content className="select-content" position="popper">
-              <Select.Item value="original" className="select-item">
-                <Flex as="span" align="center" gap="2">
-                  <CassetteTape size={16}/>
-                  Original
-                </Flex>
-              </Select.Item>
-              <Select.Item value="modern" className="select-item">
-                <Flex as="span" align="center" gap="2">
-                  <GemIcon size={16}/>
-                  Modern
-                </Flex>
-              </Select.Item>
-              <Select.Item value="agrume" className="select-item">
-                <Flex as="span" align="center" gap="2">
-                  <Citrus size="16"/>
-                  Agrume
-                </Flex>
-              </Select.Item>
+              {UI_THEMES.map((preset) => (
+                <Select.Item key={preset.id} value={preset.id} className="select-item">
+                  <Flex as="span" align="center" gap="2">
+                    {preset.id === 'default'
+                      ? <Monitor size={16}/>
+                      : preset.appearance === 'dark'
+                        ? <Moon size={16}/>
+                        : <Sun size={16}/>
+                    }
+                    {preset.label}
+                  </Flex>
+                </Select.Item>
+              ))}
             </Select.Content>
           </Select.Root>
 

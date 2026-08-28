@@ -8,7 +8,8 @@ import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
 import SearchModal from './components/SearchModal';
 import ShortcutsModal from './components/ShortcutsModal';
-import { getRadixThemeSettings } from './services/themeService';
+import { getRadixThemeSettings, getThemeModeForUITheme, isKnownUITheme } from './services/themeService';
+import './themes.css';
 import {
   FolderOpen,
   FileText,
@@ -78,7 +79,7 @@ function App() {
   const [isUnlockVaultModalOpen, setIsUnlockVaultModalOpen] = useState<boolean>(false);
   const [unlockVaultModalError, setUnlockVaultModalError] = useState<string>("");
   const [isVaultSecured, setIsVaultSecured] = useState<boolean>(false);
-  const [uiTheme, setUITheme] = useState<UIThemeMode>('original');
+  const [uiTheme, setUITheme] = useState<UIThemeMode>('default');
   const [showFileMTime, setShowFileMTime] = useState<boolean>(true);
   const [vimMode, setVimMode] = useState<boolean>(false);
   const [vimStatus, setVimStatus] = useState<string | null>(null);
@@ -184,10 +185,12 @@ function App() {
       if (folderConfig.theme) {
         setTheme(folderConfig.theme as ThemeMode);
       }
-      if (folderConfig.uiTheme) {
-        setUITheme(folderConfig.uiTheme as UIThemeMode);
+      if (folderConfig.uiTheme && isKnownUITheme(folderConfig.uiTheme)) {
+        const savedUITheme = folderConfig.uiTheme;
+        setUITheme(savedUITheme);
+        setTheme(getThemeModeForUITheme(savedUITheme));
       } else {
-        setUITheme('original');
+        setUITheme('default');
       }
       if (folderConfig.showFileMTime !== undefined) {
         setShowFileMTime(folderConfig.showFileMTime);
