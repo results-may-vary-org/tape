@@ -299,8 +299,13 @@ button {
 
 .current-file {
   color: var(--gray-11);
+  font-family: var(--font-sans);
   font-weight: 400;
-  width: 100%;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .unsaved-indicator {
@@ -617,6 +622,16 @@ div[data-remark-code-title="true"] + pre {
   align-items: center;
 }
 
+.file-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-info {
+  min-width: 0;
+  overflow: hidden;
+}
+
 .stat-icon {
   display: flex;
   align-items: center;
@@ -642,14 +657,20 @@ div[data-remark-code-title="true"] + pre {
 
 .note-status-bar .stat-delta-positive {
   color: var(--green-10);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 
 .note-status-bar .stat-delta-negative {
   color: var(--tomato-10);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 
 .note-status-bar .stat-delta-modified {
   color: var(--blue-10);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-save {
@@ -667,7 +688,10 @@ div[data-remark-code-title="true"] + pre {
 
 @media (max-width: 665px) and (min-width: 476px) {
   .stat-text { display: none; }
-  .stat-text-small { margin-right: 0.5rem; }
+  .stat-text-small {
+    margin-right: 0.5rem;
+    font-family: var(--font-sans);
+  }
   .stat-text-small > span { margin-right: 2px; }
 }
 
