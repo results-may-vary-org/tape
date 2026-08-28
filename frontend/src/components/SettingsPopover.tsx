@@ -1,9 +1,9 @@
 import { Popover, Button, Flex, Select, Switch, Text } from "@radix-ui/themes"
-import { CassetteTape, Citrus, File, Folder, GemIcon, Monitor, Moon, Settings2, Sun } from "lucide-react";
+import { CassetteTape, Citrus, GemIcon, Hash, Monitor, Moon, Rows3, Scan, Settings2, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
-import { SaveTheme, SaveUITheme, SaveShowFileMTime, SaveShowVim, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
-import type { FileItem, ThemeMode, UIThemeMode } from "../types/types";
+import { SaveTheme, SaveUITheme, SaveShowFileMTime, SaveShowVim, SaveLineNumberMode, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
+import type { FileItem, ThemeMode, UIThemeMode, LineNumberMode } from "../types/types";
 import EncTreeConfirmationModal from "./EncTreeConfirmationModal";
 import EncTreeDoneModal from "./EncTreeDoneModal";
 import UseEncVaultModal from "./UseEncVaultModal";
@@ -14,8 +14,10 @@ const SettingsPopover = ({
   uiTheme,
   showFileMTime,
   vimMode,
+  lineNumberMode,
   onShowFileMTimeChange,
   onVimModeChange,
+  onLineNumberModeChange,
   onUIThemeChange,
   onEncryptionComplete,
 }: {
@@ -24,8 +26,10 @@ const SettingsPopover = ({
   uiTheme: UIThemeMode;
   showFileMTime: boolean;
   vimMode: boolean;
+  lineNumberMode: LineNumberMode;
   onShowFileMTimeChange: (show: boolean) => void;
   onVimModeChange: (vim: boolean) => void;
+  onLineNumberModeChange: (mode: LineNumberMode) => void;
   onUIThemeChange: (t: UIThemeMode) => void;
   onEncryptionComplete: () => Promise<void>;
 }) => {
@@ -75,6 +79,17 @@ const SettingsPopover = ({
         await SaveShowVim(fileTree.path, vim);
       } catch (error) {
         console.error("Error saving vim mode setting:", error);
+      }
+    }
+  };
+
+  const handleLineNumberModeChange = async (mode: LineNumberMode) => {
+    onLineNumberModeChange(mode);
+    if (fileTree?.path) {
+      try {
+        await SaveLineNumberMode(fileTree.path, mode);
+      } catch (error) {
+        console.error("Error saving line number mode setting:", error);
       }
     }
   };
@@ -191,6 +206,41 @@ const SettingsPopover = ({
                 <Flex as="span" align="center" gap="2">
                   <Citrus size="16"/>
                   Agrume
+                </Flex>
+              </Select.Item>
+            </Select.Content>
+          </Select.Root>
+
+          {/* Line number mode selector */}
+          <Select.Root value={lineNumberMode} onValueChange={(value: LineNumberMode) => handleLineNumberModeChange(value)}>
+            <Select.Trigger className="theme-select-trigger">
+              <Flex as="span" align="center" gap="2">
+                {lineNumberMode === 'normal'
+                  ? <Hash size={16}/>
+                  : lineNumberMode === 'relative'
+                    ? <Rows3 size={16}/>
+                    : <Scan size={16}/>
+                }
+                {lineNumberMode === 'normal' ? 'Normal' : lineNumberMode === 'relative' ? 'Relative' : 'None'}
+              </Flex>
+            </Select.Trigger>
+            <Select.Content className="select-content" position="popper">
+              <Select.Item value="none" className="select-item">
+                <Flex as="span" align="center" gap="2">
+                  <Scan size={16}/>
+                  None
+                </Flex>
+              </Select.Item>
+              <Select.Item value="normal" className="select-item">
+                <Flex as="span" align="center" gap="2">
+                  <Hash size={16}/>
+                  Normal
+                </Flex>
+              </Select.Item>
+              <Select.Item value="relative" className="select-item">
+                <Flex as="span" align="center" gap="2">
+                  <Rows3 size={16}/>
+                  Relative
                 </Flex>
               </Select.Item>
             </Select.Content>

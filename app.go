@@ -48,6 +48,7 @@ type Config struct {
 	PrivacyMode      bool     `json:"privacyMode"`
 	ShowFileMTime    bool     `json:"showFileMTime"`
 	VimMode          bool     `json:"vimMode"`
+	LineNumberMode   string   `json:"lineNumberMode"`
 	Check            []byte   `json:"check"`
 	NonceCheck       []byte   `json:"nonceCheck"`
 }
@@ -1011,6 +1012,17 @@ func (a *App) SaveShowVim(folderPath string, vimMode bool) error {
 	}
 
 	config.VimMode = vimMode
+	return a.SaveConfig(config, folderPath)
+}
+
+// SaveLineNumberMode saves the line number display mode (none/normal/relative)
+func (a *App) SaveLineNumberMode(folderPath string, mode string) error {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		config = &Config{}
+	}
+
+	config.LineNumberMode = mode
 	return a.SaveConfig(config, folderPath)
 }
 

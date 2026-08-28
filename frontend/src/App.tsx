@@ -49,7 +49,7 @@ import Stats from "./components/Stats";
 import SaveIndicator from "./components/SaveIndicator";
 import handleKeys from "./services/handleKeys";
 import SettingsPopover from './components/SettingsPopover';
-import type { FileItem, ViewMode, ThemeMode, UIThemeMode, SearchResult } from './types/types';
+import type { FileItem, ViewMode, ThemeMode, UIThemeMode, SearchResult, LineNumberMode } from './types/types';
 import UseEncVaultModal from './components/UseEncVaultModal';
 import UnlockVaultModal from './components/UnlockVaultModal';
 import UnsavedChangesModal from './components/UnsavedChangesModal';
@@ -82,6 +82,7 @@ function App() {
   const [showFileMTime, setShowFileMTime] = useState<boolean>(true);
   const [vimMode, setVimMode] = useState<boolean>(false);
   const [vimStatus, setVimStatus] = useState<string | null>(null);
+  const [lineNumberMode, setLineNumberMode] = useState<LineNumberMode>('none');
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState<boolean>(false);
@@ -197,6 +198,11 @@ function App() {
         setVimMode(folderConfig.vimMode);
       } else {
         setVimMode(false);
+      }
+      if (folderConfig.lineNumberMode) {
+        setLineNumberMode(folderConfig.lineNumberMode as LineNumberMode);
+      } else {
+        setLineNumberMode('none');
       }
       if (folderConfig.expandedFolders) {
         setExpandedFolders(folderConfig.expandedFolders);
@@ -695,8 +701,10 @@ function App() {
               uiTheme={uiTheme}
               showFileMTime={showFileMTime}
               vimMode={vimMode}
+              lineNumberMode={lineNumberMode}
               onShowFileMTimeChange={(show) => setShowFileMTime(show)}
               onVimModeChange={(vim) => setVimMode(vim)}
+              onLineNumberModeChange={(mode) => setLineNumberMode(mode)}
               onUIThemeChange={(theme) => setUITheme(theme)}
               onEncryptionComplete={async () => {
                 await refreshFileTree();
@@ -737,6 +745,7 @@ function App() {
                     filePath={selectedFilePath}
                     vimEnabled={vimMode}
                     onVimModeChange={setVimStatus}
+                    lineNumberMode={lineNumberMode}
                     scrollRatio={scrollRatioRef.current}
                     onScrollChange={(r) => { scrollRatioRef.current = r; }}
                   />

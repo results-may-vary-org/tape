@@ -1,8 +1,8 @@
-import React, {useState, useRef, useLayoutEffect} from "react";
+import React, {useRef, useLayoutEffect} from "react";
 import { useScrollSync } from "../services/useScrollSync";
-import { Compartment, EditorState } from "@codemirror/state";
+import { Compartment, EditorState, StateField } from "@codemirror/state";
 import { EditorView } from "codemirror";
-import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropCursor, crosshairCursor, highlightActiveLineGutter} from "@codemirror/view";
+import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropCursor, crosshairCursor, highlightActiveLineGutter, lineNumbers, gutter, GutterMarker} from "@codemirror/view";
 import {defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching, foldKeymap} from "@codemirror/language";
 import {defaultKeymap, history, historyKeymap} from "@codemirror/commands";
 import {searchKeymap, highlightSelectionMatches} from "@codemirror/search";
@@ -14,6 +14,41 @@ import {useTheme} from "next-themes";
 import {tapeLight} from "../codeThemes/ligh";
 import {tapeDark} from "../codeThemes/dark";
 import { vim, getCM } from "@replit/codemirror-vim";
+import type { LineNumberMode } from "../types/types";
+
+class LineNumberMarker extends GutterMarker {
+  constructor(readonly count: number) { super(); }
+  eq(other: LineNumberMarker) { return this.count === other.count; }
+  toDOM(): HTMLElement {
+    const span = document.createElement("span");
+    span.textContent = String(this.count);
+    return span;
+  }
+}
+
+const activeLineField = StateField.define<number>({
+  create(state) { return state.doc.lineAt(state.selection.main.head).number; },
+  update(value, tr) {
+    const newValue = tr.state.doc.lineAt(tr.state.selection.main.head).number;
+    return newValue === value ? value : newValue;
+  },
+});
+
+const relativeLineNumbers = () => [
+  activeLineField,
+  gutter({
+    class: "cm-relative-line-numbers",
+    lineMarker(view, line) {
+      const active = view.state.field(activeLineField);
+      const lineNumber = view.state.doc.lineAt(line.from).number;
+      return new LineNumberMarker(Math.abs(lineNumber - active));
+    },
+    lineMarkerChange: () => true,
+    initialSpacer() {
+      return new LineNumberMarker(0);
+    },
+  }),
+];
 
 interface MarkdownEditorProps {
   content: string;
@@ -21,17 +56,27 @@ interface MarkdownEditorProps {
   filePath: string | null;
   vimEnabled?: boolean;
   onVimModeChange?: (mode: string | null) => void;
+  lineNumberMode?: LineNumberMode;
   scrollRatio?: number;
   onScrollChange?: (ratio: number) => void;
+}
+
+function getLineNumberExtensions(mode: LineNumberMode | undefined): Array<any> {
+  switch (mode) {
+    case "relative":
+      return [...relativeLineNumbers()];
+    case "normal":
+      return [lineNumbers()];
+    default:
+      return [];
+  }
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const scrollDomRef = useRef<HTMLElement | null>(null);
-  const [editorView, setEditorView] = useState<EditorView | null>(null);
   useScrollSync(scrollDomRef, props.scrollRatio, props.onScrollChange);
 
-  const themeConfig = new Compartment();
   const langConfig = new Compartment();
   const wrapConfig = new Compartment();
 
@@ -65,7 +110,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
       ]),
       wrapConfig.of(EditorView.lineWrapping),
       langConfig.of(markdown({ base: markdownLanguage, codeLanguages: languages })),
-      themeConfig.of([theme]),
+      theme,
+      ...getLineNumberExtensions(props.lineNumberMode),
       EditorView.updateListener.of((viewUpdate) => {
         if (viewUpdate.docChanged) {
           const value = viewUpdate.state.doc.toString();
@@ -85,7 +131,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
 
     const editorView = new EditorView({ state: editorState, parent: editorRef.current as Element });
     scrollDomRef.current = editorView.scrollDOM;
-    setEditorView(editorView);
 
     let lastMode: string | null = null;
     const reportMode = () => {
@@ -113,17 +158,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
       offModeChange?.();
       scrollDomRef.current = null;
       editorView.destroy();
-      setEditorView(null);
     }
-  }, [props.filePath, props.vimEnabled]);
-
-  useLayoutEffect(() => {
-    if (editorView) {
-      editorView.dispatch({
-        effects: themeConfig.reconfigure([theme]),
-      });
-    }
-  }, [resolvedTheme, editorView]);
+  }, [props.filePath, props.vimEnabled, props.lineNumberMode, resolvedTheme]);
 
   if (!props.filePath) {
     return (

@@ -612,6 +612,14 @@ div[data-remark-code-title="true"] + pre {
   font-weight: 600;
 }
 
+/* ---------- Editor ---------- */
+.cm-relative-line-numbers .cm-gutterElement {
+  padding: 0 3px 0 5px;
+  min-width: 20px;
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* ---------- Note Status Bar ---------- */
 .note-status-bar {
   box-sizing: border-box;

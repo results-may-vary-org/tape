@@ -50,6 +50,8 @@ export function SaveLastOpenedFile(arg1:string,arg2:string):Promise<void>;
 
 export function SaveLastOpenedFolder(arg1:string):Promise<void>;
 
+export function SaveLineNumberMode(arg1:string,arg2:string):Promise<void>;
+
 export function SavePrivacyMode(arg1:string,arg2:boolean):Promise<void>;
 
 export function SaveShowFileMTime(arg1:string,arg2:boolean):Promise<void>;

@@ -29,6 +29,7 @@ export namespace main {
 	    privacyMode: boolean;
 	    showFileMTime: boolean;
 	    vimMode: boolean;
+	    lineNumberMode: string;
 	    check: number[];
 	    nonceCheck: number[];
 	
@@ -47,6 +48,7 @@ export namespace main {
 	        this.privacyMode = source["privacyMode"];
 	        this.showFileMTime = source["showFileMTime"];
 	        this.vimMode = source["vimMode"];
+	        this.lineNumberMode = source["lineNumberMode"];
 	        this.check = source["check"];
 	        this.nonceCheck = source["nonceCheck"];
 	    }

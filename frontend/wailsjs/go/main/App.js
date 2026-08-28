@@ -98,6 +98,10 @@ export function SaveLastOpenedFolder(arg1) {
   return window['go']['main']['App']['SaveLastOpenedFolder'](arg1);
 }
 
+export function SaveLineNumberMode(arg1, arg2) {
+  return window['go']['main']['App']['SaveLineNumberMode'](arg1, arg2);
+}
+
 export function SavePrivacyMode(arg1, arg2) {
   return window['go']['main']['App']['SavePrivacyMode'](arg1, arg2);
 }
