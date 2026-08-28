@@ -298,8 +298,8 @@ button {
 }
 
 .current-file {
-  color: var(--gray-12);
-  font-weight: 500;
+  color: var(--gray-11);
+  font-weight: 400;
   width: 100%;
 }
 
@@ -603,6 +603,7 @@ div[data-remark-code-title="true"] + pre {
   border-top: 1px solid var(--gray-a5);
   background: var(--color-panel);
   font-size: 0.75rem;
+  font-weight: 400;
   display: flex;
   align-items: center;
   gap: 1.25rem;
@@ -636,7 +637,9 @@ div[data-remark-code-title="true"] + pre {
 
 .stat-text {
   margin-right: 1rem;
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .note-status-bar .stat-delta-positive {
