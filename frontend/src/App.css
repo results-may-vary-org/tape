@@ -695,6 +695,28 @@ div[data-remark-code-title="true"] + pre {
   .stat-text-small > span { margin-right: 2px; }
 }
 
+/* ---------- Top bar: same 3 breakpoints as the bottom bar ---------- */
+
+@media (max-width: 800px) {
+  .search-trigger { display: none; }
+}
+
+/* ≥664px: full layout is the default, nothing to hide */
+
+@media (max-width: 665px) and (min-width: 476px) {
+  .topbar { gap: 0.5rem; }
+}
+
+@media (max-width: 476px) {
+  .topbar {
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+  }
+  .brand-name,
+  .action-button-label { display: none; }
+  .action-button-primary { padding: 0 0.5rem; }
+}
+
 /* ---------- Search Modal ---------- */
 #search-info {
   color: var(--gray-11);

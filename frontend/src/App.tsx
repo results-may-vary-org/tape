@@ -603,7 +603,7 @@ function App() {
                 <DropdownMenu.Trigger>
                   <button className="action-button action-button-primary">
                     <Plus size={14} />
-                    New
+                    <span className="action-button-label">New</span>
                   </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content className="dropdown-content" sideOffset={6} align="start">
