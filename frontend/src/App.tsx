@@ -53,6 +53,8 @@ import SettingsPopover from './components/SettingsPopover';
 import type { FileItem, ViewMode, ThemeMode, UIThemeMode, SearchResult } from './types/types';
 import UseEncVaultModal from './components/UseEncVaultModal';
 import UnlockVaultModal from './components/UnlockVaultModal';
+import UnsavedChangesModal from './components/UnsavedChangesModal';
+import { EventsOn, Quit } from '../wailsjs/runtime/runtime';
 
 function App() {
   const { setTheme } = useTheme();
@@ -93,6 +95,28 @@ function App() {
   // but for now this is the fastest since none of the elements change height
   const [sidebarHidden, setSidebarHidden] = useState<boolean>(false);
   const [zenMode, setZenMode] = useState<boolean>(false);
+
+  // pending file switch / app-close guard for unsaved changes
+  const [pendingFile, setPendingFile] = useState<FileItem | null>(null);
+  const [closeRequested, setCloseRequested] = useState<boolean>(false);
+  const hasUnsavedChangesRef = useRef(false);
+  const quittingRef = useRef(false);
+
+  // keep refs in sync so the runtime close handler reads fresh state
+  useEffect(() => { hasUnsavedChangesRef.current = hasUnsavedChanges; }, [hasUnsavedChanges]);
+
+  // app close: main window emits "tape:before-close" (OnBeforeClose returns true to cancel)
+  useEffect(() => {
+    const off = EventsOn("tape:before-close", () => {
+      if (hasUnsavedChangesRef.current && selectedFilePath) {
+        quittingRef.current = true;
+        setCloseRequested(true);
+      } else {
+        Quit();
+      }
+    });
+    return off;
+  }, [selectedFilePath]);
 
   const noMDinMDEWarning = async () => {
     window.localStorage.setItem("noMDinMDEWarning", "1");
@@ -257,8 +281,8 @@ function App() {
     }
   };
 
-  // open a file and save the state in the config
-  const handleFileSelect = async (item: FileItem) => {
+  // actually load and display a file's content
+  const loadFile = async (item: FileItem) => {
     try {
       setIsLoading(true);
       scrollRatioRef.current = 0;
@@ -291,6 +315,18 @@ function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // open a file and save the state in the config
+  const handleFileSelect = async (item: FileItem) => {
+    // if we already have an unsaved file, warn before switching
+    if (hasUnsavedChanges && selectedFilePath && item.path !== selectedFilePath) {
+      setCloseRequested(false);
+      quittingRef.current = false;
+      setPendingFile(item);
+      return;
+    }
+    await loadFile(item);
   };
 
   // expand folder and save the state in the config
@@ -339,6 +375,42 @@ function App() {
       console.log('File saved successfully');
     } catch (error) {
       console.error('Error saving file:', error);
+    }
+  };
+
+  // close the unsaved-changes modal (Cancel)
+  const handlePendingClose = () => {
+    setPendingFile(null);
+    setCloseRequested(false);
+  };
+
+  // discard pending action (switch file or quit) without saving
+  const handlePendingDiscard = async () => {
+    const file = pendingFile;
+    const quitting = quittingRef.current;
+    setPendingFile(null);
+    setCloseRequested(false);
+
+    if (quitting) {
+      Quit();
+    } else if (file) {
+      await loadFile(file);
+    }
+  };
+
+  // save pending file then switch or quit
+  const handlePendingSave = async () => {
+    const file = pendingFile;
+    const quitting = quittingRef.current;
+    setPendingFile(null);
+    setCloseRequested(false);
+
+    await handleSave();
+
+    if (quitting) {
+      Quit();
+    } else if (file) {
+      await loadFile(file);
     }
   };
 
@@ -791,6 +863,16 @@ function App() {
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
+
+      {/* warn before switching file or closing app with unsaved changes */}
+      <UnsavedChangesModal
+        open={!!pendingFile || closeRequested}
+        filePath={selectedFilePath}
+        quitting={closeRequested}
+        onClose={handlePendingClose}
+        onSave={handlePendingSave}
+        onDiscard={handlePendingDiscard}
+      />
 
     </RadixTheme>
   );

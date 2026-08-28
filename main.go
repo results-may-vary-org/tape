@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"embed"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 //go:embed all:frontend/dist
@@ -25,7 +27,13 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup:        app.startup,
-		OnShutdown:       app.shutdown,	
+		OnShutdown:       app.shutdown,
+		// intercept the close so the frontend can warn about unsaved changes;
+		// we always cancel here and let the frontend call runtime.Quit() when ready
+		OnBeforeClose: func(ctx context.Context) bool {
+			runtime.EventsEmit(ctx, "tape:before-close")
+			return true
+		},
 		Bind: []interface{}{
 			app,
 		},

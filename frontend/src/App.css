@@ -476,9 +476,7 @@ button {
 }
 
 .markdown-reader .reader-content {
-  padding: 1rem 1.5rem 2rem;
-  max-width: 760px;
-  margin: 0 auto;
+  padding: 1rem 0.75rem 2rem;
   width: 100%;
   box-sizing: border-box;
 }
@@ -916,6 +914,7 @@ div[data-remark-code-title="true"] + pre {
 /* callout */
 .callout {
   border-radius: 0.2rem;
+  box-sizing: border-box;
 }
 
 .callout-content > :first-child {
