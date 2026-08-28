@@ -47,6 +47,7 @@ type Config struct {
 	UITheme          string   `json:"uiTheme"`
 	PrivacyMode      bool     `json:"privacyMode"`
 	ShowFileMTime    bool     `json:"showFileMTime"`
+	VimMode          bool     `json:"vimMode"`
 	Check            []byte   `json:"check"`
 	NonceCheck       []byte   `json:"nonceCheck"`
 }
@@ -999,6 +1000,17 @@ func (a *App) SaveShowFileMTime(folderPath string, showFileMTime bool) error {
 	}
 
 	config.ShowFileMTime = showFileMTime
+	return a.SaveConfig(config, folderPath)
+}
+
+// SaveShowVim saves whether vim keybindings are enabled in the editor
+func (a *App) SaveShowVim(folderPath string, vimMode bool) error {
+	config, err := a.LoadConfig(folderPath)
+	if err != nil {
+		config = &Config{}
+	}
+
+	config.VimMode = vimMode
 	return a.SaveConfig(config, folderPath)
 }
 

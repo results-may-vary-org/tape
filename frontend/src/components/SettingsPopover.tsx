@@ -2,7 +2,7 @@ import { Popover, Button, Flex, Select, Switch, Text } from "@radix-ui/themes"
 import { CassetteTape, Citrus, File, Folder, GemIcon, Monitor, Moon, Settings2, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
-import { SaveTheme, SaveUITheme, SaveShowFileMTime, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
+import { SaveTheme, SaveUITheme, SaveShowFileMTime, SaveShowVim, TransformTreeIntoMDE1 } from "../../wailsjs/go/main/App";
 import type { FileItem, ThemeMode, UIThemeMode } from "../types/types";
 import EncTreeConfirmationModal from "./EncTreeConfirmationModal";
 import EncTreeDoneModal from "./EncTreeDoneModal";
@@ -13,7 +13,9 @@ const SettingsPopover = ({
   isVaultSecured,
   uiTheme,
   showFileMTime,
+  vimMode,
   onShowFileMTimeChange,
+  onVimModeChange,
   onUIThemeChange,
   onEncryptionComplete,
 }: {
@@ -21,7 +23,9 @@ const SettingsPopover = ({
   isVaultSecured: boolean;
   uiTheme: UIThemeMode;
   showFileMTime: boolean;
+  vimMode: boolean;
   onShowFileMTimeChange: (show: boolean) => void;
+  onVimModeChange: (vim: boolean) => void;
   onUIThemeChange: (t: UIThemeMode) => void;
   onEncryptionComplete: () => Promise<void>;
 }) => {
@@ -60,6 +64,17 @@ const SettingsPopover = ({
         await SaveShowFileMTime(fileTree.path, show);
       } catch (error) {
         console.error("Error saving last edited date setting:", error);
+      }
+    }
+  };
+
+  const handleVimModeChange = async (vim: boolean) => {
+    onVimModeChange(vim);
+    if (fileTree?.path) {
+      try {
+        await SaveShowVim(fileTree.path, vim);
+      } catch (error) {
+        console.error("Error saving vim mode setting:", error);
       }
     }
   };
@@ -186,6 +201,14 @@ const SettingsPopover = ({
             <Switch
               checked={showFileMTime}
               onCheckedChange={handleShowFileMTimeChange}
+            />
+          </Flex>
+
+          <Flex align="center" justify="between" gap="3">
+            <Text size="2">Vim keybindings</Text>
+            <Switch
+              checked={vimMode}
+              onCheckedChange={handleVimModeChange}
             />
           </Flex>
 

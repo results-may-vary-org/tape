@@ -28,6 +28,7 @@ export namespace main {
 	    uiTheme: string;
 	    privacyMode: boolean;
 	    showFileMTime: boolean;
+	    vimMode: boolean;
 	    check: number[];
 	    nonceCheck: number[];
 	
@@ -45,6 +46,7 @@ export namespace main {
 	        this.uiTheme = source["uiTheme"];
 	        this.privacyMode = source["privacyMode"];
 	        this.showFileMTime = source["showFileMTime"];
+	        this.vimMode = source["vimMode"];
 	        this.check = source["check"];
 	        this.nonceCheck = source["nonceCheck"];
 	    }

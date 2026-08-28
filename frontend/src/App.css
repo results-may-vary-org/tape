@@ -688,6 +688,39 @@ div[data-remark-code-title="true"] + pre {
   font-variant-numeric: tabular-nums;
 }
 
+.vim-mode-label {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: var(--gray-1);
+  background: var(--gray-9);
+  white-space: nowrap;
+}
+
+.vim-mode-normal {
+  background: var(--gray-11);
+}
+
+.vim-mode-insert,
+.vim-mode-replace {
+  background: var(--green-10);
+}
+
+.vim-mode-visual,
+.vim-mode-visual line,
+.vim-mode-visual block {
+  background: var(--amber-10);
+}
+
+.vim-mode-ex {
+  background: var(--blue-10);
+}
+
 .stat-save {
   color: var(--amber-10);
 }

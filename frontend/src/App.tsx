@@ -80,6 +80,8 @@ function App() {
   const [isVaultSecured, setIsVaultSecured] = useState<boolean>(false);
   const [uiTheme, setUITheme] = useState<UIThemeMode>('original');
   const [showFileMTime, setShowFileMTime] = useState<boolean>(true);
+  const [vimMode, setVimMode] = useState<boolean>(false);
+  const [vimStatus, setVimStatus] = useState<string | null>(null);
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState<boolean>(false);
@@ -190,6 +192,11 @@ function App() {
         setShowFileMTime(folderConfig.showFileMTime);
       } else {
         setShowFileMTime(true);
+      }
+      if (folderConfig.vimMode !== undefined) {
+        setVimMode(folderConfig.vimMode);
+      } else {
+        setVimMode(false);
       }
       if (folderConfig.expandedFolders) {
         setExpandedFolders(folderConfig.expandedFolders);
@@ -687,7 +694,9 @@ function App() {
               isVaultSecured={isVaultSecured}
               uiTheme={uiTheme}
               showFileMTime={showFileMTime}
+              vimMode={vimMode}
               onShowFileMTimeChange={(show) => setShowFileMTime(show)}
+              onVimModeChange={(vim) => setVimMode(vim)}
               onUIThemeChange={(theme) => setUITheme(theme)}
               onEncryptionComplete={async () => {
                 await refreshFileTree();
@@ -726,6 +735,8 @@ function App() {
                     content={fileContent}
                     onChange={handleContentChange}
                     filePath={selectedFilePath}
+                    vimEnabled={vimMode}
+                    onVimModeChange={setVimStatus}
                     scrollRatio={scrollRatioRef.current}
                     onScrollChange={(r) => { scrollRatioRef.current = r; }}
                   />
@@ -747,6 +758,8 @@ function App() {
             selectedFilePath={selectedFilePath}
             hasUnsavedChanges={hasUnsavedChanges}
             isVaultSecured={isVaultSecured}
+            vimMode={vimMode}
+            vimStatus={vimStatus}
           />
 
         </div> {/* content */}

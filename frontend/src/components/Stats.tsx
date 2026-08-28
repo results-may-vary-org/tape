@@ -12,6 +12,8 @@ type props = {
   selectedFilePath: string | null
   hasUnsavedChanges: boolean
   isVaultSecured: boolean
+  vimMode?: boolean
+  vimStatus?: string | null
 }
 
 const Stats = (props: props) => {
@@ -65,6 +67,16 @@ const Stats = (props: props) => {
 
   return (
     <div className="note-status-bar">
+
+      {props.vimMode && (
+        <div className="stat-container vim-mode">
+          <Tooltip content={props.vimStatus ? `Vim mode: ${props.vimStatus}` : "Vim keybindings enabled"}>
+            <span className={`vim-mode-label vim-mode-${props.vimStatus ?? "normal"}`}>
+              {props.vimStatus ? props.vimStatus === "ex" ? "EX" : props.vimStatus : "VIM"}
+            </span>
+          </Tooltip>
+        </div>
+      )}
 
       <div className="stat-container">
         {props.isVaultSecured && (

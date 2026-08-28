@@ -106,6 +106,10 @@ export function SaveShowFileMTime(arg1, arg2) {
   return window['go']['main']['App']['SaveShowFileMTime'](arg1, arg2);
 }
 
+export function SaveShowVim(arg1, arg2) {
+  return window['go']['main']['App']['SaveShowVim'](arg1, arg2);
+}
+
 export function SaveTheme(arg1, arg2) {
   return window['go']['main']['App']['SaveTheme'](arg1, arg2);
 }
