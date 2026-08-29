@@ -18,6 +18,18 @@ export function DeleteFile(arg1) {
   return window['go']['main']['App']['DeleteFile'](arg1);
 }
 
+export function GetConfigContent(arg1) {
+  return window['go']['main']['App']['GetConfigContent'](arg1);
+}
+
+export function GetConfigDiff(arg1, arg2) {
+  return window['go']['main']['App']['GetConfigDiff'](arg1, arg2);
+}
+
+export function GetConfigProtectedKeyChanges(arg1, arg2) {
+  return window['go']['main']['App']['GetConfigProtectedKeyChanges'](arg1, arg2);
+}
+
 export function GetContentDiff(arg1, arg2) {
   return window['go']['main']['App']['GetContentDiff'](arg1, arg2);
 }
@@ -44,6 +56,10 @@ export function GetOs() {
 
 export function GetTapeVersion() {
   return window['go']['main']['App']['GetTapeVersion']();
+}
+
+export function HasConfigChanges(arg1, arg2) {
+  return window['go']['main']['App']['HasConfigChanges'](arg1, arg2);
 }
 
 export function HasSecurity(arg1) {
@@ -80,6 +96,10 @@ export function RenameFile(arg1, arg2, arg3, arg4) {
 
 export function SaveConfig(arg1, arg2) {
   return window['go']['main']['App']['SaveConfig'](arg1, arg2);
+}
+
+export function SaveConfigContent(arg1, arg2) {
+  return window['go']['main']['App']['SaveConfigContent'](arg1, arg2);
 }
 
 export function SaveCryptoData(arg1, arg2, arg3) {

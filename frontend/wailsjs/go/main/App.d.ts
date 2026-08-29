@@ -10,6 +10,12 @@ export function DeleteDirectory(arg1:string):Promise<void>;
 
 export function DeleteFile(arg1:string):Promise<void>;
 
+export function GetConfigContent(arg1:string):Promise<string>;
+
+export function GetConfigDiff(arg1:string,arg2:string):Promise<string>;
+
+export function GetConfigProtectedKeyChanges(arg1:string,arg2:string):Promise<Array<string>>;
+
 export function GetContentDiff(arg1:string,arg2:string):Promise<main.Diff>;
 
 export function GetDecryptedFileName(arg1:string):Promise<string>;
@@ -23,6 +29,8 @@ export function GetFileModTime(arg1:string):Promise<string>;
 export function GetOs():Promise<string>;
 
 export function GetTapeVersion():Promise<string>;
+
+export function HasConfigChanges(arg1:string,arg2:string):Promise<boolean>;
 
 export function HasSecurity(arg1:string):Promise<boolean>;
 
@@ -41,6 +49,8 @@ export function ReadFile(arg1:string):Promise<string>;
 export function RenameFile(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<string>;
 
 export function SaveConfig(arg1:main.Config,arg2:string):Promise<void>;
+
+export function SaveConfigContent(arg1:string,arg2:string):Promise<void>;
 
 export function SaveCryptoData(arg1:string,arg2:Array<number>,arg3:Array<number>):Promise<void>;
 

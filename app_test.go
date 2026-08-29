@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -220,5 +221,113 @@ func TestBuildEncryptedPathsMultipleSiblings(t *testing.T) {
 	}
 	if result[2].encPath != filepath.Join("ENC_docs", "ENC_b.mde") {
 		t.Fatalf("unexpected encPath for b: %q", result[2].encPath)
+	}
+}
+
+// --- config diff / protected keys ---
+
+func TestHasConfigChangesIgnoresWhitespace(t *testing.T) {
+	a := &App{}
+	orig := `{"theme":"dark","privacyMode":true}`
+	edited := "{\n  \"theme\": \"dark\",\n  \"privacyMode\": true\n}"
+	changed, err := a.HasConfigChanges(orig, edited)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if changed {
+		t.Fatal("pure formatting changes must not be reported as config changes")
+	}
+}
+
+func TestHasConfigChangesDetectsValueChange(t *testing.T) {
+	a := &App{}
+	changed, err := a.HasConfigChanges(`{"theme":"dark"}`, `{"theme":"light"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !changed {
+		t.Fatal("a value change must be reported")
+	}
+}
+
+func TestGetConfigProtectedKeyChangesNone(t *testing.T) {
+	a := &App{}
+	changed, err := a.GetConfigProtectedKeyChanges(
+		`{"theme":"dark","privacyMode":true,"check":"aGk=","nonceCheck":"bm8="}`,
+		`{"theme":"light","privacyMode":true,"check":"aGk=","nonceCheck":"bm8="}`,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(changed) != 0 {
+		t.Fatalf("expected no protected changes, got %v", changed)
+	}
+}
+
+func TestGetConfigProtectedKeyChangesPrivacyMode(t *testing.T) {
+	a := &App{}
+	changed, err := a.GetConfigProtectedKeyChanges(
+		`{"privacyMode":true,"check":"aGk=","nonceCheck":"bm8="}`,
+		`{"privacyMode":false,"check":"aGk=","nonceCheck":"bm8="}`,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(changed) != 1 || changed[0] != "privacyMode" {
+		t.Fatalf("expected [privacyMode], got %v", changed)
+	}
+}
+
+func TestGetConfigProtectedKeyChangesContent(t *testing.T) {
+	a := &App{}
+	changed, err := a.GetConfigProtectedKeyChanges(
+		`{"privacyMode":true,"check":"aGk=","nonceCheck":"bm8="}`,
+		`{"privacyMode":true,"check":"Y2hhbmdlZA==","nonceCheck":"bm8="}`,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(changed) != 1 || changed[0] != "check" {
+		t.Fatalf("expected [check], got %v", changed)
+	}
+}
+
+func TestGetConfigProtectedKeyChangesRemoved(t *testing.T) {
+	a := &App{}
+	changed, err := a.GetConfigProtectedKeyChanges(
+		`{"privacyMode":true,"check":"aGk=","nonceCheck":"bm8="}`,
+		`{"privacyMode":true}`,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(changed) != 2 {
+		t.Fatalf("expected [check nonceCheck], got %v", changed)
+	}
+}
+
+func TestGetConfigDiffIncludesHeadersAndMarkers(t *testing.T) {
+	a := &App{}
+	diff, err := a.GetConfigDiff(`{"theme":"dark"}`, `{"theme":"light"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(diff, "--- a/tape.json\n+++ b/tape.json\n") {
+		t.Fatalf("expected git-style headers, got:\n%s", diff)
+	}
+	if !strings.Contains(diff, "\n-  \"theme\": \"dark\"") || !strings.Contains(diff, "\n+  \"theme\": \"light\"") {
+		t.Fatalf("expected -/+ lines, got:\n%s", diff)
+	}
+}
+
+func TestGetConfigDiffNoChangesEmpty(t *testing.T) {
+	a := &App{}
+	diff, err := a.GetConfigDiff(`{"theme":"dark"}`, `{"theme":"dark"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := strings.TrimPrefix(diff, "--- a/tape.json\n+++ b/tape.json\n")
+	if strings.TrimSpace(body) != "" {
+		t.Fatalf("expected empty diff body, got:\n%s", diff)
 	}
 }

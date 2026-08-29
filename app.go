@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
@@ -10,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	goruntime "runtime"
 	"sort"
@@ -857,7 +859,7 @@ func (a *App) LoadConfig(folderPath string) (*Config, error) {
 
 	// If config file doesn't exist, return empty config
 	if !a.IsFileExists(configPath) {
-		return &Config{}, nil
+		return &Config{UITheme: "tokyo-night"}, nil
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -869,6 +871,10 @@ func (a *App) LoadConfig(folderPath string) (*Config, error) {
 	err = json.Unmarshal(data, &config)
 	if err != nil {
 		return &Config{}, err
+	}
+
+	if config.UITheme == "" {
+		config.UITheme = "tokyo-night"
 	}
 
 	return &config, nil
@@ -1024,6 +1030,231 @@ func (a *App) SaveLineNumberMode(folderPath string, mode string) error {
 
 	config.LineNumberMode = mode
 	return a.SaveConfig(config, folderPath)
+}
+
+// GetConfigContent returns the raw content of the tape.json config file.
+// If the file doesn't exist a default empty JSON object is returned.
+func (a *App) GetConfigContent(folderPath string) (string, error) {
+	configPath := a.getConfigPath(folderPath)
+
+	if !a.IsFileExists(configPath) {
+		return "{}", nil
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
+
+// SaveConfigContent validates the given JSON and writes it to tape.json.
+// It returns an error if the content is not valid JSON.
+func (a *App) SaveConfigContent(folderPath string, content string) error {
+	var config Config
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		return fmt.Errorf("invalid JSON: %v", err)
+	}
+
+	configPath := a.getConfigPath(folderPath)
+	return os.WriteFile(configPath, []byte(content), 0600)
+}
+
+// parseConfig parses the given JSON content into a Config struct.
+func parseConfig(content string) (Config, error) {
+	var config Config
+	if err := json.Unmarshal([]byte(content), &config); err != nil {
+		return Config{}, err
+	}
+	return config, nil
+}
+
+// normalizeConfigJSON parses the given JSON content into a Config struct and
+// re-encodes it with a canonical 2-space indentation using the struct field
+// order (matching SaveConfig), so purely cosmetic whitespace changes are not
+// reported as differences.
+func normalizeConfigJSON(content string) (string, error) {
+	config, err := parseConfig(content)
+	if err != nil {
+		return "", err
+	}
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// HasConfigChanges reports whether the two config contents differ semantically,
+// ignoring formatting/whitespace differences.
+func (a *App) HasConfigChanges(originalContent, editedContent string) (bool, error) {
+	oldConfig, err := parseConfig(originalContent)
+	if err != nil {
+		return false, err
+	}
+	newConfig, err := parseConfig(editedContent)
+	if err != nil {
+		return false, err
+	}
+	return !reflect.DeepEqual(oldConfig, newConfig), nil
+}
+
+// configProtectedKeys lists the keys that control the encryption of the notes.
+// (kept for documentation; detection is implemented in GetConfigProtectedKeyChanges)
+// GetConfigProtectedKeyChanges returns the list of protected keys whose value
+// (content included) was edited or removed between the two config contents.
+func (a *App) GetConfigProtectedKeyChanges(originalContent, editedContent string) ([]string, error) {
+	oldConfig, err := parseConfig(originalContent)
+	if err != nil {
+		return nil, err
+	}
+	newConfig, err := parseConfig(editedContent)
+	if err != nil {
+		return nil, err
+	}
+
+	var changed []string
+	if oldConfig.PrivacyMode != newConfig.PrivacyMode {
+		changed = append(changed, "privacyMode")
+	}
+	if !bytes.Equal(oldConfig.Check, newConfig.Check) {
+		changed = append(changed, "check")
+	}
+	if !bytes.Equal(oldConfig.NonceCheck, newConfig.NonceCheck) {
+		changed = append(changed, "nonceCheck")
+	}
+	return changed, nil
+}
+
+// GetConfigDiff returns a git-style unified diff between the two config
+// contents. Both are normalized first so only real value changes are shown.
+func (a *App) GetConfigDiff(originalContent, editedContent string) (string, error) {
+	oldText, err := normalizeConfigJSON(originalContent)
+	if err != nil {
+		return "", err
+	}
+	newText, err := normalizeConfigJSON(editedContent)
+	if err != nil {
+		return "", err
+	}
+	return buildUnifiedDiff(oldText, newText), nil
+}
+
+// lineOp is a single line in the diff with a prefix indicating context (' '),
+// removal ('-') or addition ('+').
+type lineOp struct {
+	op   byte
+	line string
+}
+
+// buildUnifiedDiff computes a line-level diff between two texts and formats it
+// as a unified (git-style) diff.
+func buildUnifiedDiff(oldText, newText string) string {
+	dmp := diffmatchpatch.New()
+	chars1, chars2, lineArray := dmp.DiffLinesToChars(oldText, newText)
+	diffRes := dmp.DiffMain(chars1, chars2, false)
+	dmp.DiffCleanupSemantic(diffRes)
+	diffs := dmp.DiffCharsToLines(diffRes, lineArray)
+
+	var ops []lineOp
+	for _, d := range diffs {
+		text := d.Text
+		if text == "" {
+			continue
+		}
+		lines := strings.Split(strings.TrimSuffix(text, "\n"), "\n")
+		switch d.Type {
+		case diffmatchpatch.DiffEqual:
+			for _, ln := range lines {
+				ops = append(ops, lineOp{' ', ln})
+			}
+		case diffmatchpatch.DiffDelete:
+			for _, ln := range lines {
+				ops = append(ops, lineOp{'-', ln})
+			}
+		case diffmatchpatch.DiffInsert:
+			for _, ln := range lines {
+				ops = append(ops, lineOp{'+', ln})
+			}
+		}
+	}
+
+	return formatDiffHunks(ops)
+}
+
+// diffContext is how many unchanged context lines to show around each change.
+const diffContext = 3
+
+// formatDiffHunks groups the line operations into hunks with context and emits
+// them with @@ headers in a unified diff format.
+func formatDiffHunks(ops []lineOp) string {
+	type hunk struct {
+		oldStart, newStart int
+		oldCnt, newCnt     int
+		lines              []string
+	}
+	var hunks []hunk
+
+	i := 0
+	for i < len(ops) {
+		if ops[i].op == ' ' {
+			i++
+			continue
+		}
+		start := i
+		changeEnd := i
+		for changeEnd < len(ops) && ops[changeEnd].op != ' ' {
+			changeEnd++
+		}
+
+		ctxStart := start
+		for ctxStart > 0 && start-ctxStart < diffContext && ops[ctxStart-1].op == ' ' {
+			ctxStart--
+		}
+		ctxEnd := changeEnd
+		for ctxEnd < len(ops) && ctxEnd-changeEnd < diffContext && ops[ctxEnd].op == ' ' {
+			ctxEnd++
+		}
+
+		oldStart, newStart := 1, 1
+		for k := 0; k < ctxStart; k++ {
+			if ops[k].op == ' ' || ops[k].op == '-' {
+				oldStart++
+			}
+			if ops[k].op == ' ' || ops[k].op == '+' {
+				newStart++
+			}
+		}
+
+		var body []string
+		oldCnt, newCnt := 0, 0
+		for k := ctxStart; k < ctxEnd; k++ {
+			body = append(body, string(ops[k].op)+ops[k].line)
+			if ops[k].op == '-' {
+				oldCnt++
+			}
+			if ops[k].op == '+' {
+				newCnt++
+			}
+		}
+
+		hunks = append(hunks, hunk{oldStart, newStart, oldCnt, newCnt, body})
+		i = ctxEnd
+	}
+
+	var b strings.Builder
+	b.WriteString("--- a/tape.json\n")
+	b.WriteString("+++ b/tape.json\n")
+	for _, h := range hunks {
+		fmt.Fprintf(&b, "@@ -%d,%d +%d,%d @@\n",
+			h.oldStart, max(h.oldCnt, 1), h.newStart, max(h.newCnt, 1))
+		for _, l := range h.lines {
+			b.WriteString(l)
+			b.WriteString("\n")
+		}
+	}
+	return b.String()
 }
 
 // getCryptoOptions return all related config for crypto

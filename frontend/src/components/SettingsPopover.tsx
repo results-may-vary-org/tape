@@ -8,6 +8,7 @@ import { getThemeModeForUITheme, getUIThemePreset, UI_THEMES } from "../services
 import EncTreeConfirmationModal from "./EncTreeConfirmationModal";
 import EncTreeDoneModal from "./EncTreeDoneModal";
 import UseEncVaultModal from "./UseEncVaultModal";
+import ConfigEditorModal from "./ConfigEditorModal";
 
 const SettingsPopover = ({
   fileTree,
@@ -39,6 +40,13 @@ const SettingsPopover = ({
   const [isSetupEncOpen, setIsSetupEncOpen] = useState<boolean>(false);
   const [setupEncError, setSetupEncError] = useState<string>("");
   const [encIsSucess, setEncIsSucess] = useState<boolean>(false);
+  const [isConfigEditorOpen, setIsConfigEditorOpen] = useState<boolean>(false);
+
+  const handleConfigSaved = () => {
+    setIsConfigEditorOpen(false);
+    // reload the window so the new settings take effect
+    window.location.reload();
+  };
 
   const handleUIThemeChange = async (newUITheme: UIThemeMode) => {
     onUIThemeChange(newUITheme);
@@ -259,6 +267,10 @@ const SettingsPopover = ({
             />
           </Flex>
 
+          <Button variant="soft" onClick={() => setIsConfigEditorOpen(true)}>
+            Edit config
+          </Button>
+
           {!isVaultSecured && <EncTreeConfirmationModal nextStep={() => setIsSetupEncOpen(true)}/>}
         </Flex>
 
@@ -269,6 +281,15 @@ const SettingsPopover = ({
         />
 
         <EncTreeDoneModal isOpen={encIsSucess} onClose={() => setEncIsSucess(false)} />
+
+        <ConfigEditorModal
+          isOpen={isConfigEditorOpen}
+          folderPath={fileTree?.path ?? null}
+          vimMode={vimMode}
+          lineNumberMode={lineNumberMode}
+          onClose={() => setIsConfigEditorOpen(false)}
+          onSave={handleConfigSaved}
+        />
 
       </Popover.Content>
     </Popover.Root>
