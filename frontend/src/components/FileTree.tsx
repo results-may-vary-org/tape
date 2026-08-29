@@ -54,26 +54,32 @@ const FileTree: React.FC<FileTreeProps> = ({
   );
   const visiblePaths = useMemo(() => new Set(visibleItems.map(i => i.path)), [visibleItems]);
 
-  // entering the tree with no usable focus target: fall back to the root (first visible node)
+  // keep the tree cursor valid and visible so the tree always has exactly one tab stop
   useEffect(() => {
-    if (treeFocused && (focusedTreeItem === null || !visiblePaths.has(focusedTreeItem))) {
-      onFocusedTreeItemChange(visibleItems[0]?.path ?? null);
+    const candidate = (selectedFile && visiblePaths.has(selectedFile))
+      ? selectedFile
+      : (visibleItems[0]?.path ?? null);
+    if (candidate !== null && (focusedTreeItem === null || !visiblePaths.has(focusedTreeItem))) {
+      onFocusedTreeItemChange(candidate);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [treeFocused, visiblePaths, visibleItems]);
+  }, [selectedFile, visiblePaths, visibleItems]);
 
-  // arrow keys move the tree cursor between the rendered nodes
+  // arrow keys (or vim j/k) move the tree cursor between the rendered nodes
   const handleTreeKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
+    let key = e.key;
+    if (key === 'j') key = 'ArrowDown';
+    else if (key === 'k') key = 'ArrowUp';
+    if (key !== 'ArrowDown' && key !== 'ArrowUp' && key !== 'Home' && key !== 'End') return;
     e.preventDefault();
     if (visibleItems.length === 0) return;
 
     const idx = focusedTreeItem ? visibleItems.findIndex(i => i.path === focusedTreeItem) : -1;
     let next = idx;
-    if (e.key === 'ArrowDown') next = idx < 0 ? 0 : Math.min(idx + 1, visibleItems.length - 1);
-    else if (e.key === 'ArrowUp') next = idx < 0 ? 0 : Math.max(idx - 1, 0);
-    else if (e.key === 'Home') next = 0;
-    else if (e.key === 'End') next = visibleItems.length - 1;
+    if (key === 'ArrowDown') next = idx < 0 ? 0 : Math.min(idx + 1, visibleItems.length - 1);
+    else if (key === 'ArrowUp') next = idx < 0 ? 0 : Math.max(idx - 1, 0);
+    else if (key === 'Home') next = 0;
+    else if (key === 'End') next = visibleItems.length - 1;
     if (next !== idx) onFocusedTreeItemChange(visibleItems[next].path);
   };
 

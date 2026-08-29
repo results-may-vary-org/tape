@@ -23,6 +23,7 @@ function handleKeys(
   // Esc for modal
   if (event.key === 'Escape') {
     event.preventDefault();
+    const anyModalOpen = isShortcutsModalOpen || isSearchModalOpen || isUseEncModalOpen || isUnlockVaultModalOpen;
     // close only one modal
     if (isShortcutsModalOpen) {
       setIsShortcutsModalOpen(false);
@@ -33,8 +34,8 @@ function handleKeys(
     } else if (isUnlockVaultModalOpen) {
       setIsUnlockVaultModalOpen(false);
     }
-    const noOtherOpen = !(isShortcutsModalOpen && isSearchModalOpen && isUseEncModalOpen && isUnlockVaultModalOpen);
-    if (noOtherOpen) {
+    // only when no modal was open does Esc also move focus out of the tree
+    if (!anyModalOpen) {
       const inTree = document.activeElement?.closest?.('.file-tree') != null;
       if (inTree) {
         // leave the file tree and bring focus back to the content area

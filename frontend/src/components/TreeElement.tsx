@@ -38,14 +38,13 @@ interface TreeElementProps {
 // IMPORTANT: TreeElement is rendered as the DIRECT CHILD of Radix's ContextMenu.Trigger.
 // Radix clones that child and injects its own DOM props onto it: onContextMenu,
 // onPointerDown, onPointerMove/Up/Cancel, data-state and a composed ref. This is what makes
-// the context menu open on right-click AND makes the node reachable via Tab/Shift+Tab.
-// Therefore this component MUST:
+// the context menu open on right-click. Therefore this component MUST:
 //   1. be a React.forwardRef component, so the injected ref composes correctly, AND
 //   2. spread `...rest` onto the focusable div so all injected props are forwarded.
 // If the extra props are dropped (e.g. by destructuring only a fixed set), the node
-// loses its context-menu trigger wiring and Tab/Shift+Tab selection breaks.
-// Keep `tabIndex={0}` on the inner div: it is what makes each node focusable so that
-// pressing Tab/Shift+Tab moves selection between the file-tree items (native behavior).
+// loses its context-menu trigger wiring.
+// Roving tabindex: only the focused node is a tab stop (tabIndex 0), all others are -1.
+// That way Tab enters/leaves the tree as one element and arrows move inside it.
 const TreeElement = React.forwardRef<HTMLDivElement, TreeElementProps>(
   ({ item, isExpanded, isSelected, isRootFolder = false, isVaultSecured, showFileMTime, indent, useAltIcons, isFocused, onClick, onKeyDown, ...rest }, ref) => {
     const displayName = (isVaultSecured && !item.isDir && item.name.endsWith(".mde"))
@@ -60,7 +59,7 @@ const TreeElement = React.forwardRef<HTMLDivElement, TreeElementProps>(
         {...rest}
         className={`file-tree-item ${isSelected ? "selected" : ""} ${isFocused ? "tree-focused" : ""}`}
         style={{ paddingLeft: `${indent}px` }}
-        tabIndex={0}
+        tabIndex={isFocused ? 0 : -1}
         role={item.isDir ? "treeitem" : "button"}
         aria-expanded={item.isDir ? isExpanded : undefined}
         aria-selected={isSelected}

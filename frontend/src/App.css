@@ -397,10 +397,14 @@ button {
   background: var(--accent-4);
 }
 
-/* keyboard cursor while navigating the tree (Ctrl+W / arrow keys) */
-.file-tree-item.tree-focused {
+/* keyboard cursor while navigating the tree: highlight + outline only while
+ * the tree has keyboard focus (Ctrl+W / Tab in / arrow keys). Disappears when
+ * focus moves back to the editor or elsewhere. */
+.file-tree:focus-within .file-tree-item.tree-focused {
   background: var(--accent-3);
   color: var(--accent-11);
+  outline: 2px solid var(--accent-8);
+  outline-offset: -2px;
 }
 
 /* ---------- Context Menu ---------- */

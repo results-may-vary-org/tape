@@ -26,11 +26,13 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
     { keys: ['Ctrl', 'H'], description: 'Show this shortcuts modal', category: 'navigation' },
     { keys: ['Ctrl', 'K'], description: 'Open search modal', category: 'navigation' },
     { keys: ['Ctrl', 'W'], description: 'Toggle focus between file tree and editor', category: 'navigation' },
+    { keys: ['j', 'k'], description: 'Tree: move cursor up / down', category: 'navigation' },
+    { keys: ['h', 'l'], description: 'Tree: collapse / expand folder', category: 'navigation' },
+    { keys: ['Enter'], description: 'Tree: open selected item', category: 'navigation' },
+    { keys: ['Space'], description: 'Tree: open context menu', category: 'navigation' },
     { keys: ['Ctrl', 'Tab'], description: 'Switch between Editor/Reader', category: 'navigation' },
-    { keys: ['Tab'], description: 'Navigate between UI elements', category: 'navigation' },
-    { keys: ['Shift', 'Tab'], description: 'Navigate between UI elements', category: 'navigation' },
-    { keys: ['←↑↓→'], description: 'Navigate between search result', category: 'navigation' },
-    { keys: ['Enter'], description: 'Open selected file/folder', category: 'navigation' },
+    { keys: ['Tab', 'Shift+Tab'], description: 'Move between UI elements', category: 'navigation' },
+    { keys: ['←↑↓→'], description: 'Navigate search results', category: 'navigation' },
     { keys: ['Esc'], description: 'Close modal', category: 'navigation' },
 
     // Editor

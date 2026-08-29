@@ -74,6 +74,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   }, [isFocused, treeFocused]);
 
   const handleClick = () => {
+    onFocusedTreeItemChange(item.path);
     if (item.isDir) {
       const newExpandedFolders = isExpanded
         ? expandedFolders.filter(path => path !== item.path)
@@ -133,14 +134,28 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
     onCreateFolder(parentPath);
   };
 
+  const openContextMenu = () => {
+    const rect = elementRef.current?.getBoundingClientRect();
+    elementRef.current?.dispatchEvent(new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      clientX: rect ? rect.left + rect.width / 2 : 0,
+      clientY: rect ? rect.bottom : 0,
+    }));
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
       case 'Enter':
-      case ' ':
         e.preventDefault();
         handleClick();
         break;
+      case ' ':
+        e.preventDefault();
+        openContextMenu();
+        break;
       case 'ArrowRight':
+      case 'l':
         if (item.isDir && !isExpanded) {
           e.preventDefault();
           const newExpandedFolders = [...expandedFolders, item.path];
@@ -148,6 +163,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
         }
         break;
       case 'ArrowLeft':
+      case 'h':
         if (item.isDir && isExpanded) {
           e.preventDefault();
           const newExpandedFolders = expandedFolders.filter(path => path !== item.path);
