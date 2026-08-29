@@ -510,16 +510,16 @@ function App() {
         handleSave,
         handleViewModeChange,
         toggleZenMode,
-        toggleSidebar,
         toggleTreeFocus,
         treeFocused,
         refocusContent
       );
     };
-    // Ctrl+W (vim setting) and Ctrl+T (tree focus) are captured on document
-    // during the CAPTURE phase, so they run before the editor (CodeMirror and
-    // the vim plugin) can swallow them with stopPropagation. This guarantees
-    // both shortcuts fire no matter which element currently has focus.
+    // Ctrl+W (vim setting), Ctrl+T (tree focus) and Ctrl+N (sidebar toggle) are
+    // captured on document during the CAPTURE phase, so they run before the
+    // editor (CodeMirror and the vim plugin) can swallow them with
+    // stopPropagation. This guarantees these shortcuts fire no matter which
+    // element currently has focus.
     const handleCapturedKeys = (event: KeyboardEvent) => {
       if (!event.ctrlKey) return;
       if (event.key === 'w') {
@@ -530,6 +530,10 @@ function App() {
         event.preventDefault();
         event.stopPropagation();
         toggleTreeFocus();
+      } else if (event.key === 'n') {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleSidebar();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -538,7 +542,7 @@ function App() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keydown', handleCapturedKeys, true);
     };
-  }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode, toggleTreeFocus, treeFocused, refocusContent, toggleVimMode]);
+  }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode, toggleTreeFocus, treeFocused, refocusContent, toggleVimMode, toggleSidebar]);
 
   const handleCreateFile = (parentPath?: string) => {
     if (!fileTree && !parentPath) return;

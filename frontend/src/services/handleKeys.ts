@@ -14,7 +14,6 @@ function handleKeys(
   handleSave: () => void,
   handleViewModeChange: (view: "editor" | "reader") => void,
   toggleZenMode : () => void,
-  toggleSidebar: () => void,
   toggleTreeFocus: () => void,
   treeFocused: boolean,
   refocusContent: () => void
@@ -87,12 +86,6 @@ function handleKeys(
     return;
   }
 
-  // Ctrl + n: Toogle sidebar
-  if (event.ctrlKey && event.key === 'n') {
-    event.preventDefault();
-    toggleSidebar();
-    return;
   }
-}
 
 export default handleKeys;
