@@ -36,8 +36,13 @@ The design is inspired by old cassette color, the logo represents the wheel of a
 - **Full keyboard integration**: You can navigate the ui with `tab` and `shift+tab`, `enter` to open
 - **Shortcut help**: just hit `ctrl+h` to get the full list of shortcuts
 - **Sync yourself**: because the app handles plain `.md` files and the config file is placed at the root of your notes folder, you can sync your notes with any other app you want
-- **Encryption**: `new` encryption is available out of the box, you can also encrypt your already existing .md file via the option
-- **Theme**: `new` you can choose from 3 built-in themes (I plan to add more later)
+- **Encryption**: encryption is available out of the box, you can also encrypt your already existing .md file via the option
+- **Themes**: `new` choose between light/dark/system and pick from a growing list of UI theme presets (Catppuccin, Rosé Pine, Tokyo Night, ...)
+- **Vim keybindings**: `new` toggle vim-style motion and editing in the editor (`:w` to save), fully compatible with the rest of the shortcuts
+- **Line numbers**: `new` pick between relative, normal or no line numbers
+- **File metadata**: `new` show the last edited date of each file in the file tree
+- **Config editor**: `new` edit your `tape.json` settings directly from the UI
+- **External links**: `new` click external links (`http`/`https`) in the reader to open them in your default browser
 
 ## Installation
 
@@ -103,9 +108,33 @@ It must be placed at the root of your notes folder.
   "lastOpenedFile": "path of the last selected note",
   "expandedFolders": ["array of each expanded folder"],
   "viewMode": "editor",
-  "theme": "light"
+  "theme": "light",
+  "uiTheme": "light",
+  "privacyMode": false,
+  "showFileMTime": false,
+  "vimMode": false,
+  "lineNumberMode": "relative",
+  "check": "encrypted blob used to verify the password (only set when privacy mode is enabled)",
+  "nonceCheck": "nonce for the check blob (only set when privacy mode is enabled)"
 }
 ```
+
+The keys are as follows:
+
+| Key | Type | Description |
+| --- | --- | --- |
+| `lastOpenedFolder` | `string` | Path of the last selected root folder |
+| `lastOpenedFile` | `string` | Path of the last selected note |
+| `expandedFolders` | `string[]` | Array of each expanded folder |
+| `viewMode` | `string` | `"editor"` or `"reader"` |
+| `theme` | `string` | Editor color theme |
+| `uiTheme` | `string` | UI color theme |
+| `privacyMode` | `boolean` | Whether encryption is enabled |
+| `showFileMTime` | `boolean` | Show file modification times in the file tree |
+| `vimMode` | `boolean` | Enable vim-style editing |
+| `lineNumberMode` | `string` | Line number display mode |
+| `check` | `string` | Encrypted blob used to verify the password (only present when privacy mode is on) |
+| `nonceCheck` | `string` | Random nonce used with `check` (only present when privacy mode is on) |
 
 ## Markdown flavor example
 
