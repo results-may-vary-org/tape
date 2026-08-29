@@ -94,6 +94,26 @@
   --blue-contrast: var(--t-accent-contrast);
 }
 
+/* Force every Radix Theme root (the main wrapper AND each portaled root that
+   menus/dialogs/selects/popovers create in <body>) to the preset's own
+   background / panel / surface / overlay colors.
+
+   Radix self-declares these --color-* variables on each .radix-themes root
+   (white for light, and hardcoded translucent surfaces), so they would
+   otherwise ignore the scale overrides above — especially on light presets.
+   This selector (specificity >> Radix's :where/.dark rules) pins them to the
+   active preset's tokens, and it's gated by :not([data-ui-theme='default'])
+   so the stock theme is untouched. */
+:root:has(.app-container[data-ui-theme]:not([data-ui-theme='default'])) .radix-themes {
+  --color-background: var(--t-bg);
+  --color-panel-solid: var(--t-panel);
+  --color-panel-translucent: var(--t-panel);
+  --color-panel: var(--t-panel);
+  --color-surface: var(--t-surface);
+  --color-overlay: color-mix(in srgb, var(--t-overlay) 55%, transparent);
+  --backdrop-filter-panel: none;
+}
+
 /* Re-assert the aliases on the in-app container so all in-tree chrome
    (topbar, sidebar, dialogs rendered in place, custom CSS in App.css)
    resolves to the custom palette with high specificity. */
