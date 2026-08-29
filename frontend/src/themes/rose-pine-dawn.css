@@ -1,0 +1,17 @@
+/*
+ * Rosé Pine Dawn — official palette colors (rosepinetheme.com/palette).
+ */
+:root:has(.app-container[data-ui-theme='rose-pine-dawn']),
+.app-container[data-ui-theme='rose-pine-dawn'] {
+  --t-scheme: light;
+  --t-bg: #faf4ed;
+  --t-panel: #fffaf3;
+  --t-surface: #faf4ed;
+  --t-overlay: #f2e9e1;
+  --t-accent: #907aa9;
+  --t-accent-contrast: #ffffff;
+  --t-text: #575279;
+  --t-g1: #fffaf3; --t-g2: #faf4ed; --t-g3: #f2e9e1; --t-g4: #f4ede8;
+  --t-g5: #dfdad9; --t-g6: #dfdad9; --t-g7: #cecacd; --t-g8: #9893a5;
+  --t-g9: #9893a5; --t-g10: #797593; --t-g11: #797593; --t-g12: #575279;
+}

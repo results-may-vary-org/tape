@@ -1,0 +1,17 @@
+/*
+ * Catppuccin Latte — official palette colors (catppuccin.com/palette).
+ */
+:root:has(.app-container[data-ui-theme='catppuccin-latte']),
+.app-container[data-ui-theme='catppuccin-latte'] {
+  --t-scheme: light;
+  --t-bg: #eff1f5;
+  --t-panel: #e6e9ef;
+  --t-surface: #eff1f5;
+  --t-overlay: #ccd0da;
+  --t-accent: #8839ef;
+  --t-accent-contrast: #ffffff;
+  --t-text: #4c4f69;
+  --t-g1: #eff1f5; --t-g2: #e6e9ef; --t-g3: #ccd0da; --t-g4: #ccd0da;
+  --t-g5: #bcc0cc; --t-g6: #bcc0cc; --t-g7: #acb0be; --t-g8: #9ca0b0;
+  --t-g9: #8c8fa1; --t-g10: #7c7f93; --t-g11: #6c6f85; --t-g12: #4c4f69;
+}

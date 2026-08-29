@@ -1,0 +1,17 @@
+/*
+ * Catppuccin Macchiato — official palette colors (catppuccin.com/palette).
+ */
+:root:has(.app-container[data-ui-theme='catppuccin-macchiato']),
+.app-container[data-ui-theme='catppuccin-macchiato'] {
+  --t-scheme: dark;
+  --t-bg: #24273a;
+  --t-panel: #1e2030;
+  --t-surface: #24273a;
+  --t-overlay: #363a4f;
+  --t-accent: #c6a0f6;
+  --t-accent-contrast: #24273a;
+  --t-text: #cad3f5;
+  --t-g1: #24273a; --t-g2: #1e2030; --t-g3: #363a4f; --t-g4: #363a4f;
+  --t-g5: #494d64; --t-g6: #494d64; --t-g7: #5b6078; --t-g8: #6e738d;
+  --t-g9: #8087a2; --t-g10: #939ab7; --t-g11: #a5adcb; --t-g12: #cad3f5;
+}

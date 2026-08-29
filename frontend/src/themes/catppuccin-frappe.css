@@ -1,0 +1,17 @@
+/*
+ * Catppuccin Frappé — official palette colors (catppuccin.com/palette).
+ */
+:root:has(.app-container[data-ui-theme='catppuccin-frappe']),
+.app-container[data-ui-theme='catppuccin-frappe'] {
+  --t-scheme: dark;
+  --t-bg: #303446;
+  --t-panel: #292c3c;
+  --t-surface: #303446;
+  --t-overlay: #414559;
+  --t-accent: #ca9ee6;
+  --t-accent-contrast: #303446;
+  --t-text: #c6d0f5;
+  --t-g1: #303446; --t-g2: #292c3c; --t-g3: #414559; --t-g4: #414559;
+  --t-g5: #51576d; --t-g6: #51576d; --t-g7: #626880; --t-g8: #737994;
+  --t-g9: #838ba7; --t-g10: #949cbb; --t-g11: #a5adce; --t-g12: #c6d0f5;
+}

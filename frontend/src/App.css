@@ -397,6 +397,12 @@ button {
   background: var(--accent-4);
 }
 
+/* keyboard cursor while navigating the tree (Ctrl+W / arrow keys) */
+.file-tree-item.tree-focused {
+  background: var(--accent-3);
+  color: var(--accent-11);
+}
+
 /* ---------- Context Menu ---------- */
 .context-menu-content {
   min-width: 180px;
@@ -444,6 +450,84 @@ button {
   height: 1px;
   margin: 0.25rem 0.3rem;
   background: var(--gray-a6);
+}
+
+/* ---------- Dropdown Menu (topbar New / mobile) ---------- */
+.dropdown-content {
+  min-width: 180px;
+  background: var(--gray-2);
+  border: 1px solid var(--gray-a6);
+  border-radius: 8px;
+  padding: 0.25rem;
+  box-shadow: var(--shadow-5), 0 1px 2px var(--gray-a3);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  z-index: 1000;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 5px;
+  color: var(--gray-11);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus,
+.dropdown-item[data-highlighted] {
+  background: var(--accent-9);
+  color: var(--accent-contrast);
+}
+
+/* ---------- Select (Settings) ---------- */
+.select-content {
+  min-width: 180px;
+  background: var(--gray-2);
+  border: 1px solid var(--gray-a6);
+  border-radius: 8px;
+  padding: 0.25rem;
+  box-shadow: var(--shadow-5), 0 1px 2px var(--gray-a3);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+}
+
+.select-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 5px;
+  color: var(--gray-11);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.select-item:hover,
+.select-item:focus,
+.select-item[data-highlighted] {
+  background: var(--accent-9);
+  color: var(--accent-contrast);
+}
+
+.theme-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0 0.625rem;
+  height: 2.25rem;
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--gray-11);
+  font-size: 0.8125rem;
+  cursor: pointer;
 }
 
 .file-tree-icon {

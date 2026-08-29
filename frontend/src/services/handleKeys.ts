@@ -14,7 +14,10 @@ function handleKeys(
   handleSave: () => void,
   handleViewModeChange: (view: "editor" | "reader") => void,
   toggleZenMode : () => void,
-  toggleSidebar: () => void
+  toggleSidebar: () => void,
+  toggleTreeFocus: () => void,
+  treeFocused: boolean,
+  refocusContent: () => void
 ) {
 
   // Esc for modal
@@ -31,12 +34,18 @@ function handleKeys(
       setIsUnlockVaultModalOpen(false);
     }
     const noOtherOpen = !(isShortcutsModalOpen && isSearchModalOpen && isUseEncModalOpen && isUnlockVaultModalOpen);
-    if (noOtherOpen && viewMode === 'editor') {
-      // todo: refactor that
-      setTimeout(() => {
-        const editor = document.getElementById('editor') as HTMLDivElement;
-        editor?.focus();
-      }, 100);
+    if (noOtherOpen) {
+      const inTree = document.activeElement?.closest?.('.file-tree') != null;
+      if (inTree) {
+        // leave the file tree and bring focus back to the content area
+        if (treeFocused) {
+          toggleTreeFocus();
+        } else {
+          refocusContent();
+        }
+      } else if (viewMode === 'editor') {
+        refocusContent();
+      }
     }
   }
 

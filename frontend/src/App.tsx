@@ -3,6 +3,7 @@ import './App.css';
 import '@radix-ui/themes/styles.css';
 import {AlertDialog, Theme as RadixTheme } from '@radix-ui/themes';
 import {useTheme} from "next-themes";
+import type { EditorView } from "codemirror";
 import FileTree from './components/FileTree';
 import MarkdownEditor from './components/MarkdownEditor';
 import MarkdownReader from './components/MarkdownReader';
@@ -62,6 +63,8 @@ function App() {
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const scrollRatioRef = useRef<number>(0);
+  const editorViewRef = useRef<EditorView | null>(null);
+  const wasTreeFocusedRef = useRef(false);
 
   const [version] = useState<string>(__TAPE_VERSION__);
   const [dirPath, setDirPath] = useState<string>("");
@@ -85,6 +88,8 @@ function App() {
   const [vimMode, setVimMode] = useState<boolean>(false);
   const [vimStatus, setVimStatus] = useState<string | null>(null);
   const [lineNumberMode, setLineNumberMode] = useState<LineNumberMode>('none');
+  const [treeFocused, setTreeFocused] = useState<boolean>(false);
+  const [focusedTreeItem, setFocusedTreeItem] = useState<string | null>(null);
 
   // Modal states
   const [showCreateFileDialog, setShowCreateFileDialog] = useState<boolean>(false);
@@ -273,6 +278,31 @@ function App() {
       return next;
     });
   }
+
+  // bring keyboard focus back to the content area (editor or reader)
+  const refocusContent = useCallback(() => {
+    if (viewMode === 'editor') {
+      editorViewRef.current?.focus();
+    } else {
+      // the reader isn't interactive; just drop focus so arrow keys vanish
+      (document.activeElement as HTMLElement | null)?.blur?.();
+    }
+  }, [viewMode]);
+
+  // Ctrl+W: toggle keyboard focus between the file tree and the content area
+  const toggleTreeFocus = useCallback(() => {
+    if (sidebarHidden) toggleSidebar();
+    setFocusedTreeItem((item) => item ?? (selectedFilePath ?? null));
+    setTreeFocused((focused) => !focused);
+  }, [sidebarHidden, selectedFilePath, toggleSidebar]);
+
+  // when leaving the tree, put the cursor back in the content area
+  useEffect(() => {
+    if (wasTreeFocusedRef.current && !treeFocused) {
+      refocusContent();
+    }
+    wasTreeFocusedRef.current = treeFocused;
+  }, [treeFocused, refocusContent]);
 
   // handle the opening of any root (new or old)
   const handleRootOpen = async (rootPath?: string) => {
@@ -468,12 +498,30 @@ function App() {
         handleSave,
         handleViewModeChange,
         toggleZenMode,
-        toggleSidebar
+        toggleSidebar,
+        toggleTreeFocus,
+        treeFocused,
+        refocusContent
       );
     };
+    // Ctrl+W is captured on document during the CAPTURE phase, so it runs before
+    // the editor (CodeMirror and the vim plugin) can swallow it with
+    // stopPropagation. This guarantees the focus toggle always fires, no matter
+    // which element currently has focus.
+    const handleCtrlW = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 'w') {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleTreeFocus();
+      }
+    };
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode]);
+    document.addEventListener('keydown', handleCtrlW, true);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleCtrlW, true);
+    };
+  }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode, toggleTreeFocus, treeFocused, refocusContent]);
 
   const handleCreateFile = (parentPath?: string) => {
     if (!fileTree && !parentPath) return;
@@ -760,6 +808,9 @@ function App() {
                 onDeleteItem={handleDeleteItem}
                 expandedFolders={expandedFolders}
                 onExpandedFoldersChange={handleExpandedFoldersChange}
+                treeFocused={treeFocused}
+                focusedTreeItem={focusedTreeItem}
+                onFocusedTreeItemChange={setFocusedTreeItem}
               />
             </div>
 
@@ -778,6 +829,7 @@ function App() {
                     lineNumberMode={lineNumberMode}
                     scrollRatio={scrollRatioRef.current}
                     onScrollChange={(r) => { scrollRatioRef.current = r; }}
+                    onEditorReady={(view) => { editorViewRef.current = view; }}
                   />
                 ) : (
                     <MarkdownReader

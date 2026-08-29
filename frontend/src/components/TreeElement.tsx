@@ -28,8 +28,11 @@ interface TreeElementProps {
   showFileMTime: boolean;
   indent: number;
   useAltIcons: boolean;
+  isFocused: boolean;
   onClick: (e: React.MouseEvent) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
+  // forwarded to the focusable div via ...rest
+  onFocus?: React.FocusEventHandler<HTMLDivElement>;
 }
 
 // IMPORTANT: TreeElement is rendered as the DIRECT CHILD of Radix's ContextMenu.Trigger.
@@ -44,7 +47,7 @@ interface TreeElementProps {
 // Keep `tabIndex={0}` on the inner div: it is what makes each node focusable so that
 // pressing Tab/Shift+Tab moves selection between the file-tree items (native behavior).
 const TreeElement = React.forwardRef<HTMLDivElement, TreeElementProps>(
-  ({ item, isExpanded, isSelected, isRootFolder = false, isVaultSecured, showFileMTime, indent, useAltIcons, onClick, onKeyDown, ...rest }, ref) => {
+  ({ item, isExpanded, isSelected, isRootFolder = false, isVaultSecured, showFileMTime, indent, useAltIcons, isFocused, onClick, onKeyDown, ...rest }, ref) => {
     const displayName = (isVaultSecured && !item.isDir && item.name.endsWith(".mde"))
       ? item.name.slice(0, -4)
       : item.name;
@@ -55,7 +58,7 @@ const TreeElement = React.forwardRef<HTMLDivElement, TreeElementProps>(
         onClick={onClick}
         onKeyDown={onKeyDown}
         {...rest}
-        className={`file-tree-item ${isSelected ? "selected" : ""}`}
+        className={`file-tree-item ${isSelected ? "selected" : ""} ${isFocused ? "tree-focused" : ""}`}
         style={{ paddingLeft: `${indent}px` }}
         tabIndex={0}
         role={item.isDir ? "treeitem" : "button"}

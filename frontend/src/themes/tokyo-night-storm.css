@@ -1,0 +1,17 @@
+/*
+ * Tokyo Night Storm — official palette colors (folke/tokyonight.nvim).
+ */
+:root:has(.app-container[data-ui-theme='tokyo-night-storm']),
+.app-container[data-ui-theme='tokyo-night-storm'] {
+  --t-scheme: dark;
+  --t-bg: #24283b;
+  --t-panel: #1f2335;
+  --t-surface: #24283b;
+  --t-overlay: #292e42;
+  --t-accent: #7aa2f7;
+  --t-accent-contrast: #1f2335;
+  --t-text: #c0caf5;
+  --t-g1: #24283b; --t-g2: #1f2335; --t-g3: #292e42; --t-g4: #292e42;
+  --t-g5: #343a55; --t-g6: #343a55; --t-g7: #3b4261; --t-g8: #414868;
+  --t-g9: #545c7e; --t-g10: #565f89; --t-g11: #a9b1d6; --t-g12: #c0caf5;
+}

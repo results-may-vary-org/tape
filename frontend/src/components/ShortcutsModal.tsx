@@ -25,6 +25,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose, versio
     // Navigation
     { keys: ['Ctrl', 'H'], description: 'Show this shortcuts modal', category: 'navigation' },
     { keys: ['Ctrl', 'K'], description: 'Open search modal', category: 'navigation' },
+    { keys: ['Ctrl', 'W'], description: 'Toggle focus between file tree and editor', category: 'navigation' },
     { keys: ['Ctrl', 'Tab'], description: 'Switch between Editor/Reader', category: 'navigation' },
     { keys: ['Tab'], description: 'Navigate between UI elements', category: 'navigation' },
     { keys: ['Shift', 'Tab'], description: 'Navigate between UI elements', category: 'navigation' },

@@ -1,0 +1,17 @@
+/*
+ * Rosé Pine — official palette colors (rosepinetheme.com/palette).
+ */
+:root:has(.app-container[data-ui-theme='rose-pine']),
+.app-container[data-ui-theme='rose-pine'] {
+  --t-scheme: dark;
+  --t-bg: #191724;
+  --t-panel: #1f1d2e;
+  --t-surface: #191724;
+  --t-overlay: #26233a;
+  --t-accent: #c4a7e7;
+  --t-accent-contrast: #191724;
+  --t-text: #e0def4;
+  --t-g1: #191724; --t-g2: #1f1d2e; --t-g3: #26233a; --t-g4: #21202e;
+  --t-g5: #403d52; --t-g6: #403d52; --t-g7: #524f67; --t-g8: #6e6a86;
+  --t-g9: #6e6a86; --t-g10: #908caa; --t-g11: #908caa; --t-g12: #e0def4;
+}

@@ -1,0 +1,17 @@
+/*
+ * Catppuccin Mocha — official palette colors (catppuccin.com/palette).
+ */
+:root:has(.app-container[data-ui-theme='catppuccin-mocha']),
+.app-container[data-ui-theme='catppuccin-mocha'] {
+  --t-scheme: dark;
+  --t-bg: #1e1e2e;
+  --t-panel: #181825;
+  --t-surface: #1e1e2e;
+  --t-overlay: #313244;
+  --t-accent: #cba6f7;
+  --t-accent-contrast: #1e1e2e;
+  --t-text: #cdd6f4;
+  --t-g1: #1e1e2e; --t-g2: #181825; --t-g3: #313244; --t-g4: #313244;
+  --t-g5: #45475a; --t-g6: #45475a; --t-g7: #585b70; --t-g8: #6c7086;
+  --t-g9: #7f849c; --t-g10: #9399b2; --t-g11: #a6adc8; --t-g12: #cdd6f4;
+}

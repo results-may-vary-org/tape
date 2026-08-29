@@ -1,0 +1,17 @@
+/*
+ * Tokyo Night Light — official palette colors (folke/tokyonight.nvim).
+ */
+:root:has(.app-container[data-ui-theme='tokyo-night-light']),
+.app-container[data-ui-theme='tokyo-night-light'] {
+  --t-scheme: light;
+  --t-bg: #e6e7ed;
+  --t-panel: #f3f4f7;
+  --t-surface: #e6e7ed;
+  --t-overlay: #e3e5eb;
+  --t-accent: #2959aa;
+  --t-accent-contrast: #ffffff;
+  --t-text: #343b58;
+  --t-g1: #f3f4f7; --t-g2: #e6e7ed; --t-g3: #e3e5eb; --t-g4: #e3e5eb;
+  --t-g5: #d3d6df; --t-g6: #d3d6df; --t-g7: #c2c5d0; --t-g8: #aeb1bd;
+  --t-g9: #8b8f9c; --t-g10: #6c6e75; --t-g11: #40434f; --t-g12: #343b58;
+}

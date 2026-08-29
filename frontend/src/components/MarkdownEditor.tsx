@@ -60,6 +60,7 @@ interface MarkdownEditorProps {
   lineNumberMode?: LineNumberMode;
   scrollRatio?: number;
   onScrollChange?: (ratio: number) => void;
+  onEditorReady?: (view: EditorView) => void;
 }
 
 function getLineNumberExtensions(mode: LineNumberMode | undefined): Array<any> {
@@ -78,6 +79,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
   const scrollDomRef = useRef<HTMLElement | null>(null);
   const onSaveRef = useRef(props.onSave);
   onSaveRef.current = props.onSave;
+  const onEditorReadyRef = useRef(props.onEditorReady);
+  onEditorReadyRef.current = props.onEditorReady;
   useScrollSync(scrollDomRef, props.scrollRatio, props.onScrollChange);
 
   const langConfig = new Compartment();
@@ -111,6 +114,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
         ...completionKeymap,
         ...lintKeymap
       ]),
+      // Ctrl+W is handled globally (capture phase in App) before the editor
+      // can consume it, so the file-tree focus toggle always works.
       wrapConfig.of(EditorView.lineWrapping),
       langConfig.of(markdown({ base: markdownLanguage, codeLanguages: languages })),
       theme,
@@ -137,6 +142,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
 
     const editorView = new EditorView({ state: editorState, parent: editorRef.current as Element });
     scrollDomRef.current = editorView.scrollDOM;
+    onEditorReadyRef.current?.(editorView);
 
     let lastMode: string | null = null;
     const reportMode = () => {
@@ -178,6 +184,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
   return (
     <div className="markdown-editor">
       <div
+        id="editor"
         ref={editorRef}
         style={{ flex: 1, overflowY: "auto", maxWidth: "100%", minHeight: 0 }}
       ></div>

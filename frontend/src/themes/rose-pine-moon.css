@@ -1,0 +1,17 @@
+/*
+ * Rosé Pine Moon — official palette colors (rosepinetheme.com/palette).
+ */
+:root:has(.app-container[data-ui-theme='rose-pine-moon']),
+.app-container[data-ui-theme='rose-pine-moon'] {
+  --t-scheme: dark;
+  --t-bg: #232136;
+  --t-panel: #2a273f;
+  --t-surface: #232136;
+  --t-overlay: #393552;
+  --t-accent: #c4a7e7;
+  --t-accent-contrast: #232136;
+  --t-text: #e0def4;
+  --t-g1: #232136; --t-g2: #2a273f; --t-g3: #393552; --t-g4: #2a283e;
+  --t-g5: #44415a; --t-g6: #44415a; --t-g7: #56526e; --t-g8: #6e6a86;
+  --t-g9: #6e6a86; --t-g10: #908caa; --t-g11: #908caa; --t-g12: #e0def4;
+}

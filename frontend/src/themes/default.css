@@ -1,0 +1,7 @@
+/*
+ * Default theme.
+ *
+ * This preset intentionally keeps Radix Themes' stock light/dark behavior,
+ * so it defines no --t-* tokens and is excluded from the shared mapping in
+ * radix-mapping.css.
+ */

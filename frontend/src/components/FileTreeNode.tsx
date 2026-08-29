@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Folder,
   Plus,
@@ -24,6 +24,9 @@ interface FileTreeNodeProps {
   isVaultSecured: boolean;
   uiTheme: UIThemeMode;
   showFileMTime: boolean;
+  treeFocused: boolean;
+  focusedTreeItem: string | null;
+  onFocusedTreeItemChange: (path: string | null) => void;
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = ({
@@ -41,12 +44,34 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   isVaultSecured,
   uiTheme,
   showFileMTime,
+  treeFocused,
+  focusedTreeItem,
+  onFocusedTreeItemChange,
 }: FileTreeNodeProps) => {
   const useAltIcons = uiTheme !== 'default';  const isExpanded = expandedFolders.includes(item.path);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newName, setNewName] = useState<string>(item.name);
   const [renameError, setRenameError] = useState<string>("");
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  // the tree keyboard cursor. Independent of treeFocused so that Tab-based
+  // focus entry also enables arrow-key navigation.
+  const isFocused = focusedTreeItem === item.path;
+
+  // move DOM focus to this node when it becomes the cursor. treeFocused is part
+  // of the deps so that re-entering the tree via Ctrl+W re-focuses even when
+  // focusedTreeItem did not change (e.g. toggling OFF then ON again).
+  useEffect(() => {
+    if (!isFocused || !elementRef.current) return;
+    // focus when tree mode is active, or when focus is already inside the tree
+    // (Tab/click/arrow navigation)
+    const insideTree = document.activeElement?.closest?.('.file-tree') != null;
+    if (treeFocused || insideTree) {
+      elementRef.current.focus();
+      elementRef.current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [isFocused, treeFocused]);
 
   const handleClick = () => {
     if (item.isDir) {
@@ -148,8 +173,13 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
             showFileMTime={showFileMTime}
             indent={indent}
             useAltIcons={useAltIcons}
+            isFocused={isFocused}
+            ref={elementRef}
             onClick={handleClick}
             onKeyDown={handleKeyDown}
+            onFocus={() => {
+              if (focusedTreeItem !== item.path) onFocusedTreeItemChange(item.path);
+            }}
           />
         </ContextMenu.Trigger>
         <ContextMenu.Content className="context-menu-content">
@@ -200,6 +230,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               isVaultSecured={isVaultSecured}
               uiTheme={uiTheme}
               showFileMTime={showFileMTime}
+              treeFocused={treeFocused}
+              focusedTreeItem={focusedTreeItem}
+              onFocusedTreeItemChange={onFocusedTreeItemChange}
             />
           ))}
         </div>
