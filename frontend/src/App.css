@@ -397,6 +397,55 @@ button {
   background: var(--accent-4);
 }
 
+/* ---------- Context Menu ---------- */
+.context-menu-content {
+  min-width: 180px;
+  background: var(--gray-2);
+  border: 1px solid var(--gray-a6);
+  border-radius: 8px;
+  padding: 0.25rem;
+  box-shadow: var(--shadow-5), 0 1px 2px var(--gray-a3);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  z-index: 1000;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 5px;
+  color: var(--gray-11);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.context-menu-item:hover,
+.context-menu-item:focus,
+.context-menu-item[data-highlighted] {
+  background: var(--accent-9);
+  color: var(--accent-contrast);
+}
+
+.context-menu-item-danger {
+  color: var(--red-11);
+}
+
+.context-menu-item-danger:hover,
+.context-menu-item-danger:focus,
+.context-menu-item-danger[data-highlighted] {
+  background: var(--red-9);
+  color: var(--red-contrast);
+}
+
+.context-menu-separator {
+  height: 1px;
+  margin: 0.25rem 0.3rem;
+  background: var(--gray-a6);
+}
+
 .file-tree-icon {
   display: flex;
   align-items: center;
