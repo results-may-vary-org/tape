@@ -114,8 +114,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
         ...completionKeymap,
         ...lintKeymap
       ]),
-      // Ctrl+W is handled globally (capture phase in App) before the editor
-      // can consume it, so the file-tree focus toggle always works.
+      // Ctrl+W/Ctrl+T are handled globally (capture phase in App) before the
+      // editor can consume them, so the vim toggle and view toggle always work.
       wrapConfig.of(EditorView.lineWrapping),
       langConfig.of(markdown({ base: markdownLanguage, codeLanguages: languages })),
       theme,

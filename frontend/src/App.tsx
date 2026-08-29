@@ -38,6 +38,7 @@ import {
   SaveLastOpenedFile,
   SaveExpandedFolders,
   SaveViewMode,
+  SaveShowVim,
   SearchFiles,
   SetupPassword,
   HasSecurity,
@@ -289,7 +290,18 @@ function App() {
     }
   }, [viewMode]);
 
-  // Ctrl+W: toggle keyboard focus between the file tree and the content area
+  // Ctrl+W: cycle the vim keybindings setting (on/off) and persist it
+  const toggleVimMode = useCallback(() => {
+    const next = !vimMode;
+    setVimMode(next);
+    if (fileTree) {
+      SaveShowVim(fileTree.path, next).catch((err) =>
+        console.error("Error saving vim mode setting:", err)
+      );
+    }
+  }, [vimMode, fileTree]);
+
+  // Ctrl+T: toggle keyboard focus between the file tree and the content area
   const toggleTreeFocus = useCallback(() => {
     if (sidebarHidden) toggleSidebar();
     setFocusedTreeItem((item) => item ?? (selectedFilePath ?? null));
@@ -504,24 +516,29 @@ function App() {
         refocusContent
       );
     };
-    // Ctrl+W is captured on document during the CAPTURE phase, so it runs before
-    // the editor (CodeMirror and the vim plugin) can swallow it with
-    // stopPropagation. This guarantees the focus toggle always fires, no matter
-    // which element currently has focus.
-    const handleCtrlW = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === 'w') {
+    // Ctrl+W (vim setting) and Ctrl+T (tree focus) are captured on document
+    // during the CAPTURE phase, so they run before the editor (CodeMirror and
+    // the vim plugin) can swallow them with stopPropagation. This guarantees
+    // both shortcuts fire no matter which element currently has focus.
+    const handleCapturedKeys = (event: KeyboardEvent) => {
+      if (!event.ctrlKey) return;
+      if (event.key === 'w') {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleVimMode();
+      } else if (event.key === 't') {
         event.preventDefault();
         event.stopPropagation();
         toggleTreeFocus();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keydown', handleCtrlW, true);
+    document.addEventListener('keydown', handleCapturedKeys, true);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('keydown', handleCtrlW, true);
+      document.removeEventListener('keydown', handleCapturedKeys, true);
     };
-  }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode, toggleTreeFocus, treeFocused, refocusContent]);
+  }, [selectedFilePath, hasUnsavedChanges, handleSave, viewMode, toggleTreeFocus, treeFocused, refocusContent, toggleVimMode]);
 
   const handleCreateFile = (parentPath?: string) => {
     if (!fileTree && !parentPath) return;

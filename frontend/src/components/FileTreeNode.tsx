@@ -60,7 +60,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   const isFocused = focusedTreeItem === item.path;
 
   // move DOM focus to this node when it becomes the cursor. treeFocused is part
-  // of the deps so that re-entering the tree via Ctrl+W re-focuses even when
+  // of the deps so that re-entering the tree via Ctrl+T re-focuses even when
   // focusedTreeItem did not change (e.g. toggling OFF then ON again).
   useEffect(() => {
     if (!isFocused || !elementRef.current) return;
@@ -209,12 +209,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = ({
                 <Folder size={16} />
                 New Folder
               </ContextMenu.Item>
-              {!isRootFolder && <ContextMenu.Separator className="context-menu-separator" />}
             </>
           )}
+          {item.isDir && !isRootFolder && <ContextMenu.Separator className="context-menu-separator" />}
           {!isRootFolder && (
             <>
-              {item.isDir && <ContextMenu.Separator className="context-menu-separator" />}
               <ContextMenu.Item className="context-menu-item" onClick={handleRename}>
                 <Edit3 size={16} />
                 Rename
