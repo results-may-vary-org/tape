@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { BrowserOpenURL } from "../../wailsjs/runtime/runtime";
 import { useScrollSync } from "../services/useScrollSync";
 import MarkdownBody from "./MarkdownBody";
 
@@ -13,6 +14,15 @@ interface MarkdownReaderProps {
 const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, scrollRatio, onScrollChange }: MarkdownReaderProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   useScrollSync(contentRef, scrollRatio, onScrollChange);
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as Element;
+    const link = target.closest('a');
+    if (link && link.href && /^https?:\/\//i.test(link.href)) {
+      e.preventDefault();
+      BrowserOpenURL(link.href);
+    }
+  };
 
   if (!filePath) {
     return (
@@ -33,7 +43,7 @@ const MarkdownReader: React.FC<MarkdownReaderProps> = ({ content, filePath, scro
 
   return (
     <div className="markdown-reader">
-      <div className="reader-content" ref={contentRef}>
+      <div className="reader-content" ref={contentRef} onClick={handleClick}>
         <MarkdownBody content={content} />
       </div>
     </div>
