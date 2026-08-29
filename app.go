@@ -114,6 +114,12 @@ func (a *App) GetOs() string {
 	}
 }
 
+// SetUnsaved keeps the Go close-guard in sync with the editor state so
+// OnBeforeClose can decide about closing without a frontend round-trip
+func (a *App) SetUnsaved(unsaved bool) {
+	hasUnsaved.Store(unsaved)
+}
+
 func isMD(filename string) bool {
 	return strings.HasSuffix(strings.ToLower(filename), ".md")
 }

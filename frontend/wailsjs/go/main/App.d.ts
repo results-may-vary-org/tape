@@ -76,6 +76,8 @@ export function SaveViewMode(arg1:string,arg2:string):Promise<void>;
 
 export function SearchFiles(arg1:string,arg2:string):Promise<Array<main.SearchResult>>;
 
+export function SetUnsaved(arg1:boolean):Promise<void>;
+
 export function SetupPassword(arg1:string,arg2:string):Promise<string>;
 
 export function TransformTreeIntoMDE1(arg1:string,arg2:string):Promise<void>;

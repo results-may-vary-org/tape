@@ -150,6 +150,10 @@ export function SearchFiles(arg1, arg2) {
   return window['go']['main']['App']['SearchFiles'](arg1, arg2);
 }
 
+export function SetUnsaved(arg1) {
+  return window['go']['main']['App']['SetUnsaved'](arg1);
+}
+
 export function SetupPassword(arg1, arg2) {
   return window['go']['main']['App']['SetupPassword'](arg1, arg2);
 }

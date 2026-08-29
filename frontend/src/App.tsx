@@ -46,6 +46,7 @@ import {
   IsFileExists,
   WriteContentInFile,
   GetOs,
+  SetUnsaved,
 } from "../wailsjs/go/main/App";
 import appIcon from './assets/images/logo.png';
 import appIconBck from './assets/images/logo-background.png';
@@ -115,6 +116,9 @@ function App() {
 
   // keep refs in sync so the runtime close handler reads fresh state
   useEffect(() => { hasUnsavedChangesRef.current = hasUnsavedChanges; }, [hasUnsavedChanges]);
+
+  // keep Go in sync so OnBeforeClose can decide about closing synchronously
+  useEffect(() => { SetUnsaved(hasUnsavedChanges); }, [hasUnsavedChanges]);
 
   // app close: main window emits "tape:before-close" (OnBeforeClose returns true to cancel)
   useEffect(() => {
@@ -469,6 +473,7 @@ function App() {
     setCloseRequested(false);
 
     if (quitting) {
+      await SetUnsaved(false);
       Quit();
     } else if (file) {
       await loadFile(file);
@@ -485,6 +490,7 @@ function App() {
     await handleSave();
 
     if (quitting) {
+      await SetUnsaved(false);
       Quit();
     } else if (file) {
       await loadFile(file);
