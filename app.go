@@ -1114,7 +1114,7 @@ func (a *App) GetConfigProtectedKeyChanges(originalContent, editedContent string
 		return nil, err
 	}
 
-	var changed []string
+	var changed = []string{}
 	if oldConfig.PrivacyMode != newConfig.PrivacyMode {
 		changed = append(changed, "privacyMode")
 	}
