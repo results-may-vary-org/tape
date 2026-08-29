@@ -774,6 +774,7 @@ function App() {
                     filePath={selectedFilePath}
                     vimEnabled={vimMode}
                     onVimModeChange={setVimStatus}
+                    onSave={handleSave}
                     lineNumberMode={lineNumberMode}
                     scrollRatio={scrollRatioRef.current}
                     onScrollChange={(r) => { scrollRatioRef.current = r; }}

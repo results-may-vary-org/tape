@@ -13,7 +13,7 @@ import { languages } from '@codemirror/language-data';
 import {useTheme} from "next-themes";
 import {tapeLight} from "../codeThemes/ligh";
 import {tapeDark} from "../codeThemes/dark";
-import { vim, getCM } from "@replit/codemirror-vim";
+import { vim, Vim, getCM } from "@replit/codemirror-vim";
 import type { LineNumberMode } from "../types/types";
 
 class LineNumberMarker extends GutterMarker {
@@ -56,6 +56,7 @@ interface MarkdownEditorProps {
   filePath: string | null;
   vimEnabled?: boolean;
   onVimModeChange?: (mode: string | null) => void;
+  onSave?: () => void;
   lineNumberMode?: LineNumberMode;
   scrollRatio?: number;
   onScrollChange?: (ratio: number) => void;
@@ -75,6 +76,8 @@ function getLineNumberExtensions(mode: LineNumberMode | undefined): Array<any> {
 const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const scrollDomRef = useRef<HTMLElement | null>(null);
+  const onSaveRef = useRef(props.onSave);
+  onSaveRef.current = props.onSave;
   useScrollSync(scrollDomRef, props.scrollRatio, props.onScrollChange);
 
   const langConfig = new Compartment();
@@ -122,6 +125,9 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
 
     if (props.vimEnabled) {
       extensions.push(vim());
+      Vim.defineEx("write", "w", () => {
+        onSaveRef.current?.();
+      });
     }
 
     const editorState = EditorState.create({
