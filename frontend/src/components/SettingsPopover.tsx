@@ -134,7 +134,7 @@ const SettingsPopover = ({
       <Popover.Trigger>
         <Button variant="soft">
           <Settings2 size="14"/>
-          Settings
+          <span className="s-hide xs-hide">Settings</span>
         </Button>
       </Popover.Trigger>
       <Popover.Content width="auto">

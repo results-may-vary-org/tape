@@ -751,7 +751,31 @@ div[data-remark-code-title="true"] + pre {
   .stat-text-small > span { margin-right: 2px; }
 }
 
-/* ---------- Top bar: same 3 breakpoints as the bottom bar ---------- */
+/* ----------- Generic --------- */
+/* Default: hidden above 800px */
+.l-show, .m-show, .s-show, .xs-show { display: none; }
+
+@media (min-width: 666px) and (max-width: 800px) {
+  .l-show { display: block; }
+  .l-hide { display: none; }
+}
+
+@media (min-width: 477px) and (max-width: 665px) {
+  .m-show { display: block; }
+  .m-hide { display: none; }
+}
+
+@media (min-width: 391px) and (max-width: 476px) {
+  .s-show { display: block; }
+  .s-hide { display: none; }
+}
+
+@media (max-width: 390px) {
+  .xs-show { display: block; }
+  .xs-hide { display: none; }
+}
+
+/* ---------- Top bar ---------- */
 
 @media (max-width: 800px) {
   .search-trigger { display: none; }

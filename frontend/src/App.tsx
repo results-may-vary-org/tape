@@ -19,7 +19,8 @@ import {
   Edit,
   Eye,
   LockIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  Menu
 } from 'lucide-react';
 import { DropdownMenu, Tooltip, Dialog, Button, Flex, TextField, Text } from '@radix-ui/themes';
 import {
@@ -634,7 +635,6 @@ function App() {
                   <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFile()}>
                     <FileText size={15} />
                     <span>New file</span>
-                    <span className="dropdown-hint">N</span>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item className="dropdown-item" onClick={() => handleCreateFolder()}>
                     <FolderPlus size={15} />
@@ -643,21 +643,47 @@ function App() {
                 </DropdownMenu.Content>
               </DropdownMenu.Root>
 
+              <div className="xs-show">
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger>
+                    <button className="action-button action-button-primary">
+                      <Menu size={14} />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Content className="dropdown-content" sideOffset={6} align="start">
+                    <DropdownMenu.Item className="dropdown-item" onClick={() => handleRootOpen()}>
+                      <FolderOpen size={15} />
+                      <span>Open another folder</span>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item className="dropdown-item" onClick={() => refreshFileTree()}>
+                      <RefreshCw size={15} />
+                      <span>Refresh</span>
+                    </DropdownMenu.Item>
+                    {isVaultSecured && (
+                      <DropdownMenu.Item className="dropdown-item" onClick={() => lockVault()}>
+                        <LockIcon size={15} />
+                        <span>Lock vault</span>
+                      </DropdownMenu.Item>
+                    )}
+                  </DropdownMenu.Content>
+                </DropdownMenu.Root>
+              </div>
+
               <Tooltip content="Open another folder">
-                <button onClick={() => handleRootOpen()} className="action-button">
+                <button onClick={() => handleRootOpen()} className="action-button xs-hide">
                   <FolderOpen size={15} />
                 </button>
               </Tooltip>
 
               <Tooltip content="Refresh">
-                <button onClick={refreshFileTree} className="action-button">
+                <button onClick={refreshFileTree} className="action-button xs-hide">
                   <RefreshCw size={15} />
                 </button>
               </Tooltip>
 
               {isVaultSecured && (
                 <Tooltip content="Lock vault">
-                  <button onClick={lockVault} className="action-button">
+                  <button onClick={lockVault} className="action-button xs-hide">
                     <LockIcon size={15} />
                   </button>
                 </Tooltip>
