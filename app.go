@@ -381,9 +381,6 @@ func (a *App) transformTreeIntoMDE1(password, rootPath string, nameFunc func(int
 
 	// recreate the tree with encrypted names and content
 	for _, node := range nodes {
-		if len(node.pathParts) == 1 {
-			continue // top-level items are handled by the backup step below
-		}
 		fullPath := filepath.Join(rootPath, node.encPath)
 		if node.info.IsDir() {
 			err := os.MkdirAll(fullPath, 0700)
