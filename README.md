@@ -147,7 +147,7 @@ An example exists here: [example](./example.md).
 See the following files:
 - [license](LICENSE)
 - [contributing guidelines](CONTRIBUTING.md)
-- [changelog](CHANGELOG.md)
+- [changelog](CHANGELOG)
 - [code of conduct](CODE_OF_CONDUCT.md)
 
 ## Want to participate? Have a bug or a feature request?
