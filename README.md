@@ -21,7 +21,7 @@ Yeah `cassette` [is already taken](https://aur.archlinux.org/packages?K=cassette
 
 [What a tape or a cassette, you may ask.](https://en.wikipedia.org/wiki/Cassette_tape)
 
-The design is inspired by old cassette color, the logo represents the wheel of a cassette.
+The logo represents the wheel of a cassette.
 
 ## Main Features
 
